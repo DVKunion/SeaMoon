@@ -1,0 +1,58 @@
+edition: 1.0.0          #  命令行YAML规范版本，遵循语义化版本（Semantic Versioning）规范
+name: SeaMoonAPP   #  应用名称
+access: "default" #  秘钥别名
+
+services: # 可以包括多个服务
+  SeaMoon-HZ: # 服务名称
+    component: fc  #  组件名称
+    actions:
+      pre-deploy:
+        - run: go version
+        - run: go mod tidy
+          path: ./
+        - run: GO111MODULE=on GOOS=linux CGO_ENABLED=0 go build -o main cmd/aliyun_server.go
+          path: ./
+        - run: chmod +x main
+          path: ./
+    props:
+      region: cn-hangzhou
+      service:
+        name: SeaMoon-Service-HZ
+        description: "SeaMoon Service HZ"
+      function:
+        name: http-proxy-HZ
+        description: 'http(s)-proxy HZ'
+        codeUri: './'
+        customRuntimeConfig:
+          command:
+            - ./main
+        environmentVariables: { serverMod: "http" }
+        handler: main
+        instanceConcurrency: 20
+        instanceType: e1
+        memorySize: 512
+        runtime: go1
+        timeout: 120
+        internetAccess: true
+      triggers:
+        - name: httpTrigger
+          type: http
+          config:
+            authType: anonymous
+            methods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+      customDomains:
+        - domainName: auto
+          protocol: HTTP
+          routeConfigs:
+            - path: /*
+              methods:
+                - GET
+                - POST
+                - PUT
+                - DELETE
+                - OPTIONS

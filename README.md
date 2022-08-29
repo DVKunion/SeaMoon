@@ -3,8 +3,6 @@
 </p>
 <h1 align="center">Sea Moon</h1>
 
----
-
 <p align="center">
 
 <img src="https://img.shields.io/github/stars/DVKunion/SeaMoon.svg"  alt="stars"/>
@@ -12,20 +10,21 @@
 <img src="https://img.shields.io/github/license/DVKunion/SeaMoon.svg"  alt="license"/>
 </p>
 
-
 <p align="center">
-    月海(Sea Moon) 是一款使用 FaaS/BaaS 实现的的 Serverless 云渗透工具集，致力于开启云原生的渗透模式。  
+    月海(Sea Moon) 是一款 FaaS/BaaS 实现的 Serverless 云渗透工具集，致力于开启云原生的渗透模式。  
 </p>
 <p align="center">
-    月海之名取自于苏轼的《西江月·顷在黄州》，寓意云安全工具取自于传统安全工具，用之于云，最终达到隐匿于海的效果。
+    月海之名取自于苏轼的《西江月·顷在黄州》，寓意月海取自于传统安全工具，用之于云，最终达到隐匿于海的效果。
+</p>
+<p align="center">
+目前工具正处于开发中，欢迎各位提交 <a href="https://github.com/DVKunion/SeaMoon/issues">Issue</a> |  <a href="https://github.com/DVKunion/SeaMoon/pulls">Pr</a>
 </p>
 
---- 
+<br />
 
 ## ☁️ 什么是月海
 
 > 🌕 月出于云却隐于海
-
 
 月海(Sea Moon) 是一款使用 FaaS/BaaS 实现的的 Serverless 渗透工具，致力于开启云原生的渗透模式。
 
@@ -37,23 +36,41 @@
 
 网络层支持是月海的基础功能，也是云函数最基本的优势和特性。 支持一级代理 / 链式代理，
 
-+ HTTP/HTTPS 代理
-+ C2 代理
-+ DNS 隧道代理
-+ Socks5 代理
+| 代理类型   | 原理文档                                                                          | 服务端支持 | 客户端支持 |
+|--------|-------------------------------------------------------------------------------|:-----:|:-----:|
+| HTTP   | [HTTP.md](https://github.com/DVKunion/SeaMoon/blob/main/docs/net/HTTP.md)     |   ✅   |   ✅   |
+| HTTPS  | [HTTP.md](https://github.com/DVKunion/SeaMoon/blob/main/docs/net/HTTP.md)     |   ✅   |   ✅   |
+| Socks5 | [Socks5.md](https://github.com/DVKunion/SeaMoon/blob/main/docs/net/SOCKS5.md) | 🐶开发中 | 🐶开发中 |
+| 链式代理   |                                                                               |       |       |
 
 ### 应用层
 
 月海的应用层能力是基于网络层的思考基础上，实现的真正上层渗透业务，例如：端口探测，网络反馈等
 
-+ 分布式扫描: 如:Nmap端口探测。解耦过于复杂的网络探测/扫描类任务
-+ XSS小工具，属于您自己的专属xss payload平台
-+ DNSLog 小工具，属于您自己的 DNSLog 平台
-+ Shell代理
+| 能力名称         | 原理文档                                                                              | 服务端支持 | 客户端支持 |
+|--------------|-----------------------------------------------------------------------------------|:-----:|:-----:|
+| 动态WebShell隐匿 | [WebShell.md](https://github.com/DVKunion/SeaMoon/blob/main/docs/app/WEBSHELL.md) | 🐷待开发 | 🐷待开发 |
+| 分布式扫描        |                                                                                   | 🐷待开发 | 🐷待开发 |
+| 反弹Shell代理    |                                                                                   | 🐷待开发 | 🐷待开发 |
+| CI容器云扫描利用    |                                                                                   | 🐷待开发 | 🐷待开发 |
+
+### 其他特性
+
++ 身份认证加强保密性: 🐷待开发
++ 探活机制/心跳检测: 🐷待开发
++ 多云平台/区域环境部署后随机选择机制: 🐷待开发
 
 ## 🕹 ️开始使用
 
+[三步部署月海(Sea Moon)到阿里云](https://github.com/DVKunion/SeaMoon/blob/main/docs/DEPLOY.md)
+
+[开启月海客户端使用](https://github.com/DVKunion/SeaMoon/blob/main/docs/START.md)
+
 ## ❗ 免责声明
+
+本工具仅用于学习serverless以及云原生相关技术，请勿用于其他用途。
+
+如您在使用本工具的过程中存在任何非法行为，您需自行承担相应后果，我们将不承担任何法律及连带责任。
 
 ## 参考文献与项目
 
@@ -63,10 +80,14 @@
 
 + [浅谈云函数的利用面](https://xz.aliyun.com/t/9502)
 + [白嫖CDN，打造封不尽IP的代理池](https://freewechat.com/a/MzI0MDI5MTQ3OQ==/2247484068/1)
++ [Serverless 应用开发指南](https://serverless.ink/)
 
 **项目类**
 
 + [SFCProxy](https://github.com/shimmeris/SCFProxy)
++ [gost](https://github.com/ginuerzh/gost)
++ [InCloud](https://github.com/inbug-team/InCloud)
 + [GOProxy](https://github.com/snail007/goproxy)
 + [sfc-proxy](https://github.com/Sakurasan/scf-proxy)
++ [Serverless-transitcode](https://github.com/copriwolf/serverless-transitcode)
 + [protoplex](https://github.com/SapphicCode/protoplex)
