@@ -1,56 +1,56 @@
 package main
 
 import (
-	"SeaMoon/pkg/proxy"
-	"fmt"
+	"github.com/DVKunion/SeaMoon/pkg/client"
+	"github.com/DVKunion/SeaMoon/pkg/consts"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"os"
 )
 
 var (
-	proxyAddr          string
-	listenAddr         string
-	clientMod          string
-	verbose            bool
-	rootClientCommand  = &cobra.Command{}
-	proxyClientCommand = &cobra.Command{
-		Use:   "proxy",
-		Short: "SeaMoon Proxy Client",
+	mod        string
+	debug      bool
+	verbose    bool
+	listenAddr string
+	proxyAddr  string
+
+	clientMap = map[string]func(listenAddr string, proxyAddr string, verbose bool){
+		"http":   client.NewHttpClient,
+		"socks5": client.NewSocks5Client,
+	}
+
+	rootCommand = &cobra.Command{
+		Use:   "client",
+		Short: "SeaMoon Client",
 		Run: func(cmd *cobra.Command, args []string) {
-			Proxy()
+			Client()
 		},
 	}
 	versionCommand = &cobra.Command{
 		Use: "version",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("V1.0.0-BETA")
+			log.Info(consts.Version)
 		},
 	}
 )
 
 func init() {
-	rootClientCommand.AddCommand(versionCommand)
-	proxyClientCommand.Flags().StringVarP(&clientMod, "mod", "m", "http", "mod of SeaMoon client")
-	proxyClientCommand.Flags().StringVarP(&listenAddr, "laddr", "l", ":9000", "local client address like : 0.0.0.0:9000")
-	proxyClientCommand.Flags().StringVarP(&proxyAddr, "paddr", "p", "", "proxy server address")
-	proxyClientCommand.Flags().BoolVarP(&verbose, "verbose", "v", false, "proxy detail log")
-
-	rootClientCommand.AddCommand(proxyClientCommand)
+	rootCommand.AddCommand(versionCommand)
+	rootCommand.Flags().StringVarP(&mod, "mod", "m", "http", "mod of SeaMoon client")
+	rootCommand.Flags().StringVarP(&listenAddr, "laddr", "l", ":9000", "local client address like : 0.0.0.0:9000")
+	rootCommand.Flags().StringVarP(&proxyAddr, "paddr", "p", "", "proxy server address")
+	rootCommand.Flags().BoolVarP(&verbose, "verbose", "v", false, "proxy detail log")
+	rootCommand.Flags().BoolVarP(&debug, "debug", "d", false, "proxy detail log")
 }
 
-func Proxy() {
-	switch clientMod {
-	case "http":
-		proxy.NewHttpClient(listenAddr, proxyAddr, verbose)
-		break
-	case "socks5":
-		proxy.NewSocks5Client(listenAddr, proxyAddr, verbose)
-		break
-	}
+func Client() {
+	handle := clientMap[mod]
+	handle(listenAddr, proxyAddr, verbose)
 }
 
 func main() {
-	if err := rootClientCommand.Execute(); err != nil {
+	if err := rootCommand.Execute(); err != nil {
 		os.Exit(1)
 	}
 }

@@ -17,7 +17,7 @@
     月海之名取自于苏轼的《西江月·顷在黄州》，寓意月海取自于传统安全工具，用之于云，最终达到隐匿于海的效果。
 </p>
 <p align="center">
-目前工具正处于开发中，欢迎各位提交 <a href="https://github.com/DVKunion/SeaMoon/issues">Issue</a> |  <a href="https://github.com/DVKunion/SeaMoon/pulls">Pr</a>
+目前工具正处于开发中，欢迎各位提交 <a href="https://github.com/DVKunion/SeaMoon/issues"><b>Issue</b></a> |  <a href="https://github.com/DVKunion/SeaMoon/pulls"><b>Pr</b></a>
 </p>
 
 <br />
@@ -36,12 +36,15 @@
 
 网络层支持是月海的基础功能，也是云函数最基本的优势和特性。 支持一级代理 / 链式代理，
 
-| 代理类型   | 原理文档                                                                          | 服务端支持 | 客户端支持 |
-|--------|-------------------------------------------------------------------------------|:-----:|:-----:|
-| HTTP   | [HTTP.md](https://github.com/DVKunion/SeaMoon/blob/main/docs/net/HTTP.md)     |   ✅   |   ✅   |
-| HTTPS  | [HTTP.md](https://github.com/DVKunion/SeaMoon/blob/main/docs/net/HTTP.md)     |   ✅   |   ✅   |
-| Socks5 | [Socks5.md](https://github.com/DVKunion/SeaMoon/blob/main/docs/net/SOCKS5.md) | 🐶开发中 | 🐶开发中 |
-| 链式代理   |                                                                               |       |       |
+| 代理类型      | 原理文档                                                                          | 服务端支持 | 客户端支持 |
+|-----------|-------------------------------------------------------------------------------|:-----:|:-----:|
+| HTTP      | [HTTP.md](https://github.com/DVKunion/SeaMoon/blob/main/docs/net/HTTP.md)     |   ✅   |   ✅   |
+| HTTPS     | [HTTP.md](https://github.com/DVKunion/SeaMoon/blob/main/docs/net/HTTP.md)     |   ✅   |   ✅   |
+| Socks5    | [Socks5.md](https://github.com/DVKunion/SeaMoon/blob/main/docs/net/SOCKS5.md) |   ✅   |   ✅   |
+| SS/SSR    | [Socks5.md](https://github.com/DVKunion/SeaMoon/blob/main/docs/net/SOCKS5.md) | 🐷待开发 | 🐷待开发 |
+| VMess     | [Socks5.md](https://github.com/DVKunion/SeaMoon/blob/main/docs/net/SOCKS5.md) | 🐷待开发 | 🐷待开发 |
+| websocket |                                                                               | 🐷待开发 | 🐷待开发 |
+| 链式代理      |                                                                               | ❌暂无计划 | ❌暂无计划 |
 
 ### 应用层
 
@@ -56,9 +59,10 @@
 
 ### 其他特性
 
-+ 身份认证加强保密性: 🐷待开发
++ 身份认证加强保密性: 🐶开发中
 + 探活机制/心跳检测: 🐷待开发
 + 多云平台/区域环境部署后随机选择机制: 🐷待开发
++ 精美的客户端web控制台: ? MayBe
 
 ## 🕹 ️开始使用
 
@@ -81,13 +85,16 @@
 + [浅谈云函数的利用面](https://xz.aliyun.com/t/9502)
 + [白嫖CDN，打造封不尽IP的代理池](https://freewechat.com/a/MzI0MDI5MTQ3OQ==/2247484068/1)
 + [Serverless 应用开发指南](https://serverless.ink/)
++ [HTTP被动扫描代理的那些事](https://www.freebuf.com/articles/web/212382.html)
++ [Subsocks: 用GO实现一个Socks5安全代理](https://luyuhuang.tech/2020/12/02/subsocks.html)
 
 **项目类**
 
 + [SFCProxy](https://github.com/shimmeris/SCFProxy)
++ [go-socks5](https://github.com/armon/go-socks5)
++ [subsocks](https://github.com/luyuhuang/subsocks)
 + [gost](https://github.com/ginuerzh/gost)
 + [InCloud](https://github.com/inbug-team/InCloud)
-+ [GOProxy](https://github.com/snail007/goproxy)
 + [sfc-proxy](https://github.com/Sakurasan/scf-proxy)
 + [Serverless-transitcode](https://github.com/copriwolf/serverless-transitcode)
 + [protoplex](https://github.com/SapphicCode/protoplex)

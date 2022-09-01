@@ -1,37 +1,42 @@
 edition: 1.0.0          #  命令行YAML规范版本，遵循语义化版本（Semantic Versioning）规范
-name: SeaMoonAPP   #  应用名称
-access: "default" #  秘钥别名
+name: SeaMoonAPP
+access: "default"
 
-services: # 可以包括多个服务
-  SeaMoon-HZ: # 服务名称
-    component: fc  #  组件名称
+vars:
+  region: cn-hangzhou
+  service:
+    name: SeaMoon-Service
+    description: "SeaMoon Service"
+    internetAccess: true
+    logConfig: auto # 开启日志，注意日志服务是收费的，每月只有500MB的免费额度，如不需要(非debug)可以注释掉。
+
+services:
+  SeaMoon-HTTP-Proxy:
+    component: fc
     actions:
       pre-deploy:
-        - run: go version
         - run: go mod tidy
           path: ./
-        - run: GO111MODULE=on GOOS=linux CGO_ENABLED=0 go build -o main cmd/aliyun_server.go
+        - run: GO111MODULE=on GOOS=linux CGO_ENABLED=0 go build  -ldflags "-X github.com/DVKunion/SeaMoon/pkg/consts.Version=beta" -o main cmd/aliyun_server.go
           path: ./
         - run: chmod +x main
           path: ./
     props:
-      region: cn-hangzhou
-      service:
-        name: SeaMoon-Service-HZ
-        description: "SeaMoon Service HZ"
+      region: ${vars.region}
+      service: ${vars.service}
       function:
-        name: http-proxy-HZ
-        description: 'http(s)-proxy HZ'
+        name: http-proxy
+        description: 'http(s)-proxy'
         codeUri: './'
         customRuntimeConfig:
           command:
             - ./main
         environmentVariables: { serverMod: "http" }
         handler: main
-        instanceConcurrency: 20
+        instanceConcurrency: 1
         instanceType: e1
         memorySize: 512
-        runtime: go1
+        runtime: custom
         timeout: 120
         internetAccess: true
       triggers:
@@ -56,3 +61,51 @@ services: # 可以包括多个服务
                 - PUT
                 - DELETE
                 - OPTIONS
+  SeaMoon-Socks-Proxy:
+    component: fc
+    actions:
+      pre-deploy:
+        - run: go mod tidy
+          path: ./
+        - run: GO111MODULE=on GOOS=linux CGO_ENABLED=0 go build  -ldflags "-X github.com/DVKunion/SeaMoon/pkg/consts.Version=beta" -o main cmd/aliyun_server.go
+          path: ./
+        - run: chmod +x main
+          path: ./
+    props:
+      region: ${vars.region}
+      service: ${vars.service}
+      function:
+        name: socks-proxy
+        description: 'socks5(s)-proxy'
+        codeUri: './'
+        customRuntimeConfig:
+          command:
+            - ./main
+        environmentVariables: { serverMod: "socks5" }
+        handler: main
+        instanceConcurrency: 1
+        instanceType: e1
+        memorySize: 512
+        runtime: custom
+        timeout: 120
+        internetAccess: true
+      triggers:
+        - name: httpTrigger
+          type: http
+          config:
+            authType: anonymous
+            methods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+      customDomains:
+        - domainName: auto
+          protocol: HTTP
+          routeConfigs:
+            - path: /*
+              methods:
+                - GET
+                - POST
+                - PUT
+                - DELETE

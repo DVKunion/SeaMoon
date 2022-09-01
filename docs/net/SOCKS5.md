@@ -1,6 +1,13 @@
 # SOCKS5
 
+## s5效果
+
+相比http代理更稳定，速度更快。
+![speed.png](../img/speed2.png)
+
 ## 原理
+
+### SOCKS5
 
 基础理论: [浅谈云函数的利用面](https://xz.aliyun.com/t/9502)
 
@@ -20,9 +27,9 @@ FC的不成熟的确限制了大部分的玩法，比如触发器种类，比如
 
 这个工具提供了各种语言的脚本，能够通过HTTP隧道的方式，结合本地客户端，建立socks连接代理。
 
-他的原理其实是依赖于，socks属于会话层，是对TCP/IP协议的封装，而在应用层的HTTP协议也是同样属于对TCP/IP协议的封装。
+他的原理其实是依赖于，socks属于一种建立在TCP层的接口，是对TCP/IP协议的封装，而在应用层的HTTP协议也是同样属于对TCP/IP协议的封装。
 
-通俗来说，socks就是爸爸，而HTTP只是他众多的子类而已，相互之间的转化是存在某种方式的。
+通俗来说，socks就是爸爸，而HTTP只是他众多的接口调用实现方而已，相互之间的转化是存在某种方式的。
 
 举个例子，如python中的urllib库，底层就是使用sockets实现的HTTP。
 
@@ -40,5 +47,35 @@ FC的不成熟的确限制了大部分的玩法，比如触发器种类，比如
 + 在云函数部署好一个接受HTTP响应，并转化为socks连接的服务
 + 在本地启动client端，监听一个socks端口，将该端口的数据按照协议转化为HTTP请求发送给云函数
 
-我们参考reGeorg的重构版[Neo-reGeorg](https://github.com/L-codes/Neo-reGeorg), 写出我们的客户端和服务端。
+参考[reGeorg](https://github.com/sensepost/reGeorg)
+和他的的重构版[Neo-reGeorg](https://github.com/L-codes/Neo-reGeorg), 复制了一个GO版本的客户端和服务端。
 
+也就是说，你也可以选择连接 reGeorg 的shell作为http代理，启动一个本地的socks连接。
+
+以PHP为例，reGeorg将状态、IO全部存储在了session内。
+
+我们的云函数是没有状态的，所以不能够通过这种断开连接的方式再重新找到状态进行读取，要重新寻找出路。
+
+经过一周的改写，我发现虽然思路可行，但是reGeorg的项目实在太老了，而重构版Neo-reGeorg又因为各种加密等原因离谱的乱，导致最终socks建立起的连接无法再次read的相应的socks。
+
+终于在苦找下，发现了大佬做了这样的事情：将客户端socks5升级至http/https/websocket等应用层协议，同时还提供了UDP的解决方案！
+
+[subsocks](https://github.com/luyuhuang/subsocks)
+
+但是测试发现，http触发器存在最大连接超时时间，虽然阿里云已经把这个数值调整到了24小时，依旧存在隐患，不够完美。
+
+于是，替换者websockets触发器完美出现，解决了所有的问题。
+
+因为本身websockets就是一种类sockets的http连接，现在我们只要通过 `io.copy` 将双端的输入输出绑定，即可构成通信信道。
+
+最后就是处理好断开连接问题，来防止异常断开导致的panic，和节约云函数计费成本。
+
+最终达成上图效果。
+
+### SS
+
+待开发
+
+### VMess
+
+待开发
