@@ -6,8 +6,9 @@
 <p align="center">
 
 <img src="https://img.shields.io/github/stars/DVKunion/SeaMoon.svg"  alt="stars"/>
-<img src="https://img.shields.io/github/languages/top/DVKunion/SeaMoon.svg?&color=red" alt="languages">
-<img src="https://img.shields.io/github/license/DVKunion/SeaMoon.svg"  alt="license"/>
+<img src="https://img.shields.io/github/downloads/dvkunion/seamoon/total?color=orange" alt="downloads" />
+<img src="https://img.shields.io/github/languages/top/DVKunion/SeaMoon.svg?&color=blueviolet" alt="languages">
+<img src="https://img.shields.io/github/license/DVKunion/SeaMoon.svg?color=brightgreen"  alt="license"/>
 </p>
 
 <p align="center">
@@ -43,7 +44,6 @@
 | Socks5    | [Socks5.md](https://github.com/DVKunion/SeaMoon/blob/main/docs/net/SOCKS5.md) |   ✅   |   ✅   |
 | SS/SSR    | [Socks5.md](https://github.com/DVKunion/SeaMoon/blob/main/docs/net/SOCKS5.md) | 🐷待开发 | 🐷待开发 |
 | VMess     | [Socks5.md](https://github.com/DVKunion/SeaMoon/blob/main/docs/net/SOCKS5.md) | 🐷待开发 | 🐷待开发 |
-| websocket |                                                                               | 🐷待开发 | 🐷待开发 |
 | 链式代理      |                                                                               | ❌暂无计划 | ❌暂无计划 |
 
 ### 应用层
@@ -57,12 +57,38 @@
 | 反弹Shell代理    |                                                                                   | 🐷待开发 | 🐷待开发 |
 | CI容器云扫描利用    |                                                                                   | 🐷待开发 | 🐷待开发 |
 
+### 支持平台
+
+目前使用下来，serverless契合度最好的还是阿里云。其他厂家收费、支持力度都不太满意。
+
+腾讯云只有三个月的免费额度，最低套餐价格12.8，每月只有2G流量; 并且不支持Go的serverless应用模式部署。
+
+华为云...直接没有远程仓库部署，需要把项目托管到他们自己的dev git，而且这种模式部署还需要自己提供ECS(那我用云函数的意义在哪里?)
+
+国外的厂商免费的场景较少，而且有些注册需要信用卡，门槛很尴尬。
+
+| 平台名称   | 是否支持  |
+|--------|:-----:|
+| 阿里云    |   ✅   |
+| 腾讯云    | 🐷调研中 |
+| 华为云    | 🐷调研中 |
+| AWS    | 🐷调研中 |
+| Google | 🐷调研中 |
+
 ### 其他特性
 
 + 身份认证加强保密性: 🐶开发中
 + 探活机制/心跳检测: 🐷待开发
 + 多云平台/区域环境部署后随机选择机制: 🐷待开发
-+ 精美的客户端web控制台: ? MayBe
+
+### 后续方向
+
+等serverless支持力度大了之后，将全面修改客户端为grpc模式。
+
+> 关于规则匹配代理:   
+> 很多代理支持根据不同的规则来进行转发或选择不走代理。月海的定位其实更偏重于利用云原生基础设施来廉价的进行渗透测试工作。  
+> 因此在当前版本，并不打算支持规则代理，(因为很多代理客户端其实也有这个功能了，走客户端即可实现。)
+>
 
 ## 🕹 ️开始使用
 

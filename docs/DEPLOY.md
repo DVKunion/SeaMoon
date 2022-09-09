@@ -21,6 +21,11 @@
 > http://socks-proxy.seamon-service.xxx.xxxx.x.xx.x.x..x.x 表示是socks5代理
 > http://http-proxy.seamon-service.xxx.xxxx.x.xx.x.x..x.x 表示是http代理
 
+> 其他注意事项:   
+> 如果您想要修改代理生效的区域，请修改s.yaml内的 vars -> region字段   
+> 
+> 目前阿里云支持的字段有: cn-hangzhou, cn-beijing, cn-beijing, cn-hangzhou, cn-shanghai, cn-qingdao, cn-zhangjiakou, cn-huhehaote, cn-shenzhen, cn-chengdu, cn-hongkong, ap-southeast-1, ap-southeast-2, ap-southeast-3, ap-southeast-5, ap-northeast-1, eu-central-1, eu-west-1, us-west-1, us-east-1, ap-south-1
+
 5. [开启客户端](https://github.com/DVKunion/SeaMoon/blob/main/docs/START.md), 尽情享用
 
 ![speed.png](https://cdn.dvkunion.cn/SeaMoon/speed.png)

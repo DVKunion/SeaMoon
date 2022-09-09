@@ -2,6 +2,7 @@ package client
 
 import (
 	"bufio"
+	"context"
 	"github.com/DVKunion/SeaMoon/pkg/consts"
 	"github.com/DVKunion/SeaMoon/pkg/server"
 	"github.com/DVKunion/SeaMoon/pkg/utils"
@@ -9,6 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"net"
 	"net/http"
+	"strings"
 )
 
 type bufferedConn struct {
@@ -20,51 +22,89 @@ func (c *bufferedConn) Read(b []byte) (int, error) {
 	return c.br.Read(b)
 }
 
-func NewSocks5Client(listenAddr string, proxyAddr string, verbose bool) {
-	server, err := net.Listen("tcp", listenAddr)
-	if err != nil {
-		log.Error(consts.SOCKS5_LISTEN_ERROR, err)
-	}
-	log.Infof(consts.SOCKS5_LISTEN_START, listenAddr)
-	log.Debugf(consts.PROXY_ADDR, proxyAddr)
+func Socks5Controller(ctx context.Context, sg *SigGroup) {
+	c, cancel := context.WithCancel(ctx)
+	defer cancel()
 	for {
-		conn, err := server.Accept()
-		if err != nil {
-			log.Error(consts.SOCKS5_ACCEPT_ERROR)
-			// 连接的error可能是非预期不可控制的，不干扰client进程。
-			continue
-		}
-		log.Debugf(consts.SOCKS5_ACCEPT_START, conn.RemoteAddr())
+		select {
+		case <-sg.SocksStartChannel:
 
-		go func() {
-			br := bufio.NewReader(conn)
-			b, err := br.Peek(1)
-			if err != nil || b[0] != utils.Version {
-				conn.Close()
-				log.Errorf(consts.CLIENT_PROTOCOL_UNSUPPORT_ERROR, err)
+			server, err := net.Listen("tcp", Config().Socks5.ListenAddr)
+			if err != nil {
+				log.Errorf(consts.SOCKS5_LISTEN_ERROR, err)
 				return
 			}
-			Socks5Handler(&bufferedConn{conn, br}, proxyAddr)
-		}()
+			var proxyAddr string
+			for _, p := range Config().ProxyAddr {
+				if strings.HasPrefix(p, "socks-proxy") {
+					proxyAddr = "ws://" + p
+				}
+			}
+			if proxyAddr == "" {
+				log.Error(consts.PROXY_ADDR_ERROR)
+				break
+			}
+			sg.wg.Add(1)
+			go func() {
+				NewSocks5Client(c, server, proxyAddr)
+				sg.wg.Done()
+			}()
+		case <-sg.SocksStopChannel:
+			Config().Socks5.Status = "inactive"
+			log.Info(consts.SOCKS5_LISTEN_STOP)
+			cancel()
+			return
+		}
 	}
 }
 
-func Socks5Handler(conn net.Conn, raddr string) {
-	defer conn.Close()
+func NewSocks5Client(ctx context.Context, server net.Listener, proxyAddr string) {
+	var closeFlag = false
+	log.Infof(consts.SOCKS5_LISTEN_START, server.Addr())
+	log.Debugf(consts.PROXY_ADDR, proxyAddr)
+	defer func() {
+		closeFlag = true
+		server.Close()
+	}()
+	go func() {
+		for {
+			conn, err := server.Accept()
+			if err == nil {
+				log.Debugf(consts.SOCKS5_ACCEPT_START, conn.RemoteAddr())
+				br := bufio.NewReader(conn)
+				b, err := br.Peek(1)
+				if err != nil || b[0] != utils.Version {
+					log.Errorf(consts.CLIENT_PROTOCOL_UNSUPPORT_ERROR, err)
+					return
+				}
+				Socks5Handler(&bufferedConn{conn, br}, proxyAddr)
+			} else {
+				if closeFlag {
+					// except close
+					return
+				} else {
+					log.Errorf(consts.SOCKS5_ACCEPT_ERROR, err)
+				}
+			}
+		}
+	}()
+	<-ctx.Done()
+}
 
+func Socks5Handler(conn net.Conn, raddr string) {
 	// select method
 	_, err := utils.ReadMethods(conn)
 	if err != nil {
-		log.Printf(`[socks5] read methods failed: %s`, err)
+		log.Errorf(`[socks5] read methods failed: %s`, err)
 		return
 	}
 
 	// TODO AUTH
 	if err := utils.WriteMethod(utils.MethodNoAuth, conn); err != nil {
 		if err != nil {
-			log.Printf(`[socks5] write method failed: %s`, err)
+			log.Errorf(`[socks5] write method failed: %s`, err)
 		} else {
-			log.Printf(`[socks5] methods is not acceptable`)
+			log.Errorf(`[socks5] methods is not acceptable`)
 		}
 		return
 	}
@@ -72,7 +112,7 @@ func Socks5Handler(conn net.Conn, raddr string) {
 	// read command
 	request, err := utils.ReadRequest(conn)
 	if err != nil {
-		log.Printf(`[socks5] read command failed: %s`, err)
+		log.Errorf(`[socks5] read command failed: %s`, err)
 		return
 	}
 	switch request.Cmd {
@@ -97,16 +137,17 @@ func handleConnect(conn net.Conn, req *utils.Request, rAddr string) {
 	dialer := &websocket.Dialer{}
 	s := http.Header{}
 	s.Set("SM-CMD", "CONNECT")
-	// TODO fix with target format check
 	s.Set("SM-TARGET", req.Addr.String())
 	wsConn, _, err := dialer.Dial(rAddr, s)
 
 	if err != nil {
-		log.Errorf("websockect connect error: %s ", err)
+		log.Errorf(consts.SOCKS_UPGRADE_ERROR, err)
 		return
 	}
 
 	newConn := server.NewWebsocketServer(wsConn)
+
+	defer newConn.Close()
 
 	if err := utils.NewReply(utils.Succeeded, nil).Write(conn); err != nil {
 		log.Errorf(consts.SOCKS5_CONNECT_WRITE_ERROR, err)

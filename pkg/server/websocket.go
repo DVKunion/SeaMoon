@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/gorilla/websocket"
+	"io"
 	"net"
 )
 
@@ -23,6 +24,11 @@ func (ws *WebsocketServer) RemoteAddr() net.Addr {
 }
 
 func (ws *WebsocketServer) Close() error {
+	// ws need send close message first to avoid err : close 1006 (abnormal closure): unexpected EOF
+	err := ws.wConn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "close"))
+	if err != nil {
+		return err
+	}
 	return ws.wConn.Close()
 }
 
@@ -37,6 +43,9 @@ func (ws *WebsocketServer) Write(b []byte) (n int, err error) {
 func (ws *WebsocketServer) Read(b []byte) (n int, err error) {
 	mt, message, err := ws.wConn.ReadMessage()
 	if err != nil {
+		if wsErr, ok := err.(*websocket.CloseError); ok && wsErr.Code == websocket.CloseNormalClosure {
+			return 0, io.EOF
+		}
 		return 0, err
 	}
 	ws.messageType = mt

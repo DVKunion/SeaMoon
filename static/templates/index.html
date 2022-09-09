@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SeaMoon - 月海</title>
+    <link rel="stylesheet" type="text/css" href="/static/public/css/semantic.min.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/public/css/icon.min.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/public/css/index.css"/>
+    <script src="/static/public/js/jquery-3.1.1.min.js"></script>
+    <script src="/static/public/js/semantic.min.js"></script>
+</head>
+<body>
+<div>
+    <div class="ui inverted container">
+        <div class="ui inverted segment">
+            <div class="ui success hidden icon message">
+                <i class="check circle outline icon"></i>
+                <div class="content">
+                    <div class="header">保存成功</div>
+                </div>
+            </div>
+            <div class="ui error hidden icon message">
+                <i class="times circle outline icon"></i>
+                <div class="content">
+                    <div class="header">保存失败</div>
+                    <p class="error message info"></p>
+                </div>
+            </div>
+        </div>
+        <h1 class="ui center inverted aligned icon header">
+            <img class="logo" src="/static/public/img/logo.png"/>
+            <div class="content center">
+                <p>SeaMoon - 月海</p>
+                <p align="center">
+                    <img src="https://img.shields.io/github/stars/DVKunion/SeaMoon.svg"  alt="stars"/>
+                    <img src="https://img.shields.io/github/downloads/dvkunion/seamoon/total?color=orange" alt="downloads" />
+                    <img src="https://img.shields.io/github/languages/top/DVKunion/SeaMoon.svg?&color=blueviolet" alt="languages">
+                    <img src="https://img.shields.io/github/license/DVKunion/SeaMoon.svg?color=brightgreen"  alt="license"/>
+                    <a href='https://github.com/DVKunion/SeaMoon'><img
+                            src="https://img.shields.io/github/watchers/dvkunion/seamoon?style=social"/></a>
+                </p>
+                <div class="sub header">
+                    🌕 月出于云却隐于海
+                </div>
+            </div>
+        </h1>
+        <div class="ui fullscreen basic modal visible">
+            <i class="close icon"></i>
+            <div class="ui icon header">
+                <i class="keyboard icon"></i>
+                <p>期待一下~ 已经在加班加点了</p>
+                <p>(系统状态仪表盘将在下个版本实装)</p>
+            </div>
+            <!--            <div class="ui header">-->
+            <!--                SeaMoon - 月海-->
+            <!--            </div>-->
+            <!--            <div class="scrolling content">-->
+            <!--            </div>-->
+            <div class="actions">
+                <div class="ui primary approve button">
+                    继续
+                    <i class="right chevron icon"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="ui inverted container">
+            <div class="ui form basic modal">
+                <div class="ui icon header">
+                    <i class="cog icon"></i>
+                    SeaMoon 配置管理
+                </div>
+                <div class="content">
+                    <form class="ui inverted center form">
+                        <h4 class="ui inverted dividing header"><i class="cloud icon"></i>工具配置</h4>
+                        <div class="two fields">
+                            <div class="seven wide field">
+                                <label>控制地址: </label>
+                                <input id="controlAddr" placeholder="工具控制端地址" type="text">
+                            </div>
+                            <div class="seven wide field" style="margin-left: 3em">
+                                <label>日志路径: </label>
+                                <input id="controlLog" placeholder="日志路径" type="text">
+                            </div>
+                        </div>
+                        <h4 class="ui inverted dividing header"><i class="cloud icon"></i>云端配置</h4>
+                        <div class="fifteen wide field">
+                            <label>代理地址: </label>
+                            <textarea id="proxyAddr" rows="6"
+                                      placeholder="请输入云函数域名，换行符分割。
+e.g. http-proxy.example.com" type="text"></textarea>
+                        </div>
+                        <h4 class="ui inverted dividing header"><i class="paper plane icon"></i>代理配置</h4>
+                        <div class="proxy two fields">
+                            <div class="field">
+                                <div class="http ui toggle checkbox">
+                                    <label>http代理</label>
+                                    <input id="httpEnable" type="checkbox" tabindex="0" class="hidden">
+                                </div>
+                            </div>
+                            <div class="field">
+                                <div class="socks ui toggle checkbox">
+                                    <label>socks5代理</label>
+                                    <input id="socksEnable" type="checkbox" tabindex="0" class="hidden">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="http two fields">
+                            <div class="seven wide field">
+                                <label>http代理地址</label>
+                                <input id="httpAddr" placeholder="http代理地址" type="text">
+                            </div>
+                        </div>
+                        <div class="socks two fields">
+                            <div class="seven wide field">
+                                <label>socks代理地址</label>
+                                <input id="socksAddr" placeholder="socks代理地址" type="text">
+                            </div>
+                        </div>
+                        <h4 class="ui dividing inverted header"><i class="ellipsis horizontal icon"></i>高级功能</h4>
+                        <div class="inline field">
+                            <div class="ui checkbox">
+                                <input type="checkbox" tabindex="0" class="hidden">
+                                <label>开启webshell动态代理功能(待实现)</label>
+                            </div>
+                        </div>
+                        <!--                        <div class="inline field">-->
+                        <!--                            <div class="ui checkbox">-->
+                        <!--                                <input type="checkbox" tabindex="0" class="hidden">-->
+                        <!--                                <label>其他一些乱七八糟的功能,占个位置</label>-->
+                        <!--                            </div>-->
+                        <!--                        </div>-->
+                    </form>
+                </div>
+                <div class="actions">
+                    <div class="ui black deny button">
+                        关闭
+                    </div>
+                    <div class="ui positive right labeled icon button" onclick="post()">
+                        保存
+                        <i class="checkmark icon"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ui inverted container" style="width: 30%; margin-top: 5em">
+            <button class="ui inverted primary button" style="margin-left: 15px"
+                    onclick="$('.ui.fullscreen.modal').modal('show');">系统状态
+            </button>
+            <button class="ui inverted button" style="margin-left: 7em"
+                    onclick="$('.ui.form.modal').modal('show');">配置管理
+            </button>
+        </div>
+    </div>
+</div>
+</body>
+<script src="/static/public/js/index.js"></script>
+<script>
+    const config = {{ . }}
+    setValue(config);
+</script>
+</html>

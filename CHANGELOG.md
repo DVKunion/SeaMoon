@@ -1,3 +1,13 @@
+# 1.1.0 (2022-09-27)
+
+
+### Bug Fixes
+
+* optimize connection ([70dfc5a](https://github.com/DVKunion/SeaMoon/commit/70dfc5ad4d25fd5b529097183c873d87ec37f126))
+* optimize connection ([2b416c0](https://github.com/DVKunion/SeaMoon/commit/2b416c0b106ad0a6a21aa3da838cf311061e9ef8))
+
+
+
 # 1.0.0 (2022-09-09)
 
 

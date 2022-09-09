@@ -10,17 +10,18 @@
 `go mod tidy`
 
 **http代理**  
-`./client -m http -l :9000 -p http://YOUR_FC_SERVER -v`
+`./client start -m http -l :9000 -p http://YOUR_FC_SERVER -v`
 
 YOUR_FC_SERVER是云函数部署后拿到的地址
 
-**socks5代理**
-`./client -m socks5 -l :9000 -p ws://YOUR_FC_SERVER -v`
+**socks5代理**  
+`./client start -m socks5 -l :9000 -p ws://YOUR_FC_SERVER -v`
 
 注意要将http://地址协议改为ws://
 
 证书信任:
-客户端运行后，会自动在运行目录下生成证书文件。  
+客户端运行后，会自动在运行目录下生成证书文件。
+
 以mac为例，双击ca.crt，信任证书即可(原理同burp证书信任)
 
 各参数详情:
