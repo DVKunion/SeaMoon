@@ -16,8 +16,8 @@
 <p align="center">
     月海之名取自于苏轼的《西江月·顷在黄州》，寓意月海取自于传统安全工具，用之于云，最终达到隐匿于海的效果。
 </p>
-<p align="center"><b>
-目前工具正处于开发中，欢迎各位提交</b> <a href="https://github.com/DVKunion/SeaMoon/issues" ><b>Issue</b></a> |  <a href="https://github.com/DVKunion/SeaMoon/pulls"><b>Pr</b></a>
+<p align="center" style="color:pink"><b>
+目前工具正处于开发中，版本迭代变动会比较大，可能会存在各种bug和问题，欢迎各位提交</b> <a href="https://github.com/DVKunion/SeaMoon/issues" ><b>Issue</b></a> |  <a href="https://github.com/DVKunion/SeaMoon/pulls"><b>Pr</b></a>
 </p>
 
 <br />

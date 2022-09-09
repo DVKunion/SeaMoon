@@ -50,6 +50,7 @@ func newSocksServer(r *http.Request) *SocksServer {
 
 	cmd := r.Header.Get("SM-CMD")
 	target := r.Header.Get("SM-TARGET")
+	// TODO some panic
 	host := strings.Split(target, ":")[0]
 	port := strings.Split(target, ":")[1]
 
@@ -85,8 +86,9 @@ func newSocksServer(r *http.Request) *SocksServer {
 
 func (s *SocksServer) handleConnect(conn net.Conn) {
 	log.Infof(consts.SOCKS5_CONNECT_SERVER, s.request.Addr, conn.RemoteAddr())
-
-	newConn, err := net.Dial("tcp", s.request.Addr.String())
+	// 默认socks设置十秒超时
+	dialer := net.Dialer{Timeout: 10}
+	newConn, err := dialer.Dial("tcp", s.request.Addr.String())
 
 	if err != nil {
 		log.Errorf(consts.SOCKS5_CONNECT_DIAL_ERROR, err)

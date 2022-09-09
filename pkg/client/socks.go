@@ -97,6 +97,7 @@ func handleConnect(conn net.Conn, req *utils.Request, rAddr string) {
 	dialer := &websocket.Dialer{}
 	s := http.Header{}
 	s.Set("SM-CMD", "CONNECT")
+	// TODO fix with target format check
 	s.Set("SM-TARGET", req.Addr.String())
 	wsConn, _, err := dialer.Dial(rAddr, s)
 
