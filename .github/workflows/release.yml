@@ -1,67 +1,32 @@
-#name: Release
-#
-#on:
-#  push:
-#    tags:
-#      - 'v*'
-#
-#jobs:
-#  binary:
-#    name: release binary files
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Set up Go 1.x
-#        uses: actions/setup-go@v2
-#        with:
-#          go-version: ^1.18
-#
-#      - name: Checkout
-#        uses: actions/checkout@v2
-#
-#      - name: Build
-#        run: |
-#          bash build.sh ${GITHUB_REF##*/}
-#
-#      - name: release
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        run: |
-#          set -x
-#          assets=()
-#          for asset in targets/*; do
-#            assets+=("-a" "$asset")
-#          done
-#          tag_name="${GITHUB_REF##*/}"
-#          hub release create "${assets[@]}" -m "$tag_name" "$tag_name"
-#
-#  docker:
-#    name: Release Docker
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Checkout
-#        uses: actions/checkout@v2
-#
-#      - name: Dockerhub login
-#        env:
-#          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-#        run: |
-#          echo "${DOCKER_PASSWORD}" | docker login --username luyuhuang --password-stdin
-#
-#      - name: Set up QEMU
-#        uses: docker/setup-qemu-action@v1
-#
-#      - name: Set up Docker Buildx
-#        id: buildx
-#        uses: docker/setup-buildx-action@v1
-#        with:
-#          version: latest
-#
-#      - name: Build dockerfile (with push)
-#        run: |
-#          docker buildx build \
-#          --platform=linux/amd64,linux/arm/v7,linux/arm64 \
-#          --output "type=image,push=true" \
-#          --build-arg VERSION=${GITHUB_REF##*/} \
-#          --file ./mainfest/Dockerfile . \
-#          --tag dvkunion/seamoon:latest \
-#          --tag dvkunion/seamoon:${GITHUB_REF##*/}
+name: goreleaser
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  build:
+    name: GoReleaser build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.18
+        id: go
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          distribution: goreleaser
+          version: latest
+          args: -f .github/conf/.goreleaser.yml
+          workdir: .
+        env:
+          GITHUB_TOKEN: ${{ secrets.GO_RELEASER_GITHUB_TOKEN }}

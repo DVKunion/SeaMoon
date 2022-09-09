@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="https://cdn.dvkunion.cn/github/logo.png" width="360" alt="logo"/>
+    <img src="https://cdn.dvkunion.cn/SeaMoon/logo.png" width="360" alt="logo"/>
 </p>
 <h1 align="center">Sea Moon</h1>
 
@@ -16,8 +16,8 @@
 <p align="center">
     月海之名取自于苏轼的《西江月·顷在黄州》，寓意月海取自于传统安全工具，用之于云，最终达到隐匿于海的效果。
 </p>
-<p align="center">
-目前工具正处于开发中，欢迎各位提交 <a href="https://github.com/DVKunion/SeaMoon/issues"><b>Issue</b></a> |  <a href="https://github.com/DVKunion/SeaMoon/pulls"><b>Pr</b></a>
+<p align="center"><b>
+目前工具正处于开发中，欢迎各位提交</b> <a href="https://github.com/DVKunion/SeaMoon/issues" ><b>Issue</b></a> |  <a href="https://github.com/DVKunion/SeaMoon/pulls"><b>Pr</b></a>
 </p>
 
 <br />

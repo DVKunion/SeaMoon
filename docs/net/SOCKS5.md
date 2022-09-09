@@ -3,7 +3,7 @@
 ## s5效果
 
 相比http代理更稳定，速度更快。
-![speed.png](../img/speed2.png)
+![speed.png](https://cdn.dvkunion.cn/SeaMoon/speed2.png)
 
 ## 原理
 

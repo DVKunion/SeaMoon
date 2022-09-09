@@ -67,7 +67,7 @@ services:
       pre-deploy:
         - run: go mod tidy
           path: ./
-        - run: GO111MODULE=on GOOS=linux CGO_ENABLED=0 go build  -ldflags "-X github.com/DVKunion/SeaMoon/pkg/consts.Version=beta" -o main cmd/aliyun_server.go
+        - run: GO111MODULE=on GOOS=linux CGO_ENABLED=0 go build  -ldflags "-X github.com/DVKunion/SeaMoon/pkg/consts.Version=1.0.0" -o main cmd/aliyun_server.go
           path: ./
         - run: chmod +x main
           path: ./

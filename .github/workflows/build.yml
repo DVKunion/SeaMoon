@@ -1,1 +1,23 @@
-# github.com/DVKunion/SeaMoon/pkg/consts.Version
+name: SeaMoon
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.18
+
+      - name: Build
+        run: go build --ldflags "-s -w -X github.com/DVKunion/SeaMoon/pkg/consts.Version=1.0.0" cmd/client.go
+

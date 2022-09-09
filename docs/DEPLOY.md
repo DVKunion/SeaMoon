@@ -5,16 +5,22 @@
 1. fork 该仓库到您自己的 github 账户下
 2. 进入阿里云控制台，点击应用 -> 创建应用
 
-![创建应用](img/deploy-aliyun-1.png)
+![创建应用](https://cdn.dvkunion.cn/SeaMoon/deploy-aliyun-1.png)
 
 3. 选择 `通过仓库导入应用` ， 授权Github账户后，选择fork好的仓库，如果您之前没有使用过阿里云，在角色权限处还需要进行一次授权。
 
-![导入应用](img/deploy-aliyun-2.png)
+![导入应用](https://cdn.dvkunion.cn/SeaMoon/deploy-aliyun-2.png)
 
 4. 点击创建，等待服务部署成功，即可获取到代理地址
 
-![img.png](img/deploy-aliyun-3.png)
+![img.png](https://cdn.dvkunion.cn/SeaMoon/deploy-aliyun-3.png)
+
+> 注意，socks5代理和http代理是不同的代理地址(因为是不同的云函数服务)。如果您部署了多个代理，请注意代理地址右侧会有一个`+1`，里面展示了您其他代理的地址。
+>
+> e.g.
+> http://socks-proxy.seamon-service.xxx.xxxx.x.xx.x.x..x.x 表示是socks5代理
+> http://http-proxy.seamon-service.xxx.xxxx.x.xx.x.x..x.x 表示是http代理
 
 5. [开启客户端](https://github.com/DVKunion/SeaMoon/blob/main/docs/START.md), 尽情享用
 
-![speed.png](img/speed.png)
+![speed.png](https://cdn.dvkunion.cn/SeaMoon/speed.png)

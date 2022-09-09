@@ -20,3 +20,5 @@
 *.pem
 *.crt
 *.key
+
+dist/

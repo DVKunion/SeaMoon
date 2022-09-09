@@ -13,7 +13,7 @@ HTTP代理 涉及了三个问题。
 
 ## 效果
 
-![speed.png](../img/speed.png)
+![speed.png](https://cdn.dvkunion.cn/SeaMoon/speed.png)
 
 ## 原理
 
