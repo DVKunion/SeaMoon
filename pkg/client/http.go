@@ -1,31 +1,93 @@
 package client
 
 import (
+	"context"
+	"crypto/tls"
 	"github.com/DVKunion/SeaMoon/pkg/consts"
 	"github.com/DVKunion/SeaMoon/pkg/utils"
-	"github.com/elazarl/goproxy"
+	"github.com/google/martian/v3"
 	log "github.com/sirupsen/logrus"
+	"net"
 	"net/http"
 	"net/url"
+	"strings"
+	"time"
 )
 
-func NewHttpClient(listenAddr string, proxyAddr string, verbose bool) {
-	server := goproxy.NewProxyHttpServer()
-	if err := InitCa(); err != nil {
-		log.Error(consts.CA_ERROR, err)
+func HttpController(ctx context.Context, sg *SigGroup) {
+	c, cancel := context.WithCancel(ctx)
+	defer cancel()
+	for {
+		select {
+		case <-sg.HttpStartChannel:
+			server, err := net.Listen("tcp", Config().Http.ListenAddr)
+			if err != nil {
+				log.Errorf(consts.HTTP_LISTEN_ERROR, err)
+				return
+			}
+			var proxyAddr string
+			for _, p := range Config().ProxyAddr {
+				if strings.HasPrefix(p, "http-proxy") {
+					proxyAddr = "http://" + p
+				}
+			}
+			if proxyAddr == "" {
+				log.Error(consts.PROXY_ADDR_ERROR)
+				break
+			}
+			sg.wg.Add(1)
+			go func() {
+				NewHttpClient(c, server, proxyAddr)
+				sg.wg.Done()
+			}()
+		case <-sg.HttpStopChannel:
+			log.Info(consts.HTTP_LISTEN_STOP)
+			cancel()
+			return
+		}
 	}
-	server.OnRequest().HandleConnect(goproxy.AlwaysMitm)
-	server.Verbose = verbose || log.GetLevel() == log.DebugLevel
-	server.OnRequest().DoFunc(func(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
-		req.Header.Set("SM-Host", utils.GetUrl(req))
-		req.URL, _ = url.Parse(proxyAddr)
-		req.Host = req.URL.Host
-		return req, nil
-	})
+}
 
-	log.Infof(consts.HTTP_LISTEN_START, listenAddr)
+func NewRequestModifier(pAddr string) *RequestModifier {
+	return &RequestModifier{pAddr}
+}
 
-	if err := http.ListenAndServe(listenAddr, server); err != nil {
-		log.Error(consts.HTTP_LISTEN_ERROR, err)
+// RequestModifier impl martian.RequestModifier
+type RequestModifier struct {
+	pAddr string
+}
+
+// ModifyRequest is a RequestModifier logs all request url
+func (r RequestModifier) ModifyRequest(req *http.Request) error {
+	if req.Method == http.MethodConnect {
+		return nil
 	}
+	req.Header.Set("SM-Host", utils.GetUrl(req))
+	req.URL, _ = url.Parse(r.pAddr)
+	req.Host = req.URL.Host
+	return nil
+}
+
+func NewHttpClient(ctx context.Context, l net.Listener, pAddr string) {
+	log.Infof(consts.HTTP_LISTEN_START, l.Addr())
+	p := martian.NewProxy()
+	defer l.Close()
+	tr := &http.Transport{
+		Dial: (&net.Dialer{
+			Timeout: 10 * time.Second,
+		}).Dial,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: time.Second,
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
+	}
+	p.SetRoundTripper(tr)
+	logger := NewRequestModifier(pAddr)
+
+	p.SetRequestModifier(logger)
+
+	go p.Serve(l)
+
+	<-ctx.Done()
 }

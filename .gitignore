@@ -22,3 +22,7 @@
 *.key
 
 dist/
+*.log
+*.toml
+.config
+.secret

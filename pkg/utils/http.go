@@ -3,7 +3,6 @@ package utils
 import (
 	"bytes"
 	"compress/gzip"
-	"errors"
 	"io"
 	"net/http"
 	"strings"
@@ -14,9 +13,6 @@ import (
 func DoHttp(req *http.Request) (*http.Response, error) {
 	client := &http.Client{
 		Timeout: 10 * time.Second,
-	}
-	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-		return errors.New("http redirect request")
 	}
 	resp, err := client.Do(req)
 	if err != nil {

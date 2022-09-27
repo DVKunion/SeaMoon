@@ -50,6 +50,7 @@ func Transport(rw1, rw2 io.ReadWriter) error {
 	if err := <-errc; err != nil && err != io.EOF {
 		return err
 	}
+
 	return nil
 }
 

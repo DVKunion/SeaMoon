@@ -1,12 +1,14 @@
 package server
 
 import (
+	log "github.com/sirupsen/logrus"
 	"net/http"
+	"os"
 	"strings"
 )
 
 type CloudServer interface {
-	Verification(http.ResponseWriter) bool
+	Verification(http.ResponseWriter) (bool, error)
 	Serve(http.ResponseWriter, *http.Request)
 }
 
@@ -29,24 +31,23 @@ var protocol2Server = map[string]func(*Server, *http.Request) CloudServer{
 	"socks5": (*Server).SocksServerTransfer,
 }
 
-func (s *Server) Serve() error {
+func (s *Server) Serve() {
 	// http server
 	serverAddr := strings.Join(append([]string{s.host, s.port}), ":")
 	// http handler
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		transfer := protocol2Server[s.proto]
 
-		server := transfer(s, r)
+		service := transfer(s, r)
 		// do check
-		if server.Verification(w) {
-			// do handle
-			server.Serve(w, r)
+		if ok, err := service.Verification(w); ok {
+			service.Serve(w, r)
+		} else {
+			log.Error(err)
 		}
 	})
-	// websocket upgrader
-
+	// http服务
 	if err := http.ListenAndServe(serverAddr, nil); err != nil {
-		return err
+		os.Exit(0)
 	}
-	return nil
 }

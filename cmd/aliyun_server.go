@@ -8,7 +8,7 @@ import (
 
 func main() {
 	if consts.Version == "dev" {
-		server.NewServer("socks5", "0.0.0.0", "10000").Serve()
+		server.NewServer("http", "0.0.0.0", "8888").Serve()
 	} else {
 		server.NewServer(os.Getenv("serverMod"), "0.0.0.0", "9000").Serve()
 	}

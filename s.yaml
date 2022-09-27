@@ -3,12 +3,12 @@ name: SeaMoonAPP
 access: "default"
 
 vars:
-  region: cn-hangzhou
+  region: cn-hongkong # 部署区域，请看docs/DEPLOY.md
   service:
     name: SeaMoon-Service
     description: "SeaMoon Service"
     internetAccess: true
-    logConfig: auto # 开启日志，注意日志服务是收费的，每月只有500MB的免费额度，如不需要(非debug)可以注释掉。
+#    logConfig: auto # 开启日志，注意日志服务是收费的，每月只有500MB的免费额度，如不需要(非debug)可以注释掉。
 
 services:
   SeaMoon-HTTP-Proxy:
@@ -17,7 +17,7 @@ services:
       pre-deploy:
         - run: go mod tidy
           path: ./
-        - run: GO111MODULE=on GOOS=linux CGO_ENABLED=0 go build  -ldflags "-X github.com/DVKunion/SeaMoon/pkg/consts.Version=beta" -o main cmd/aliyun_server.go
+        - run: GO111MODULE=on GOOS=linux CGO_ENABLED=0 go build  -ldflags "-X github.com/DVKunion/SeaMoon/pkg/consts.Version=1.1.0" -o main cmd/aliyun_server.go
           path: ./
         - run: chmod +x main
           path: ./
@@ -25,8 +25,8 @@ services:
       region: ${vars.region}
       service: ${vars.service}
       function:
-        name: http-proxy
-        description: 'http(s)-proxy'
+        name: http-proxy # 请不要修改函数名，因为配置处需要使用磁名称来判断函数类型。
+        description: 'http-proxy'
         codeUri: './'
         customRuntimeConfig:
           command:
@@ -67,7 +67,7 @@ services:
       pre-deploy:
         - run: go mod tidy
           path: ./
-        - run: GO111MODULE=on GOOS=linux CGO_ENABLED=0 go build  -ldflags "-X github.com/DVKunion/SeaMoon/pkg/consts.Version=1.0.0" -o main cmd/aliyun_server.go
+        - run: GO111MODULE=on GOOS=linux CGO_ENABLED=0 go build  -ldflags "-X github.com/DVKunion/SeaMoon/pkg/consts.Version=1.1.0" -o main cmd/aliyun_server.go
           path: ./
         - run: chmod +x main
           path: ./
@@ -75,8 +75,8 @@ services:
       region: ${vars.region}
       service: ${vars.service}
       function:
-        name: socks-proxy
-        description: 'socks5(s)-proxy'
+        name: socks-proxy # 请不要修改函数名，因为配置处需要使用磁名称来判断函数类型。
+        description: 'socks5-proxy'
         codeUri: './'
         customRuntimeConfig:
           command:
@@ -87,7 +87,7 @@ services:
         instanceType: e1
         memorySize: 512
         runtime: custom
-        timeout: 68400
+        timeout: 120
         internetAccess: true
       triggers:
         - name: httpTrigger
