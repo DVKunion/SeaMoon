@@ -43,7 +43,6 @@ func HttpController(ctx context.Context, sg *SigGroup) {
 		case <-sg.HttpStopChannel:
 			log.Info(consts.HTTP_LISTEN_STOP)
 			cancel()
-			return
 		}
 	}
 }
@@ -71,7 +70,7 @@ func (r RequestModifier) ModifyRequest(req *http.Request) error {
 func NewHttpClient(ctx context.Context, l net.Listener, pAddr string) {
 	log.Infof(consts.HTTP_LISTEN_START, l.Addr())
 	p := martian.NewProxy()
-	defer l.Close()
+	defer p.Close()
 	tr := &http.Transport{
 		Dial: (&net.Dialer{
 			Timeout: 10 * time.Second,
@@ -87,7 +86,11 @@ func NewHttpClient(ctx context.Context, l net.Listener, pAddr string) {
 
 	p.SetRequestModifier(logger)
 
-	go p.Serve(l)
+	go func() {
+		if err := p.Serve(l); err != nil {
+			log.Error("server:", err)
+		}
+	}()
 
 	<-ctx.Done()
 }

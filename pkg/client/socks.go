@@ -37,7 +37,11 @@ func Socks5Controller(ctx context.Context, sg *SigGroup) {
 			var proxyAddr string
 			for _, p := range Config().ProxyAddr {
 				if strings.HasPrefix(p, "socks-proxy") {
-					proxyAddr = "ws://" + p
+					if consts.Version == "dev" {
+						proxyAddr = "ws://127.0.0.1:8888"
+					} else {
+						proxyAddr = "ws://" + p
+					}
 				}
 			}
 			if proxyAddr == "" {
@@ -50,10 +54,8 @@ func Socks5Controller(ctx context.Context, sg *SigGroup) {
 				sg.wg.Done()
 			}()
 		case <-sg.SocksStopChannel:
-			Config().Socks5.Status = "inactive"
 			log.Info(consts.SOCKS5_LISTEN_STOP)
 			cancel()
-			return
 		}
 	}
 }
@@ -77,7 +79,7 @@ func NewSocks5Client(ctx context.Context, server net.Listener, proxyAddr string)
 					log.Errorf(consts.CLIENT_PROTOCOL_UNSUPPORT_ERROR, err)
 					return
 				}
-				Socks5Handler(&bufferedConn{conn, br}, proxyAddr)
+				go Socks5Handler(&bufferedConn{conn, br}, proxyAddr)
 			} else {
 				if closeFlag {
 					// except close

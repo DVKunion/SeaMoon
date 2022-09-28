@@ -76,13 +76,13 @@ func (sg *SigGroup) StopProxy() {
 	Config().Save()
 }
 
-func (sg *SigGroup) Stop() {
-	close(sg.SocksStopChannel)
-	close(sg.HttpStopChannel)
-	close(sg.SocksStartChannel)
-	close(sg.HttpStartChannel)
-	close(sg.WatchChannel)
-}
+//func (sg *SigGroup) Stop() {
+//	close(sg.SocksStopChannel)
+//	close(sg.HttpStopChannel)
+//	close(sg.SocksStartChannel)
+//	close(sg.HttpStartChannel)
+//	close(sg.WatchChannel)
+//}
 
 func (sg *SigGroup) Detection() {
 	if Config().Http.Enabled {

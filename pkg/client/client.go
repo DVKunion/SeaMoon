@@ -27,7 +27,6 @@ func Serve(ctx context.Context, verbose bool, debug bool) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	sg := NewSigGroup()
-	defer sg.Stop()
 	go Controller(sg, verbose, debug)
 	go HttpController(ctx, sg)
 	go Socks5Controller(ctx, sg)
