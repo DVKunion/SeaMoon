@@ -1,0 +1,38 @@
+# Simple workflow for deploying static content to GitHub Pages
+name: Deploy
+
+on:
+  push:
+    branches: [ "main", "feat/docs" ]
+jobs:
+  # Single deploy job since we're just deploying
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [ 14.x ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Build
+        # 安装 Node 之后就可以执行构建脚本
+        run: |
+          npm install yarn -g
+          yarn install && yarn build
+          echo seamoon.dvkunion.cn > ./docs/.vuepress/dist/CNAME
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          # Github 会在 workflow 中自动生成 GIHUBT_TOKEN，用于认证 workflow 的运行
+          github_token: ${{ secrets.GO_RELEASER_GITHUB_TOKEN }}
+          # 静态资源目录设置
+          publish_dir: ./docs/.vuepress/dist
+          # 默认发布到 gh-pages 分支上，可以指定特定的发布分支（不能选拉取代码的分支）
+          publish_branch: gh-pages

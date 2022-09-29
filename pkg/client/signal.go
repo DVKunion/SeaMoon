@@ -34,7 +34,7 @@ func NewSigGroup() *SigGroup {
 		make(chan ControlSignal, 1),
 		make(chan ControlSignal, 1),
 	}
-	signal.Notify(sg.WatchChannel, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGUSR1, syscall.SIGUSR2)
+	signal.Notify(sg.WatchChannel, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	return sg
 }
 
