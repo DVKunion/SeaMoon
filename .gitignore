@@ -26,3 +26,4 @@ dist/
 *.toml
 .config
 .secret
+node_modules
