@@ -25,6 +25,7 @@ func (ws *WebsocketServer) RemoteAddr() net.Addr {
 
 func (ws *WebsocketServer) Close() error {
 	// ws need send close message first to avoid err : close 1006 (abnormal closure): unexpected EOF
+	// todo: panic - concurrent write to websocket connection
 	err := ws.wConn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "close"))
 	if err != nil {
 		return err
