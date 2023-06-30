@@ -14,18 +14,11 @@ builds:
       - 6
       - 7
     ldflags:
-      - -s -w -X github.com/DVKunion/SeaMoon/pkg/consts.Version=1.0.0
-archives:
-  - replacements:
-      darwin: Darwin
-      linux: Linux
-      windows: Windows
-      386: i386
-      amd64: x86_64
+      - -s -w -X github.com/DVKunion/SeaMoon/pkg/consts.Version={{.Version}}
 checksum:
   name_template: 'checksums.txt'
 snapshot:
-  name_template: "{{ incpatch .Version }}-next"
+  name_template: "{{ .Tag  }}-next"
 changelog:
   sort: asc
   filters:
