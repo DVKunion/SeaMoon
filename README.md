@@ -5,10 +5,11 @@
 
 <p align="center">
 
+<img src="https://goreportcard.com/badge/github.com/DVKunion/SeaMoon" />
 <img src="https://img.shields.io/github/stars/DVKunion/SeaMoon.svg"  alt="stars"/>
 <img src="https://img.shields.io/github/downloads/dvkunion/seamoon/total?color=orange" alt="downloads" />
 <img src="https://img.shields.io/github/languages/top/DVKunion/SeaMoon.svg?&color=blueviolet" alt="languages">
-<img src="https://img.shields.io/github/license/DVKunion/SeaMoon.svg?color=brightgreen"  alt="license"/>
+<img src="https://img.shields.io/badge/LICENSE-MIT-777777.svg"  alt="license"/>
 </p>
 
 <p align="center">
