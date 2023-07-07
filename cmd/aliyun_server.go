@@ -1,9 +1,10 @@
 package main
 
 import (
+	"os"
+
 	"github.com/DVKunion/SeaMoon/pkg/consts"
 	"github.com/DVKunion/SeaMoon/pkg/server"
-	"os"
 )
 
 func main() {
