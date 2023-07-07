@@ -3,14 +3,17 @@ package client
 import (
 	"bufio"
 	"context"
-	"github.com/DVKunion/SeaMoon/pkg/consts"
-	"github.com/DVKunion/SeaMoon/pkg/server"
-	"github.com/DVKunion/SeaMoon/pkg/utils"
-	"github.com/gorilla/websocket"
-	log "github.com/sirupsen/logrus"
 	"net"
 	"net/http"
 	"strings"
+	"sync"
+
+	"github.com/gorilla/websocket"
+	log "github.com/sirupsen/logrus"
+
+	"github.com/DVKunion/SeaMoon/pkg/consts"
+	"github.com/DVKunion/SeaMoon/pkg/server"
+	"github.com/DVKunion/SeaMoon/pkg/utils"
 )
 
 type bufferedConn struct {
@@ -70,6 +73,7 @@ func NewSocks5Client(ctx context.Context, server net.Listener, proxyAddr string)
 	}()
 	go func() {
 		for {
+			lock := &sync.Mutex{}
 			conn, err := server.Accept()
 			if err == nil {
 				log.Debugf(consts.SOCKS5_ACCEPT_START, conn.RemoteAddr())
@@ -79,7 +83,7 @@ func NewSocks5Client(ctx context.Context, server net.Listener, proxyAddr string)
 					log.Errorf(consts.CLIENT_PROTOCOL_UNSUPPORT_ERROR, err)
 					return
 				}
-				go Socks5Handler(&bufferedConn{conn, br}, proxyAddr)
+				go Socks5Handler(&bufferedConn{conn, br}, proxyAddr, lock)
 			} else {
 				if closeFlag {
 					// except close
@@ -93,7 +97,7 @@ func NewSocks5Client(ctx context.Context, server net.Listener, proxyAddr string)
 	<-ctx.Done()
 }
 
-func Socks5Handler(conn net.Conn, raddr string) {
+func Socks5Handler(conn net.Conn, raddr string, lock *sync.Mutex) {
 	// select method
 	_, err := utils.ReadMethods(conn)
 	if err != nil {
@@ -119,7 +123,7 @@ func Socks5Handler(conn net.Conn, raddr string) {
 	}
 	switch request.Cmd {
 	case utils.CmdConnect:
-		handleConnect(conn, request, raddr)
+		handleConnect(conn, request, raddr, lock)
 		break
 	case utils.CmdBind:
 		log.Error("not support cmd bind")
@@ -132,7 +136,7 @@ func Socks5Handler(conn net.Conn, raddr string) {
 	}
 }
 
-func handleConnect(conn net.Conn, req *utils.Request, rAddr string) {
+func handleConnect(conn net.Conn, req *utils.Request, rAddr string, lock *sync.Mutex) {
 
 	log.Infof(consts.SOCKS5_CONNECT_SERVER, req.Addr, conn.RemoteAddr())
 
@@ -147,7 +151,7 @@ func handleConnect(conn net.Conn, req *utils.Request, rAddr string) {
 		return
 	}
 
-	newConn := server.NewWebsocketServer(wsConn)
+	newConn := server.NewWebsocketServer(wsConn, lock)
 
 	defer newConn.Close()
 
