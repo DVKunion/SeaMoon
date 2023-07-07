@@ -1,21 +1,26 @@
 package server
 
 import (
-	"github.com/gorilla/websocket"
 	"io"
 	"net"
+	"sync"
+
+	"github.com/gorilla/websocket"
 )
 
 type WebsocketServer struct {
 	net.Conn
-	wConn       *websocket.Conn
+	wConn     *websocket.Conn
+	writeLock *sync.Mutex
+
 	messageType int
 }
 
-func NewWebsocketServer(wConn *websocket.Conn) net.Conn {
+func NewWebsocketServer(wConn *websocket.Conn, lock *sync.Mutex) net.Conn {
 	return &WebsocketServer{
 		wConn:       wConn,
 		messageType: websocket.BinaryMessage,
+		writeLock:   lock,
 	}
 }
 
@@ -25,8 +30,7 @@ func (ws *WebsocketServer) RemoteAddr() net.Addr {
 
 func (ws *WebsocketServer) Close() error {
 	// ws need send close message first to avoid err : close 1006 (abnormal closure): unexpected EOF
-	// todo: panic - concurrent write to websocket connection
-	err := ws.wConn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "close"))
+	err := ws.write(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "close"))
 	if err != nil {
 		return err
 	}
@@ -34,11 +38,17 @@ func (ws *WebsocketServer) Close() error {
 }
 
 func (ws *WebsocketServer) Write(b []byte) (n int, err error) {
-	err = ws.wConn.WriteMessage(ws.messageType, b)
+	err = ws.write(ws.messageType, b)
 	if err != nil {
 		return 0, err
 	}
 	return len(b), nil
+}
+
+func (ws *WebsocketServer) write(messageType int, data []byte) error {
+	ws.writeLock.TryLock()
+	defer ws.writeLock.Unlock()
+	return ws.wConn.WriteMessage(messageType, data)
 }
 
 func (ws *WebsocketServer) Read(b []byte) (n int, err error) {

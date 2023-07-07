@@ -27,3 +27,5 @@ dist/
 .config
 .secret
 node_modules
+bootstrap
+.s/

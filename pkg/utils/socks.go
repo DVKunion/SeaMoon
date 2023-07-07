@@ -12,6 +12,8 @@ import (
 	"net"
 	"strconv"
 	"sync"
+
+	"github.com/gorilla/websocket"
 )
 
 // buffer pools
@@ -23,31 +25,25 @@ var (
 	} // small buff pool
 	LPool = sync.Pool{
 		New: func() interface{} {
-			return make([]byte, 64*1024+262)
+			return make([]byte, 32768)
 		},
 	} // large buff pool for udp
 )
 
 // Transport rw1 and rw2
 func Transport(rw1, rw2 io.ReadWriter) error {
-	errc := make(chan error, 1)
+	errC := make(chan error, 1)
 	go func() {
-		b := LPool.Get().([]byte)
-		defer LPool.Put(b)
-
-		_, err := io.CopyBuffer(rw1, rw2, b)
-		errc <- err
+		_, err := io.CopyBuffer(rw1, rw2, nil)
+		errC <- err
 	}()
 
 	go func() {
-		b := LPool.Get().([]byte)
-		defer LPool.Put(b)
-
-		_, err := io.CopyBuffer(rw2, rw1, b)
-		errc <- err
+		_, err := io.CopyBuffer(rw2, rw1, nil)
+		errC <- err
 	}()
 
-	if err := <-errc; err != nil && err != io.EOF {
+	if err := <-errC; err != nil && err != io.EOF && !websocket.IsUnexpectedCloseError(err) {
 		return err
 	}
 

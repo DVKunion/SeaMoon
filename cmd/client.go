@@ -1,11 +1,13 @@
 package main
 
 import (
-	"github.com/DVKunion/SeaMoon/pkg/client"
-	"github.com/DVKunion/SeaMoon/pkg/consts"
+	"os"
+
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"os"
+
+	"github.com/DVKunion/SeaMoon/pkg/client"
+	"github.com/DVKunion/SeaMoon/pkg/consts"
 )
 
 var (

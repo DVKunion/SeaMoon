@@ -2,15 +2,18 @@ package server
 
 import (
 	"errors"
-	"github.com/DVKunion/SeaMoon/pkg/consts"
-	"github.com/DVKunion/SeaMoon/pkg/utils"
-	"github.com/gorilla/websocket"
-	log "github.com/sirupsen/logrus"
 	"net"
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
+
+	"github.com/gorilla/websocket"
+	log "github.com/sirupsen/logrus"
+
+	"github.com/DVKunion/SeaMoon/pkg/consts"
+	"github.com/DVKunion/SeaMoon/pkg/utils"
 )
 
 type SocksServer struct {
@@ -32,16 +35,21 @@ func (s *SocksServer) Verification(w http.ResponseWriter) (bool, error) {
 }
 
 func (s *SocksServer) Serve(w http.ResponseWriter, r *http.Request) {
+	lock := &sync.Mutex{}
 	// socks upgrade websocket
-	var upGrader = websocket.Upgrader{
+	upGrader := websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
 			return true
 		},
 	}
 
-	var conn, _ = upGrader.Upgrade(w, r, nil)
+	conn, err := upGrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Errorf("websocket upgrade error: %s", err)
+		return
+	}
 
-	wsConn := NewWebsocketServer(conn)
+	wsConn := NewWebsocketServer(conn, lock)
 	defer wsConn.Close()
 
 	switch s.request.Cmd {
@@ -52,7 +60,7 @@ func (s *SocksServer) Serve(w http.ResponseWriter, r *http.Request) {
 	case utils.CmdUDPOverTCP:
 		s.handleUDPOverTCP()
 	default:
-		conn.WriteMessage(websocket.BinaryMessage, []byte("UnSupport Command"))
+		log.Errorf("UnSupport Command")
 	}
 }
 

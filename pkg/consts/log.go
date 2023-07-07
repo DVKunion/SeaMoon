@@ -43,7 +43,7 @@ const (
 	SOCKS5_LISTEN_START    string = "[Socks5] Client Start Listen At: %s"
 	SOCKS5_LISTEN_STOP     string = "[Socks5] Client Stop Listen"
 	SOCKS5_ACCEPT_START    string = "[Socks5] Client Accept Conn From: %s"
-	SOCKS5_CONNECT_SERVER  string = "[Socks5] Server Connect %s For %s"
+	SOCKS5_CONNECT_SERVER  string = "[Socks5] Server Connect %s From %s"
 	SOCKS5_CONNECT_ESTAB   string = "[Socks5] Connect Tunnel Established %s <-> %s"
 	SOCKS5_CONNECT_DIS     string = "[Socks5] Connect Tunnel Disconnected %s >-< %s"
 	SOCKS5_BIND_SERVER     string = "[Socks5] Bind For %s"
