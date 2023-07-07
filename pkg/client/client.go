@@ -3,15 +3,19 @@ package client
 import (
 	"bufio"
 	"context"
-	"github.com/DVKunion/SeaMoon/pkg/consts"
-	"github.com/DVKunion/SeaMoon/static"
-	"github.com/gin-gonic/gin"
-	log "github.com/sirupsen/logrus"
 	"html/template"
 	"io"
 	"net"
 	"net/http"
 	"os"
+
+	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
+
+	"github.com/DVKunion/SeaMoon/pkg/consts"
+	"github.com/DVKunion/SeaMoon/static"
+
+	_ "net/http/pprof"
 )
 
 type Client struct {
@@ -68,6 +72,11 @@ func Controller(sg *SigGroup, verbose bool, debug bool) {
 	server.GET("/", func(ctx *gin.Context) {
 		ctx.HTML(200, "index.html", Config())
 	})
+
+	// pprof
+	if debug {
+		server.GET("/debug/pprof/*any", gin.WrapH(http.DefaultServeMux))
+	}
 
 	// controller set
 	server.POST("/", func(ctx *gin.Context) {
