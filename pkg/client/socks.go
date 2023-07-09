@@ -81,9 +81,9 @@ func NewSocks5Client(ctx context.Context, server net.Listener, proxyAddr string)
 				b, err := br.Peek(1)
 				if err != nil || b[0] != utils.Version {
 					log.Errorf(consts.CLIENT_PROTOCOL_UNSUPPORT_ERROR, err)
-					return
+				} else {
+					go Socks5Handler(&bufferedConn{conn, br}, proxyAddr, lock)
 				}
-				go Socks5Handler(&bufferedConn{conn, br}, proxyAddr, lock)
 			} else {
 				if closeFlag {
 					// except close
