@@ -2,10 +2,12 @@ package client
 
 import (
 	"bytes"
-	"github.com/BurntSushi/toml"
-	"github.com/DVKunion/SeaMoon/pkg/consts"
-	log "github.com/sirupsen/logrus"
 	"os"
+
+	"github.com/BurntSushi/toml"
+	log "github.com/sirupsen/logrus"
+
+	"github.com/DVKunion/SeaMoon/pkg/consts"
 )
 
 type clientConfig struct {
@@ -43,7 +45,7 @@ func defaultConfig() *clientConfig {
 		ProxyAddr: []string{""},
 		Control: controlConfig{
 			// is dangerous to open Control page for everyone, do not set value like: ":7777" / "0.0.0.0:7777"
-			ConfigAddr: "127.0.0.1:7777",
+			ConfigAddr: ":7777",
 			LogPath:    "web.log",
 		},
 		Http: proxyConfig{

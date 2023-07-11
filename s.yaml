@@ -23,7 +23,7 @@ actions:
 
 services:
   SeaMoon-FC-HTTP-Proxy:
-    component: devscomp/fc
+    component: fc
     props:
       region: ${vars.region}
       service: ${vars.service}
@@ -65,7 +65,7 @@ services:
                 - DELETE
                 - OPTIONS
   SeaMoon-FC-Socks-Proxy:
-    component: devscomp/fc
+    component: fc
     props:
       region: ${vars.region}
       service: ${vars.service}
