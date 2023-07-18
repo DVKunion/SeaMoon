@@ -36,11 +36,11 @@ services:
             - ./main
         environmentVariables: { serverMod: "http" }
         handler: main
-        instanceConcurrency: 1
+        instanceConcurrency: 10
         instanceType: e1
         memorySize: 512
         runtime: custom
-        timeout: 600
+        timeout: 300
         internetAccess: true
       triggers:
         - name: httpTrigger
@@ -78,11 +78,11 @@ services:
             - ./main
         environmentVariables: { serverMod: "socks5" }
         handler: main
-        instanceConcurrency: 1
+        instanceConcurrency: 10
         instanceType: e1
         memorySize: 512
         runtime: custom
-        timeout: 600
+        timeout: 300
         internetAccess: true
       triggers:
         - name: httpTrigger
