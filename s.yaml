@@ -38,7 +38,9 @@ services:
         handler: main
         instanceConcurrency: 10
         instanceType: e1
-        memorySize: 512
+        cpu: 0.05
+        diskSize: 512
+        memorySize: 128
         runtime: custom
         timeout: 300
         internetAccess: true
@@ -80,7 +82,9 @@ services:
         handler: main
         instanceConcurrency: 10
         instanceType: e1
-        memorySize: 512
+        cpu: 0.05
+        diskSize: 512
+        memorySize: 128
         runtime: custom
         timeout: 300
         internetAccess: true
