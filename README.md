@@ -4,7 +4,6 @@
 <h1 align="center">Sea Moon</h1>
 
 <p align="center">
-
 <img src="https://goreportcard.com/badge/github.com/DVKunion/SeaMoon" />
 <img src="https://img.shields.io/github/stars/DVKunion/SeaMoon.svg"  alt="stars"/>
 <img src="https://img.shields.io/github/downloads/dvkunion/seamoon/total?color=orange" alt="downloads" />
@@ -37,6 +36,8 @@
 ## 🕹 快速开始
 
 [快速开始](https://seamoon.dvkunion.cn/guide/start)
+
+[🔥新增Sealos部署, 价格更低更实惠！](https://seamoon.dvkunion.cn/guide/deploy/sealos)
 
 ## 💻 技术文档
 
