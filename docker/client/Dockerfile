@@ -1,7 +1,7 @@
 # build stage
 FROM golang:alpine AS build
 ARG VERSION
-COPY . /src
+COPY ../.. /src
 WORKDIR /src
 ENV CGO_ENABLED 0
 ENV VERSION=${VERSION}
