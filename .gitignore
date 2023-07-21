@@ -29,3 +29,4 @@ dist/
 node_modules
 bootstrap
 .s/
+.seamoom

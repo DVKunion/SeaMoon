@@ -30,7 +30,7 @@ type proxyConfig struct {
 
 var (
 	singleton  *clientConfig
-	configPath = ".config"
+	configPath = ".seamoom"
 )
 
 func Config() *clientConfig {
@@ -62,6 +62,7 @@ func (c *clientConfig) Save() error {
 	if err := toml.NewEncoder(&buf).Encode(c); err != nil {
 		return err
 	}
+
 	fd, err := os.OpenFile(configPath, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
