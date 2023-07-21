@@ -3,15 +3,17 @@ package client
 import (
 	"context"
 	"crypto/tls"
-	"github.com/DVKunion/SeaMoon/pkg/consts"
-	"github.com/DVKunion/SeaMoon/pkg/utils"
-	"github.com/google/martian/v3"
-	log "github.com/sirupsen/logrus"
 	"net"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/google/martian/v3"
+	log "github.com/sirupsen/logrus"
+
+	"github.com/DVKunion/SeaMoon/pkg/consts"
+	"github.com/DVKunion/SeaMoon/pkg/utils"
 )
 
 func HttpController(ctx context.Context, sg *SigGroup) {
@@ -27,7 +29,9 @@ func HttpController(ctx context.Context, sg *SigGroup) {
 			}
 			var proxyAddr string
 			for _, p := range Config().ProxyAddr {
-				if strings.HasPrefix(p, "http-proxy") {
+				if strings.HasPrefix(p, "http://") || strings.HasPrefix(p, "https://") {
+					proxyAddr = p
+				} else if strings.HasPrefix(p, "http-proxy") {
 					proxyAddr = "http://" + p
 				}
 			}
