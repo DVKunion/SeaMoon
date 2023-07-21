@@ -28,7 +28,7 @@ module.exports = {
                 text: '使用手册', link: '/guide/introduce/'
             },
             {
-                text: '技术文档', link: '/tech/feature/'
+                text: '技术博客', link: '/tech/'
             }
         ],
         archive: false,
