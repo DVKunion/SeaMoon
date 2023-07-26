@@ -11,6 +11,10 @@ func main() {
 	if consts.Version == "dev" {
 		server.NewServer("socks5", "0.0.0.0", "8888").Serve()
 	} else {
-		server.NewServer(os.Getenv("serverMod"), "0.0.0.0", "9000").Serve()
+		port := "9000"
+		if envPort := os.Getenv("serverPort"); envPort != "" {
+			port = envPort
+		}
+		server.NewServer(os.Getenv("serverMod"), "0.0.0.0", port).Serve()
 	}
 }
