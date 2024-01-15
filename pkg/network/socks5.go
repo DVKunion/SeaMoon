@@ -1,59 +1,26 @@
-package utils
+package network
 
 // This file is modified version from https://github.com/ginuerzh/gosocks5/blob/master/socks5.go
 
 import (
 	"bytes"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
-	"net"
-	"strconv"
-	"sync"
-
-	"github.com/gorilla/websocket"
 )
 
-// buffer pools
-var (
-	SPool = sync.Pool{
-		New: func() interface{} {
-			return make([]byte, 576)
-		},
-	} // small buff pool
-	LPool = sync.Pool{
-		New: func() interface{} {
-			return make([]byte, 32768)
-		},
-	} // large buff pool for udp
-)
-
-// Transport rw1 and rw2
-func Transport(rw1, rw2 io.ReadWriter) error {
-	errC := make(chan error, 1)
-	go func() {
-		_, err := io.CopyBuffer(rw1, rw2, nil)
-		errC <- err
-	}()
-
-	go func() {
-		_, err := io.CopyBuffer(rw2, rw1, nil)
-		errC <- err
-	}()
-
-	if err := <-errC; err != nil && err != io.EOF && !websocket.IsUnexpectedCloseError(err) {
-		return err
-	}
-
-	return nil
-}
-
-// Version = 5
+// Address types
 const (
-	Version     = 5
-	UserPassVer = 1
+	AddrIPv4   uint8 = 1
+	AddrDomain       = 3
+	AddrIPv6         = 4
+)
+
+// SOCKS5 Version = 5
+const (
+	SOCKS5Version     = 5
+	SOCKS5UserPassVer = 1
 )
 
 // Methods
@@ -64,64 +31,52 @@ const (
 	MethodNoAcceptable uint8 = 0xFF
 )
 
-// Commands
+// SOCKS5 Commands
 const (
-	CmdConnect uint8 = iota + 1
-	CmdBind
-	CmdUDP
-	CmdUDPOverTCP
+	SOCKS5CmdConnect uint8 = iota + 1
+	SOCKS5CmdBind
+	SOCKS5CmdUDP
+	SOCKS5CmdUDPOverTCP
 )
 
-// Address types
+// SOCKS5 Response codes
 const (
-	AddrIPv4   uint8 = 1
-	AddrDomain       = 3
-	AddrIPv6         = 4
+	SOCKS5RespSucceeded uint8 = iota
+	SOCKS5RespFailure
+	SOCKS5RespAllowed
+	SOCKS5RespNetUnreachable
+	SOCKS5RespHostUnreachable
+	SOCKS5RespConnRefused
+	SOCKS5RespTTLExpired
+	SOCKS5RespCmdUnsupported
+	SOCKS5RespAddrUnsupported
 )
 
-// Response codes
 const (
-	Succeeded uint8 = iota
-	Failure
-	Allowed
-	NetUnreachable
-	HostUnreachable
-	ConnRefused
-	TTLExpired
-	CmdUnsupported
-	AddrUnsupported
-)
-
-// Errors
-var (
-	ErrBadVersion  = errors.New("Bad version")
-	ErrBadFormat   = errors.New("Bad format")
-	ErrBadAddrType = errors.New("Bad address type")
-	ErrShortBuffer = errors.New("Short buffer")
-	ErrBadMethod   = errors.New("Bad method")
-	ErrAuthFailure = errors.New("Auth failure")
+	smallSize = 576
+	largeSize = 32 * 1024
 )
 
 /*
 ReadMethods returns methods
 Method selection
- +----+----------+----------+
- |VER | NMETHODS | METHODS  |
- +----+----------+----------+
- | 1  |    1     | 1 to 255 |
- +----+----------+----------+
+
+	+----+----------+----------+
+	|VER | NMETHODS | METHODS  |
+	+----+----------+----------+
+	| 1  |    1     | 1 to 255 |
+	+----+----------+----------+
 */
 func ReadMethods(r io.Reader) ([]uint8, error) {
-	//b := make([]byte, 257)
-	b := SPool.Get().([]byte)
-	defer SPool.Put(b)
+	b := GetBuffer(smallSize)
+	defer PutBuffer(b)
 
 	n, err := io.ReadAtLeast(r, b, 2)
 	if err != nil {
 		return nil, err
 	}
 
-	if b[0] != Version {
+	if b[0] != SOCKS5Version {
 		return nil, ErrBadVersion
 	}
 
@@ -144,14 +99,14 @@ func ReadMethods(r io.Reader) ([]uint8, error) {
 
 // WriteMethod send the selected method to the client
 func WriteMethod(method uint8, w io.Writer) error {
-	_, err := w.Write([]byte{Version, method})
+	_, err := w.Write([]byte{SOCKS5Version, method})
 	return err
 }
 
 // WriteMethods send method select request to the server
 func WriteMethods(methods []uint8, w io.Writer) error {
 	b := make([]byte, 2+len(methods))
-	b[0] = Version
+	b[0] = SOCKS5Version
 	b[1] = uint8(len(methods))
 	copy(b[2:], methods)
 
@@ -160,12 +115,13 @@ func WriteMethods(methods []uint8, w io.Writer) error {
 }
 
 /*
- Username/Password authentication request
-  +----+------+----------+------+----------+
-  |VER | ULEN |  UNAME   | PLEN |  PASSWD  |
-  +----+------+----------+------+----------+
-  | 1  |  1   | 1 to 255 |  1   | 1 to 255 |
-  +----+------+----------+------+----------+
+UserPassRequest Username/Password authentication request
+
+	+----+------+----------+------+----------+
+	|VER | ULEN |  UNAME   | PLEN |  PASSWD  |
+	+----+------+----------+------+----------+
+	| 1  |  1   | 1 to 255 |  1   | 1 to 255 |
+	+----+------+----------+------+----------+
 */
 type UserPassRequest struct {
 	Version  byte
@@ -182,16 +138,15 @@ func NewUserPassRequest(ver byte, u, p string) *UserPassRequest {
 }
 
 func ReadUserPassRequest(r io.Reader) (*UserPassRequest, error) {
-	// b := make([]byte, 513)
-	b := SPool.Get().([]byte)
-	defer SPool.Put(b)
+	b := GetBuffer(smallSize)
+	defer PutBuffer(b)
 
 	n, err := io.ReadAtLeast(r, b, 2)
 	if err != nil {
 		return nil, err
 	}
 
-	if b[0] != UserPassVer {
+	if b[0] != SOCKS5UserPassVer {
 		return nil, ErrBadVersion
 	}
 
@@ -223,8 +178,8 @@ func ReadUserPassRequest(r io.Reader) (*UserPassRequest, error) {
 
 func (req *UserPassRequest) Write(w io.Writer) error {
 	// b := make([]byte, 513)
-	b := SPool.Get().([]byte)
-	defer SPool.Put(b)
+	b := GetBuffer(smallSize)
+	defer PutBuffer(b)
 
 	b[0] = req.Version
 	ulen := len(req.Username)
@@ -248,12 +203,13 @@ func (req *UserPassRequest) String() string {
 }
 
 /*
- Username/Password authentication response
-  +----+--------+
-  |VER | STATUS |
-  +----+--------+
-  | 1  |   1    |
-  +----+--------+
+UserPassResponse Username/Password authentication response
+
+	+----+--------+
+	|VER | STATUS |
+	+----+--------+
+	| 1  |   1    |
+	+----+--------+
 */
 type UserPassResponse struct {
 	Version byte
@@ -269,14 +225,14 @@ func NewUserPassResponse(ver, status byte) *UserPassResponse {
 
 func ReadUserPassResponse(r io.Reader) (*UserPassResponse, error) {
 	// b := make([]byte, 2)
-	b := SPool.Get().([]byte)
-	defer SPool.Put(b)
+	b := GetBuffer(smallSize)
+	defer PutBuffer(b)
 
 	if _, err := io.ReadFull(r, b[:2]); err != nil {
 		return nil, err
 	}
 
-	if b[0] != UserPassVer {
+	if b[0] != SOCKS5UserPassVer {
 		return nil, ErrBadVersion
 	}
 
@@ -299,186 +255,44 @@ func (res *UserPassResponse) String() string {
 }
 
 /*
-Addr has following struct
- +------+----------+----------+
- | ATYP |   ADDR   |   PORT   |
- +------+----------+----------+
- |  1   | Variable |    2     |
- +------+----------+----------+
-*/
-type Addr struct {
-	Type uint8
-	Host string
-	Port uint16
-}
-
-// NewAddr creates an address object
-func NewAddr(sa string) (addr *Addr, err error) {
-	host, sport, err := net.SplitHostPort(sa)
-	if err != nil {
-		return nil, err
-	}
-	port, err := strconv.Atoi(sport)
-	if err != nil {
-		return nil, err
-	}
-
-	addr = NewAddrFromPair(host, port)
-	return
-}
-
-// NewAddrFromPair creates an address object from host and port pair
-func NewAddrFromPair(host string, port int) (addr *Addr) {
-	addr = &Addr{
-		Type: AddrDomain,
-		Host: host,
-		Port: uint16(port),
-	}
-
-	if ip := net.ParseIP(host); ip != nil {
-		if ip.To4() != nil {
-			addr.Type = AddrIPv4
-		} else {
-			addr.Type = AddrIPv6
-		}
-	}
-
-	return
-}
-
-// NewAddrFromAddr creates an address object
-func NewAddrFromAddr(ln, conn net.Addr) (addr *Addr, err error) {
-	_, sport, err := net.SplitHostPort(ln.String())
-	if err != nil {
-		return nil, err
-	}
-	host, _, err := net.SplitHostPort(conn.String())
-	if err != nil {
-		return nil, err
-	}
-	port, err := strconv.Atoi(sport)
-	if err != nil {
-		return nil, err
-	}
-
-	addr = NewAddrFromPair(host, port)
-	return
-}
-
-// Decode an address from the stream
-func (addr *Addr) Decode(b []byte) error {
-	addr.Type = b[0]
-	pos := 1
-	switch addr.Type {
-	case AddrIPv4:
-		addr.Host = net.IP(b[pos : pos+net.IPv4len]).String()
-		pos += net.IPv4len
-	case AddrIPv6:
-		addr.Host = net.IP(b[pos : pos+net.IPv6len]).String()
-		pos += net.IPv6len
-	case AddrDomain:
-		addrlen := int(b[pos])
-		pos++
-		addr.Host = string(b[pos : pos+addrlen])
-		pos += addrlen
-	default:
-		return ErrBadAddrType
-	}
-
-	addr.Port = binary.BigEndian.Uint16(b[pos:])
-
-	return nil
-}
-
-// Encode an address to the stream
-func (addr *Addr) Encode(b []byte) (int, error) {
-	b[0] = addr.Type
-	pos := 1
-	switch addr.Type {
-	case AddrIPv4:
-		ip4 := net.ParseIP(addr.Host).To4()
-		if ip4 == nil {
-			ip4 = net.IPv4zero.To4()
-		}
-		pos += copy(b[pos:], ip4)
-	case AddrDomain:
-		b[pos] = byte(len(addr.Host))
-		pos++
-		pos += copy(b[pos:], []byte(addr.Host))
-	case AddrIPv6:
-		ip16 := net.ParseIP(addr.Host).To16()
-		if ip16 == nil {
-			ip16 = net.IPv6zero.To16()
-		}
-		pos += copy(b[pos:], ip16)
-	default:
-		b[0] = AddrIPv4
-		copy(b[pos:pos+4], net.IPv4zero.To4())
-		pos += 4
-	}
-	binary.BigEndian.PutUint16(b[pos:], addr.Port)
-	pos += 2
-
-	return pos, nil
-}
-
-// Length of the address
-func (addr *Addr) Length() (n int) {
-	switch addr.Type {
-	case AddrIPv4:
-		n = 10
-	case AddrIPv6:
-		n = 22
-	case AddrDomain:
-		n = 7 + len(addr.Host)
-	default:
-		n = 10
-	}
-	return
-}
-
-func (addr *Addr) String() string {
-	return net.JoinHostPort(addr.Host, strconv.Itoa(int(addr.Port)))
-}
-
-/*
-Request represent a socks5 request
+SOCKS5Request represent a socks5 request
 The SOCKSv5 request
- +----+-----+-------+------+----------+----------+
- |VER | CMD |  RSV  | ATYP | DST.ADDR | DST.PORT |
- +----+-----+-------+------+----------+----------+
- | 1  |  1  | X'00' |  1   | Variable |    2     |
- +----+-----+-------+------+----------+----------+
+
+	+----+-----+-------+------+----------+----------+
+	|VER | CMD |  RSV  | ATYP | DST.ADDR | DST.PORT |
+	+----+-----+-------+------+----------+----------+
+	| 1  |  1  | X'00' |  1   | Variable |    2     |
+	+----+-----+-------+------+----------+----------+
 */
-type Request struct {
+type SOCKS5Request struct {
 	Cmd  uint8
 	Addr *Addr
 }
 
-// NewRequest creates an request object
-func NewRequest(cmd uint8, addr *Addr) *Request {
-	return &Request{
+// NewSOCKS5Request creates an request object
+func NewSOCKS5Request(cmd uint8, addr *Addr) *SOCKS5Request {
+	return &SOCKS5Request{
 		Cmd:  cmd,
 		Addr: addr,
 	}
 }
 
-// ReadRequest reads request from the stream
-func ReadRequest(r io.Reader) (*Request, error) {
+// ReadSOCKS5Request reads request from the stream
+func ReadSOCKS5Request(r io.Reader) (*SOCKS5Request, error) {
 	// b := make([]byte, 262)
-	b := SPool.Get().([]byte)
-	defer SPool.Put(b)
+	b := GetBuffer(smallSize)
+	defer PutBuffer(b)
 
 	n, err := io.ReadAtLeast(r, b, 5)
 	if err != nil {
 		return nil, err
 	}
 
-	if b[0] != Version {
+	if b[0] != SOCKS5Version {
 		return nil, ErrBadVersion
 	}
 
-	request := &Request{
+	request := &SOCKS5Request{
 		Cmd: b[1],
 	}
 
@@ -509,12 +323,12 @@ func ReadRequest(r io.Reader) (*Request, error) {
 	return request, nil
 }
 
-func (r *Request) Write(w io.Writer) (err error) {
+func (r *SOCKS5Request) Write(w io.Writer) (err error) {
 	//b := make([]byte, 262)
-	b := SPool.Get().([]byte)
-	defer SPool.Put(b)
+	b := GetBuffer(smallSize)
+	defer PutBuffer(b)
 
-	b[0] = Version
+	b[0] = SOCKS5Version
 	b[1] = r.Cmd
 	b[2] = 0        //rsv
 	b[3] = AddrIPv4 // default
@@ -530,7 +344,7 @@ func (r *Request) Write(w io.Writer) (err error) {
 	return
 }
 
-func (r *Request) String() string {
+func (r *SOCKS5Request) String() string {
 	addr := r.Addr
 	if addr == nil {
 		addr = &Addr{}
@@ -541,11 +355,12 @@ func (r *Request) String() string {
 
 /*
 Reply is a SOCKSv5 reply
- +----+-----+-------+------+----------+----------+
- |VER | REP |  RSV  | ATYP | BND.ADDR | BND.PORT |
- +----+-----+-------+------+----------+----------+
- | 1  |  1  | X'00' |  1   | Variable |    2     |
- +----+-----+-------+------+----------+----------+
+
+	+----+-----+-------+------+----------+----------+
+	|VER | REP |  RSV  | ATYP | BND.ADDR | BND.PORT |
+	+----+-----+-------+------+----------+----------+
+	| 1  |  1  | X'00' |  1   | Variable |    2     |
+	+----+-----+-------+------+----------+----------+
 */
 type Reply struct {
 	Rep  uint8
@@ -563,15 +378,15 @@ func NewReply(rep uint8, addr *Addr) *Reply {
 // ReadReply reads a reply from the stream
 func ReadReply(r io.Reader) (*Reply, error) {
 	// b := make([]byte, 262)
-	b := SPool.Get().([]byte)
-	defer SPool.Put(b)
+	b := GetBuffer(smallSize)
+	defer PutBuffer(b)
 
 	n, err := io.ReadAtLeast(r, b, 5)
 	if err != nil {
 		return nil, err
 	}
 
-	if b[0] != Version {
+	if b[0] != SOCKS5Version {
 		return nil, ErrBadVersion
 	}
 
@@ -609,10 +424,10 @@ func ReadReply(r io.Reader) (*Reply, error) {
 
 func (r *Reply) Write(w io.Writer) (err error) {
 	// b := make([]byte, 262)
-	b := SPool.Get().([]byte)
-	defer SPool.Put(b)
+	b := GetBuffer(smallSize)
+	defer PutBuffer(b)
 
-	b[0] = Version
+	b[0] = SOCKS5Version
 	b[1] = r.Rep
 	b[2] = 0        //rsv
 	b[3] = AddrIPv4 // default
@@ -639,11 +454,12 @@ func (r *Reply) String() string {
 
 /*
 UDPHeader is the header of an UDP request
- +----+------+------+----------+----------+----------+
- |RSV | FRAG | ATYP | DST.ADDR | DST.PORT |   DATA   |
- +----+------+------+----------+----------+----------+
- | 2  |  1   |  1   | Variable |    2     | Variable |
- +----+------+------+----------+----------+----------+
+
+	+----+------+------+----------+----------+----------+
+	|RSV | FRAG | ATYP | DST.ADDR | DST.PORT |   DATA   |
+	+----+------+------+----------+----------+----------+
+	| 2  |  1   |  1   | Variable |    2     | Variable |
+	+----+------+------+----------+----------+----------+
 */
 type UDPHeader struct {
 	Rsv  uint16
@@ -661,8 +477,8 @@ func NewUDPHeader(rsv uint16, frag uint8, addr *Addr) *UDPHeader {
 }
 
 func (h *UDPHeader) Write(w io.Writer) error {
-	b := SPool.Get().([]byte)
-	defer SPool.Put(b)
+	b := GetBuffer(smallSize)
+	defer PutBuffer(b)
 
 	binary.BigEndian.PutUint16(b[:2], h.Rsv)
 	b[2] = h.Frag
@@ -698,8 +514,8 @@ func NewUDPDatagram(header *UDPHeader, data []byte) *UDPDatagram {
 
 // ReadUDPDatagram reads an UDPDatagram from the stream
 func ReadUDPDatagram(r io.Reader) (*UDPDatagram, error) {
-	b := LPool.Get().([]byte)
-	defer LPool.Put(b)
+	b := GetBuffer(largeSize)
+	defer PutBuffer(b)
 
 	// when r is a streaming (such as TCP connection), we may read more than the required data,
 	// but we don't know how to handle it. So we use io.ReadFull to instead of io.ReadAtLeast

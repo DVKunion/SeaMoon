@@ -15,7 +15,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.18
+          go-version: 1.21
       - name: Build
-        run: go build --ldflags "-s -w -X github.com/DVKunion/SeaMoon/pkg/consts.Version=${{github.ref_name}}" cmd/client.go
+        run: go build --ldflags "-s -w -X github.com/DVKunion/SeaMoon/pkg/consts.Version=${{github.ref_name}}" main.go
 

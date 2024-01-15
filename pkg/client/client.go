@@ -5,12 +5,12 @@ import (
 	"context"
 	"html/template"
 	"io"
+	"log/slog"
 	"net"
 	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/DVKunion/SeaMoon/pkg/consts"
 	"github.com/DVKunion/SeaMoon/static"
@@ -45,7 +45,7 @@ func Serve(ctx context.Context, verbose bool, debug bool) {
 }
 
 func Controller(sg *SigGroup, verbose bool, debug bool) {
-	log.Infof(consts.CONTROLLER_START, Config().Control.ConfigAddr)
+	slog.Info(consts.CONTROLLER_START, "addr", Config().Control.ConfigAddr)
 
 	if consts.Version != "dev" || !debug {
 		gin.SetMode(gin.ReleaseMode)
@@ -92,6 +92,6 @@ func Controller(sg *SigGroup, verbose bool, debug bool) {
 	})
 
 	if err := server.Run(Config().Control.ConfigAddr); err != http.ErrServerClosed {
-		log.Error(err)
+		slog.Error("client running error", "err", err)
 	}
 }
