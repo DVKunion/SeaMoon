@@ -1,11 +1,12 @@
-package utils
+package network
 
 import (
 	"crypto/subtle"
 	"encoding/base64"
-	log "github.com/sirupsen/logrus"
-	"github.com/tg123/go-htpasswd"
+	"log/slog"
 	"strings"
+
+	"github.com/tg123/go-htpasswd"
 )
 
 // StrEQ returns whether s1 and s2 are equal
@@ -34,11 +35,11 @@ func VerifyByMap(users map[string]string) func(string, string) bool {
 	}
 }
 
-// VerifyByHtpasswd returns an verifier that verify by a htpasswd file
+// VerifyByHtpasswd returns a verifier that verify by a htpasswd file
 func VerifyByHtpasswd(users string) func(string, string) bool {
 	f, err := htpasswd.New(users, htpasswd.DefaultSystems, nil)
 	if err != nil {
-		log.Fatalf("Load htpasswd file failed: %s", err)
+		slog.Error("Load htpasswd file failed", "err", err)
 	}
 	return func(username, password string) bool {
 		return f.Match(username, password)

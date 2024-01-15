@@ -3,17 +3,17 @@ package client
 import (
 	"bufio"
 	"context"
+	"log/slog"
 	"net"
 	"net/http"
 	"strings"
 	"sync"
 
 	"github.com/gorilla/websocket"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/DVKunion/SeaMoon/pkg/consts"
-	"github.com/DVKunion/SeaMoon/pkg/server"
-	"github.com/DVKunion/SeaMoon/pkg/utils"
+	"github.com/DVKunion/SeaMoon/pkg/network"
+	"github.com/DVKunion/SeaMoon/pkg/tunnel"
 )
 
 type bufferedConn struct {
@@ -34,7 +34,7 @@ func Socks5Controller(ctx context.Context, sg *SigGroup) {
 
 			server, err := net.Listen("tcp", Config().Socks5.ListenAddr)
 			if err != nil {
-				log.Errorf(consts.SOCKS5_LISTEN_ERROR, err)
+				slog.Error(consts.SOCKS5_LISTEN_ERROR, err)
 				return
 			}
 			var proxyAddr string
@@ -46,7 +46,7 @@ func Socks5Controller(ctx context.Context, sg *SigGroup) {
 				}
 			}
 			if proxyAddr == "" {
-				log.Error(consts.PROXY_ADDR_ERROR)
+				slog.Error(consts.PROXY_ADDR_ERROR)
 				break
 			}
 			sg.wg.Add(1)
@@ -55,7 +55,7 @@ func Socks5Controller(ctx context.Context, sg *SigGroup) {
 				sg.wg.Done()
 			}()
 		case <-sg.SocksStopChannel:
-			log.Info(consts.SOCKS5_LISTEN_STOP)
+			slog.Info(consts.SOCKS5_LISTEN_STOP)
 			cancel()
 		}
 	}
@@ -63,8 +63,8 @@ func Socks5Controller(ctx context.Context, sg *SigGroup) {
 
 func NewSocks5Client(ctx context.Context, server net.Listener, proxyAddr string) {
 	var closeFlag = false
-	log.Infof(consts.SOCKS5_LISTEN_START, server.Addr())
-	log.Debugf(consts.PROXY_ADDR, proxyAddr)
+	slog.Info(consts.SOCKS5_LISTEN_START, "addr", server.Addr())
+	slog.Debug(consts.PROXY_ADDR, "proxy", proxyAddr)
 	defer func() {
 		closeFlag = true
 		server.Close()
@@ -74,11 +74,11 @@ func NewSocks5Client(ctx context.Context, server net.Listener, proxyAddr string)
 			lock := &sync.Mutex{}
 			conn, err := server.Accept()
 			if err == nil {
-				log.Debugf(consts.SOCKS5_ACCEPT_START, conn.RemoteAddr())
+				slog.Debug(consts.SOCKS5_ACCEPT_START, "addr", conn.RemoteAddr())
 				br := bufio.NewReader(conn)
 				b, err := br.Peek(1)
-				if err != nil || b[0] != utils.Version {
-					log.Errorf(consts.CLIENT_PROTOCOL_UNSUPPORT_ERROR, err)
+				if err != nil || b[0] != network.SOCKS5Version {
+					slog.Error(consts.CLIENT_PROTOCOL_UNSUPPORT_ERROR, "err", err)
 				} else {
 					go Socks5Handler(&bufferedConn{conn, br}, proxyAddr, lock)
 				}
@@ -87,7 +87,7 @@ func NewSocks5Client(ctx context.Context, server net.Listener, proxyAddr string)
 					// except close
 					return
 				} else {
-					log.Errorf(consts.SOCKS5_ACCEPT_ERROR, err)
+					slog.Error(consts.SOCKS5_ACCEPT_ERROR, "err", err)
 				}
 			}
 		}
@@ -97,46 +97,46 @@ func NewSocks5Client(ctx context.Context, server net.Listener, proxyAddr string)
 
 func Socks5Handler(conn net.Conn, raddr string, lock *sync.Mutex) {
 	// select method
-	_, err := utils.ReadMethods(conn)
+	_, err := network.ReadMethods(conn)
 	if err != nil {
-		log.Errorf(`[socks5] read methods failed: %s`, err)
+		slog.Error(`[socks5] read methods failed`, "err", err)
 		return
 	}
 
 	// TODO AUTH
-	if err := utils.WriteMethod(utils.MethodNoAuth, conn); err != nil {
+	if err := network.WriteMethod(network.MethodNoAuth, conn); err != nil {
 		if err != nil {
-			log.Errorf(`[socks5] write method failed: %s`, err)
+			slog.Error(`[socks5] write method failed`, "err", err)
 		} else {
-			log.Errorf(`[socks5] methods is not acceptable`)
+			slog.Error(`[socks5] methods is not acceptable`)
 		}
 		return
 	}
 
 	// read command
-	request, err := utils.ReadRequest(conn)
+	request, err := network.ReadSOCKS5Request(conn)
 	if err != nil {
-		log.Errorf(`[socks5] read command failed: %s`, err)
+		slog.Error(`[socks5] read command failed`, "err", err)
 		return
 	}
 	switch request.Cmd {
-	case utils.CmdConnect:
+	case network.SOCKS5CmdConnect:
 		handleConnect(conn, request, raddr, lock)
 		break
-	case utils.CmdBind:
-		log.Error("not support cmd bind")
+	case network.SOCKS5CmdBind:
+		slog.Error("not support cmd bind")
 		//handleBind(conn, request)
 		break
-	case utils.CmdUDP:
+	case network.SOCKS5CmdUDPOverTCP:
 		//handleUDP(conn, request)
-		log.Error("not support cmd upd")
+		slog.Error("not support cmd upd")
 		break
 	}
 }
 
-func handleConnect(conn net.Conn, req *utils.Request, rAddr string, lock *sync.Mutex) {
+func handleConnect(conn net.Conn, req *network.SOCKS5Request, rAddr string, lock *sync.Mutex) {
 
-	log.Infof(consts.SOCKS5_CONNECT_SERVER, req.Addr, conn.RemoteAddr())
+	slog.Info(consts.SOCKS5_CONNECT_SERVER, "src", conn.RemoteAddr(), "dest", req.Addr)
 
 	dialer := &websocket.Dialer{}
 	s := http.Header{}
@@ -145,24 +145,24 @@ func handleConnect(conn net.Conn, req *utils.Request, rAddr string, lock *sync.M
 	wsConn, _, err := dialer.Dial(rAddr, s)
 
 	if err != nil {
-		log.Errorf(consts.SOCKS_UPGRADE_ERROR, err)
+		slog.Error(consts.SOCKS_UPGRADE_ERROR, "err", err)
 		return
 	}
 
-	newConn := server.NewWebsocketServer(wsConn, lock)
+	newConn := tunnel.WsWrapConn(wsConn)
 
 	defer newConn.Close()
 
-	if err := utils.NewReply(utils.Succeeded, nil).Write(conn); err != nil {
-		log.Errorf(consts.SOCKS5_CONNECT_WRITE_ERROR, err)
+	if err := network.NewReply(network.SOCKS5RespSucceeded, nil).Write(conn); err != nil {
+		slog.Error(consts.SOCKS5_CONNECT_WRITE_ERROR, "err", err)
 		return
 	}
-	log.Infof(consts.SOCKS5_CONNECT_ESTAB, conn.RemoteAddr(), req.Addr)
+	slog.Info(consts.SOCKS5_CONNECT_ESTAB, "src", conn.RemoteAddr(), "dest", req.Addr)
 
-	if err := utils.Transport(conn, newConn); err != nil {
-		log.Errorf(consts.SOCKS5_CONNECT_TRANS_ERROR, err)
+	if err := network.Transport(conn, newConn); err != nil {
+		slog.Error(consts.SOCKS5_CONNECT_TRANS_ERROR, "err", err)
 	}
 
-	log.Infof(consts.SOCKS5_CONNECT_DIS, conn.RemoteAddr(), req.Addr)
+	slog.Info(consts.SOCKS5_CONNECT_DIS, "src", conn.RemoteAddr(), "dest", req.Addr)
 
 }

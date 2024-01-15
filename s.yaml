@@ -16,25 +16,26 @@ actions:
   pre-deploy:
     - run: go mod tidy
       path: ./
-    - run: GO111MODULE=on GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build  -ldflags "-X github.com/DVKunion/SeaMoon/pkg/consts.Version=1.1.2" -o main cmd/aliyun_server.go
+    - run: GO111MODULE=on GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build  -ldflags "-X github.com/DVKunion/SeaMoon/pkg/consts.Version=2.0.0-beta.1" -o seamoon main.go
       path: ./
-    - run: chmod +x main
+    - run: chmod +x seamoon
       path: ./
 
 services:
-  SeaMoon-FC-HTTP-Proxy:
+  SeaMoon-WS-Node:
     component: fc
     props:
       region: ${vars.region}
       service: ${vars.service}
       function:
-        name: http-proxy # 请不要修改函数名，因为配置处需要使用磁名称来判断函数类型。
+        name: ws-node # 请不要修改函数名，因为配置处需要使用磁名称来判断函数类型。
         description: 'http-proxy'
         codeUri: './'
         customRuntimeConfig:
           command:
-            - ./main
-        environmentVariables: { serverMod: "http" }
+            - ./seamoon
+          args:
+            - "server"
         handler: main
         instanceConcurrency: 10
         instanceType: e1
@@ -66,45 +67,3 @@ services:
                 - PUT
                 - DELETE
                 - OPTIONS
-  SeaMoon-FC-Socks-Proxy:
-    component: fc
-    props:
-      region: ${vars.region}
-      service: ${vars.service}
-      function:
-        name: socks-proxy # 请不要修改函数名，因为配置处需要使用磁名称来判断函数类型。
-        description: 'socks5-proxy'
-        codeUri: './'
-        customRuntimeConfig:
-          command:
-            - ./main
-        environmentVariables: { serverMod: "socks5" }
-        handler: main
-        instanceConcurrency: 10
-        instanceType: e1
-        cpu: 0.05
-        diskSize: 512
-        memorySize: 128
-        runtime: custom
-        timeout: 300
-        internetAccess: true
-      triggers:
-        - name: httpTrigger
-          type: http
-          config:
-            authType: anonymous
-            methods:
-              - GET
-              - POST
-              - PUT
-              - DELETE
-      customDomains:
-        - domainName: auto
-          protocol: HTTP
-          routeConfigs:
-            - path: /*
-              methods:
-                - GET
-                - POST
-                - PUT
-                - DELETE

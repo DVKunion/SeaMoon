@@ -1,3 +1,6 @@
 package consts
 
-var Version string = "dev"
+var (
+	Version string = "dev"
+	Commit  string = ""
+)

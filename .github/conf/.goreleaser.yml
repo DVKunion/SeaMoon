@@ -5,7 +5,7 @@ builds:
   - binary: client
     env:
       - CGO_ENABLED=0
-    main: ./cmd/client.go
+    main: ./main.go
     goos:
       - linux
       - windows

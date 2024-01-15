@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"crypto/tls"
+	"log/slog"
 	"net"
 	"net/http"
 	"net/url"
@@ -10,10 +11,9 @@ import (
 	"time"
 
 	"github.com/google/martian/v3"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/DVKunion/SeaMoon/pkg/consts"
-	"github.com/DVKunion/SeaMoon/pkg/utils"
+	"github.com/DVKunion/SeaMoon/pkg/network"
 )
 
 func HttpController(ctx context.Context, sg *SigGroup) {
@@ -24,7 +24,7 @@ func HttpController(ctx context.Context, sg *SigGroup) {
 		case <-sg.HttpStartChannel:
 			server, err := net.Listen("tcp", Config().Http.ListenAddr)
 			if err != nil {
-				log.Errorf(consts.HTTP_LISTEN_ERROR, err)
+				slog.Error(consts.HTTP_LISTEN_ERROR, "err", err)
 				return
 			}
 			var proxyAddr string
@@ -36,7 +36,7 @@ func HttpController(ctx context.Context, sg *SigGroup) {
 				}
 			}
 			if proxyAddr == "" {
-				log.Error(consts.PROXY_ADDR_ERROR)
+				slog.Error(consts.PROXY_ADDR_ERROR)
 				break
 			}
 			sg.wg.Add(1)
@@ -45,7 +45,7 @@ func HttpController(ctx context.Context, sg *SigGroup) {
 				sg.wg.Done()
 			}()
 		case <-sg.HttpStopChannel:
-			log.Info(consts.HTTP_LISTEN_STOP)
+			slog.Info(consts.HTTP_LISTEN_STOP)
 			cancel()
 		}
 	}
@@ -65,14 +65,14 @@ func (r RequestModifier) ModifyRequest(req *http.Request) error {
 	if req.Method == http.MethodConnect {
 		return nil
 	}
-	req.Header.Set("SM-Host", utils.GetUrl(req))
+	req.Header.Set("SM-Host", network.GetUrl(req))
 	req.URL, _ = url.Parse(r.pAddr)
 	req.Host = req.URL.Host
 	return nil
 }
 
 func NewHttpClient(ctx context.Context, l net.Listener, pAddr string) {
-	log.Infof(consts.HTTP_LISTEN_START, l.Addr())
+	slog.Info(consts.HTTP_LISTEN_START, "addr", l.Addr())
 	p := martian.NewProxy()
 	defer p.Close()
 	tr := &http.Transport{
@@ -92,7 +92,7 @@ func NewHttpClient(ctx context.Context, l net.Listener, pAddr string) {
 
 	go func() {
 		if err := p.Serve(l); err != nil {
-			log.Error("server:", err)
+			slog.Error("client server error:", "err", err)
 		}
 	}()
 

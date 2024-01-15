@@ -2,10 +2,10 @@ package client
 
 import (
 	"bytes"
+	"log/slog"
 	"os"
 
 	"github.com/BurntSushi/toml"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/DVKunion/SeaMoon/pkg/consts"
 )
@@ -86,7 +86,7 @@ func (c *clientConfig) Load(sg *SigGroup) error {
 		// try first start
 		err := toml.Unmarshal(data, c)
 		if err != nil {
-			log.Debug(consts.CONFIG_NOT_FIND)
+			slog.Debug(consts.CONFIG_NOT_FIND)
 			return err
 		}
 		sg.Detection()
