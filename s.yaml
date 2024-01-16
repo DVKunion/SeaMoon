@@ -22,14 +22,14 @@ actions:
       path: ./
 
 services:
-  SeaMoon-WS-Node:
+  SeaMoon-WST-Node:
     component: fc
     props:
       region: ${vars.region}
       service: ${vars.service}
       function:
-        name: ws-node # 请不要修改函数名，因为配置处需要使用磁名称来判断函数类型。
-        description: 'http-proxy'
+        name: ws-node
+        description: 'websocket-proxy-server'
         codeUri: './'
         customRuntimeConfig:
           command:
@@ -53,17 +53,39 @@ services:
             methods:
               - GET
               - POST
-              - PUT
-              - DELETE
-              - OPTIONS
-      customDomains:
-        - domainName: auto
-          protocol: HTTP
-          routeConfigs:
-            - path: /*
-              methods:
-                - GET
-                - POST
-                - PUT
-                - DELETE
-                - OPTIONS
+  SeaMoon-GRT-Node:
+    component: fc
+    props:
+      region: ${vars.region}
+      service: ${vars.service}
+      function:
+        name: grpc-node
+        description: 'grpc-proxy-server'
+        codeUri: './'
+        caPort: 8089
+        customRuntimeConfig:
+          command:
+            - ./seamoon
+          args:
+            - "server"
+            - "-p"
+            - "8089"
+            - "-t"
+            - "grpc"
+        handler: main
+        instanceConcurrency: 10
+        instanceType: e1
+        cpu: 0.05
+        diskSize: 512
+        memorySize: 128
+        runtime: custom
+        timeout: 300
+        internetAccess: true
+      triggers:
+        - name: httpTrigger
+          type: http
+          config:
+            authType: anonymous
+            methods:
+              - GET
+              - POST
