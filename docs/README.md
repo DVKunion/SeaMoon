@@ -1,6 +1,6 @@
 ---
 home: true
-heroImage: https://cdn.dvkunion.cn/SeaMoon/logo.png
+heroImage: https://seamoon.oss-cn-hangzhou.aliyuncs.com/logo.png
 heroText: SeaMoon - 月海
 tagline: 🌕 月出于云却隐于海
 actionText: 快速上手 →
