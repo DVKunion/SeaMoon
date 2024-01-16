@@ -1,13 +1,13 @@
 package service
 
 import (
-	"net/http"
+	"net"
 
 	"github.com/DVKunion/SeaMoon/pkg/tunnel"
 )
 
 type Service interface {
-	Handle(m *http.ServeMux)
+	Serve(ln net.Listener, srvOpt ...Option) error
 }
 
 var Factory = map[tunnel.Type]Service{}

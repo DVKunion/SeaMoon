@@ -2,7 +2,24 @@ package network
 
 // fork from go-gost/core
 
-import "sync"
+import (
+	"bufio"
+	"net"
+	"sync"
+)
+
+type BufferedConn struct {
+	net.Conn
+	Br *bufio.Reader
+}
+
+func (c *BufferedConn) Read(b []byte) (int, error) {
+	return c.Br.Read(b)
+}
+
+func (c *BufferedConn) Peek(n int) ([]byte, error) {
+	return c.Br.Peek(n)
+}
 
 var (
 	pools = []struct {
