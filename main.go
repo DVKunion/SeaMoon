@@ -24,18 +24,19 @@ var (
 
 	serverCommand = &cobra.Command{
 		Use:   "server",
-		Short: "seaMoon server mod",
+		Short: "SeaMoon server mod",
 		RunE:  Server,
 	}
 
 	proxyCommand = &cobra.Command{
 		Use:   "proxy",
-		Short: "seaMoon proxy mod",
+		Short: "SeaMoon proxy mod",
 		Run:   Proxy,
 	}
 
 	versionCommand = &cobra.Command{
-		Use: "version",
+		Use:   "version",
+		Short: "SeaMoon version info",
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println(consts.Version)
 		},

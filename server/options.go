@@ -6,6 +6,8 @@ type Options struct {
 	host  string      // 监听地址
 	port  string      // 监听端口
 	proto tunnel.Type // 监听协议
+
+	mtcp bool //
 }
 
 type Option func(o *Options) (err error)
@@ -31,6 +33,13 @@ func WithProto(t string) Option {
 			// todo
 		}
 		o.proto = tt
+		return nil
+	}
+}
+
+func WithMTcp(flag bool) Option {
+	return func(o *Options) (err error) {
+		o.mtcp = flag
 		return nil
 	}
 }

@@ -1,7 +1,7 @@
 package transfer
 
 import (
-	"errors"
+	"bufio"
 	"log/slog"
 	"net"
 	"time"
@@ -10,20 +10,49 @@ import (
 	"github.com/DVKunion/SeaMoon/pkg/network"
 )
 
-func Socks5Transport(conn net.Conn, req *network.SOCKS5Request) error {
-	switch req.Cmd {
-	case network.SOCKS5CmdConnect:
-		handleConnect(conn, req)
-	case network.SOCKS5CmdBind:
-		handleBind()
-	case network.SOCKS5CmdUDP:
-		handleUDPOverTCP()
-	case network.SOCKS5CmdUDPOverTCP:
-		handleUDPOverTCP()
-	default:
-		return errors.New("")
+func Socks5Transport(conn net.Conn) error {
+	br := &network.BufferedConn{Conn: conn, Br: bufio.NewReader(conn)}
+	b, err := br.Peek(1)
+
+	if err != nil || b[0] != network.SOCKS5Version {
+		slog.Error(consts.CLIENT_PROTOCOL_UNSUPPORT_ERROR, "err", err)
+		return err
+	} else {
+		// select method
+		_, err := network.ReadMethods(br)
+		if err != nil {
+			slog.Error(`[socks5] read methods failed`, "err", err)
+			return err
+		}
+
+		// TODO AUTH
+		if err := network.WriteMethod(network.MethodNoAuth, br); err != nil {
+			if err != nil {
+				slog.Error(`[socks5] write method failed`, "err", err)
+			} else {
+				slog.Error(`[socks5] methods is not acceptable`)
+			}
+			return err
+		}
+
+		// read command
+		request, err := network.ReadSOCKS5Request(br)
+		if err != nil {
+			slog.Error(`[socks5] read command failed`, "err", err)
+			return err
+		}
+		switch request.Cmd {
+		case network.SOCKS5CmdConnect:
+			handleConnect(br, request)
+		case network.SOCKS5CmdBind:
+			slog.Error("not support cmd bind")
+			//handleBind(conn, request)
+		case network.SOCKS5CmdUDPOverTCP:
+			//handleUDP(conn, request)
+			slog.Error("not support cmd upd")
+		}
 	}
-	return errors.New("")
+	return nil
 }
 
 func handleConnect(conn net.Conn, req *network.SOCKS5Request) {
@@ -39,6 +68,11 @@ func handleConnect(conn net.Conn, req *network.SOCKS5Request) {
 
 	// if utils.Transport get out , then close conn of remote
 	defer destConn.Close()
+
+	if err := network.NewReply(network.SOCKS5RespSucceeded, nil).Write(conn); err != nil {
+		slog.Error(consts.SOCKS5_CONNECT_WRITE_ERROR, "err", err)
+		return
+	}
 
 	slog.Info(consts.SOCKS5_CONNECT_ESTAB, "src", conn.RemoteAddr(), "dest", req.Addr)
 
