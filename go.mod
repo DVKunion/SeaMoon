@@ -5,9 +5,7 @@ go 1.21
 require (
 	github.com/BurntSushi/toml v1.3.2
 	github.com/gin-gonic/gin v1.9.1
-	github.com/google/martian/v3 v3.3.2
 	github.com/gorilla/websocket v1.5.1
-	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.8.0
 	github.com/tg123/go-htpasswd v1.2.0
 	github.com/xtaci/smux v1.5.24
@@ -26,7 +24,6 @@ require (
 	github.com/go-playground/validator/v10 v10.14.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect

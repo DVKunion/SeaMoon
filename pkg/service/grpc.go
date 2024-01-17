@@ -1,8 +1,11 @@
 package service
 
 import (
+	"context"
+	"crypto/tls"
 	"log/slog"
 	"net"
+	"strings"
 	"time"
 
 	"google.golang.org/grpc"
@@ -16,6 +19,7 @@ import (
 
 type GRPCService struct {
 	addr   net.Addr
+	cc     *grpc.ClientConn
 	server *grpc.Server
 
 	pb.UnimplementedTunnelServer
@@ -23,6 +27,71 @@ type GRPCService struct {
 
 func init() {
 	register(tunnel.GRT, &GRPCService{})
+}
+
+func (g GRPCService) Conn(ctx context.Context, t transfer.Type, sOpts ...Option) (net.Conn, error) {
+	var cs grpc.ClientStream
+	var srvOpts = &Options{}
+	var err error
+
+	for _, o := range sOpts {
+		o(srvOpts)
+	}
+
+	if strings.HasPrefix(srvOpts.addr, "grpc://") {
+		srvOpts.addr = strings.TrimPrefix(srvOpts.addr, "grpc://")
+	}
+
+	nAddr, err := net.ResolveTCPAddr("tcp", srvOpts.addr)
+	if err != nil {
+		return nil, err
+	}
+
+	if g.cc == nil {
+		// do connect
+		grpcOpts := []grpc.DialOption{
+			//grpc.WithAuthority(host),
+			//grpc.WithConnectParams(grpc.ConnectParams{
+			//	Backoff: backoff.DefaultConfig,
+			//MinConnectTimeout: d.md.minConnectTimeout,
+			//}),
+			grpc.WithKeepaliveParams(keepalive.ClientParameters{
+				Time:                10 * time.Second, // send pings every 10 seconds if there is no activity
+				Timeout:             3 * time.Second,  // wait 1 second for ping ack before considering the c
+				PermitWithoutStream: false,            // send pings even without active streams
+			}),
+			//grpc.FailOnNonTempDialError(true),
+		}
+
+		//if !d.md.insecure {
+		//	grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(credentials.NewTLS(d.options.TLSConfig)))
+		//} else {
+		//grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{
+			InsecureSkipVerify: true,
+		})))
+		//}
+		g.cc, err = grpc.DialContext(ctx, srvOpts.addr, grpcOpts...)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	client := pb.NewTunnelClient(g.cc)
+
+	switch t {
+	case transfer.HTTP:
+		cs, err = client.Http(ctx)
+	case transfer.SOCKS5:
+		cs, err = client.Socks5(ctx)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tunnel.GRPCWrapConn(nAddr, cs), nil
+
 }
 
 func (g GRPCService) Serve(ln net.Listener, srvOpt ...Option) error {

@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	net "github.com/DVKunion/SeaMoon/pkg/network"
-	"github.com/DVKunion/SeaMoon/server/service"
+	"github.com/DVKunion/SeaMoon/pkg/service"
 )
 
 type Server struct {
