@@ -8,6 +8,7 @@ import (
 	"github.com/BurntSushi/toml"
 
 	"github.com/DVKunion/SeaMoon/pkg/consts"
+	"github.com/DVKunion/SeaMoon/pkg/transfer"
 )
 
 type clientConfig struct {
@@ -15,6 +16,16 @@ type clientConfig struct {
 	Control   controlConfig `toml:"control"`
 	Http      proxyConfig   `toml:"http"`
 	Socks5    proxyConfig   `toml:"socks5"`
+}
+
+func (c *clientConfig) Addr(t transfer.Type) string {
+	switch t {
+	case transfer.HTTP:
+		return c.Http.ListenAddr
+	case transfer.SOCKS5:
+		return c.Socks5.ListenAddr
+	}
+	return ""
 }
 
 type controlConfig struct {

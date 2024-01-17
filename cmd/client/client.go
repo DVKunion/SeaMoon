@@ -1,39 +1,27 @@
 package client
 
 import (
-	"bufio"
 	"context"
 	"html/template"
 	"io"
 	"log/slog"
-	"net"
 	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/DVKunion/SeaMoon/pkg/consts"
-	"github.com/DVKunion/SeaMoon/static"
-
 	_ "net/http/pprof"
+
+	"github.com/DVKunion/SeaMoon/cmd/client/static"
+	"github.com/DVKunion/SeaMoon/pkg/consts"
 )
-
-type Client struct {
-	net.Conn
-	br *bufio.Reader
-}
-
-func (c *Client) Read(b []byte) (int, error) {
-	return c.br.Read(b)
-}
 
 func Serve(ctx context.Context, verbose bool, debug bool) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	sg := NewSigGroup()
-	go Controller(sg, verbose, debug)
-	go HttpController(ctx, sg)
-	go Socks5Controller(ctx, sg)
+	go API(sg, verbose, debug)
+	go Control(ctx, sg)
 
 	Config().Load(sg)
 	<-sg.WatchChannel
@@ -44,7 +32,7 @@ func Serve(ctx context.Context, verbose bool, debug bool) {
 	sg.wg.Wait()
 }
 
-func Controller(sg *SigGroup, verbose bool, debug bool) {
+func API(sg *SigGroup, verbose bool, debug bool) {
 	slog.Info(consts.CONTROLLER_START, "addr", Config().Control.ConfigAddr)
 
 	if consts.Version != "dev" || !debug {

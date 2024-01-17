@@ -1,10 +1,12 @@
 package service
 
 import (
+	"context"
 	"crypto/tls"
 	"log/slog"
 	"net"
 	"net/http"
+	"path"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -26,6 +28,37 @@ type WSService struct {
 
 func init() {
 	register(tunnel.WST, &WSService{})
+}
+
+func (s *WSService) Conn(ctx context.Context, t transfer.Type, sOpts ...Option) (net.Conn, error) {
+	// todo: useless ctx
+	var srvOpts = &Options{}
+
+	for _, o := range sOpts {
+		o(srvOpts)
+	}
+
+	wsDialer := &websocket.Dialer{
+		HandshakeTimeout:  defaultTimeout,
+		ReadBufferSize:    defaultReadBufferSize,
+		WriteBufferSize:   defaultReadBufferSize,
+		EnableCompression: true,
+	}
+
+	if srvOpts.buffers != nil {
+		wsDialer.ReadBufferSize = srvOpts.buffers.ReadBufferSize
+		wsDialer.WriteBufferSize = srvOpts.buffers.WriteBufferSize
+		wsDialer.EnableCompression = srvOpts.buffers.EnableCompression
+	}
+
+	url := path.Join(srvOpts.addr, t.String())
+
+	wsConn, _, err := wsDialer.Dial("ws://"+url, nil)
+
+	if err != nil {
+		return nil, err
+	}
+	return tunnel.WsWrapConn(wsConn), nil
 }
 
 func (s *WSService) Serve(ln net.Listener, sOpts ...Option) error {

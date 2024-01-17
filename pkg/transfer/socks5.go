@@ -77,7 +77,7 @@ func handleConnect(conn net.Conn, req *network.SOCKS5Request) {
 	slog.Info(consts.SOCKS5_CONNECT_ESTAB, "src", conn.RemoteAddr(), "dest", req.Addr)
 
 	if err := network.Transport(conn, destConn); err != nil {
-		slog.Error(consts.SOCKS5_CONNECT_TRANS_ERROR, err)
+		slog.Error(consts.CONNECT_TRANS_ERROR, "err", err)
 	}
 
 	slog.Info(consts.SOCKS5_CONNECT_DIS, "src", conn.RemoteAddr(), "dest", req.Addr)

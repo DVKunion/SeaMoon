@@ -6,9 +6,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/DVKunion/SeaMoon/pkg/client"
+	"github.com/DVKunion/SeaMoon/cmd/client"
+	"github.com/DVKunion/SeaMoon/cmd/server"
 	"github.com/DVKunion/SeaMoon/pkg/consts"
-	"github.com/DVKunion/SeaMoon/server"
 )
 
 var (
