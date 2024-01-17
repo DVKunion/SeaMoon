@@ -2,7 +2,7 @@ before:
   hooks:
     - go mod tidy
 builds:
-  - binary: client
+  - binary: seamoon
     env:
       - CGO_ENABLED=0
     main: ./cmd/main.go
