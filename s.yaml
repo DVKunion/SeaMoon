@@ -14,9 +14,9 @@ vars:
 
 actions:
   pre-deploy:
-    - run: go mod tidy
+    - run: wget https://github.com/DVKunion/SeaMoon/releases/download/1.2.0-beta.1/SeaMoon_1.2.0-beta.1_linux_amd64.tar.gz
       path: ./
-    - run: GO111MODULE=on GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build  -ldflags "-X github.com/DVKunion/SeaMoon/pkg/consts.Version=2.0.0-beta.1" -o seamoon cmd/main.go
+    - run: tar -zvxf SeaMoon_1.2.0-beta.1_linux_amd64.tar.gz
       path: ./
     - run: chmod +x seamoon
       path: ./

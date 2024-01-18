@@ -24,8 +24,8 @@ func New(opts ...Option) (*Server, error) {
 		}
 	}
 	// check
-	if srv, ok := service.Factory[s.opts.proto]; ok {
-		s.srv = srv
+	if srv, ok := service.Factory.Load(s.opts.proto); ok {
+		s.srv = srv.(service.Service)
 	}
 
 	if s.srv == nil {

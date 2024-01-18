@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"net"
+	"sync"
 
 	"github.com/DVKunion/SeaMoon/pkg/transfer"
 	"github.com/DVKunion/SeaMoon/pkg/tunnel"
@@ -13,8 +14,8 @@ type Service interface {
 	Serve(ln net.Listener, srvOpt ...Option) error
 }
 
-var Factory = map[tunnel.Type]Service{}
+var Factory = sync.Map{}
 
 func register(t tunnel.Type, s Service) {
-	Factory[t] = s
+	Factory.Store(t, s)
 }
