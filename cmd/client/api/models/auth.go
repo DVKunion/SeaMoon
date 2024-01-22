@@ -1,0 +1,37 @@
+package models
+
+import (
+	"gorm.io/gorm"
+
+	"github.com/DVKunion/SeaMoon/cmd/client/api/types"
+)
+
+var DefaultAuth = []Auth{
+	{
+		Type:     types.Admin,
+		Username: "seamoon",
+		Password: "2575a6f37310dd27e884a0305a2dd210",
+	},
+}
+
+type Auth struct {
+	gorm.Model
+
+	Type     types.AuthType // 认证类型，用于判断该认证信息适用于啥的
+	Username string         `json:"username"`
+	Password string         `json:"password"`
+}
+
+type CloudAuth struct {
+	// 阿里需要 ID
+	AccessId string `json:"access_id" gorm:"not null"`
+	// 普通云厂商使用的认证
+	AccessKey    string `json:"access_key" gorm:"not null"`
+	AccessSecret string `json:"access_secret" gorm:"not null"`
+
+	// 接口类型认证信息
+	Token string `json:"token" gorm:"not null"`
+
+	// Sealos 认证信息
+	KubeConfig string `json:"kube_config" gorm:"not null"`
+}

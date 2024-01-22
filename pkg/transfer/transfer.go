@@ -5,6 +5,7 @@ import "strings"
 type Type string
 
 const (
+	AUTO   Type = "auto"
 	HTTP   Type = "http"
 	SOCKS5 Type = "socks5"
 )

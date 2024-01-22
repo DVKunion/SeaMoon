@@ -22,7 +22,7 @@
 *.crt
 *.key
 
-dist/
+cmd/client/static/dist/*
 web/
 *.log
 *.toml
@@ -32,3 +32,4 @@ node_modules
 bootstrap
 .s/
 .seamoom
+.seamoon.db
