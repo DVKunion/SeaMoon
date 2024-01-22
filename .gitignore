@@ -22,7 +22,6 @@
 *.key
 
 dist/
-web/
 *.log
 *.toml
 .config

@@ -1,0 +1,77 @@
+@import (reference) '~antd/es/style/themes/index';
+
+.logoImg {
+  margin-top: -10em;
+  margin-bottom: -8.5em;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  overflow: auto;
+  background: @layout-body-background;
+
+  :global(.ant-pro-form-login-title) {
+    color: rgb(229, 224, 216);
+  }
+
+  :global(.ant-pro-form-login-desc) {
+    color: rgba(229, 224, 216, 0.85);
+  }
+
+  :global(.ant-input-affix-wrapper) {
+    color: rgba(229, 224, 216, 0.85);
+    background-color: rgb(36, 37, 37);
+    background-image: none;
+    border-color: rgb(69, 72, 71);
+  }
+
+  :global(.ant-input-affix-wrapper > .ant-input:not(textarea)) {
+    color: rgba(229, 224, 216, 0.85);
+    background-color: rgb(36, 37, 37);
+    background-image: none;
+    border-color: rgb(69, 72, 71);
+  }
+
+  :global(.ant-input-clear-icon) {
+    color: rgba(229, 224, 216, 0.25);
+  }
+}
+
+.content {
+  flex: 1;
+  padding: 32px 0;
+}
+
+.content .img {
+  text-align: center;
+}
+
+@media (min-width: @screen-md-min) {
+  .container {
+    background-color: #292C2C;
+    background-repeat: no-repeat;
+    background-position: center 110px;
+    background-size: 100%;
+  }
+
+  .content {
+    padding: 32px 0 24px;
+  }
+}
+
+.icon {
+  margin-left: 8px;
+  color: rgba(0, 0, 0, 0.2);
+  font-size: 24px;
+  vertical-align: middle;
+  cursor: pointer;
+  transition: color 0.3s;
+
+  &:hover {
+    color: @primary-color;
+  }
+}
