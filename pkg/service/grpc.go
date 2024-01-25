@@ -42,6 +42,10 @@ func (g GRPCService) Conn(ctx context.Context, t transfer.Type, sOpts ...Option)
 		srvOpts.addr = strings.TrimPrefix(srvOpts.addr, "grpc://")
 	}
 
+	if strings.HasPrefix(srvOpts.addr, "grpcs://") {
+		srvOpts.addr = strings.TrimPrefix(srvOpts.addr, "grpcs://")
+	}
+
 	nAddr, err := net.ResolveTCPAddr("tcp", srvOpts.addr)
 	if err != nil {
 		return nil, err

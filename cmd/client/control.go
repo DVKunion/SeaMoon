@@ -43,11 +43,21 @@ func doListen(ctx context.Context, t transfer.Type) error {
 	var proxyType tunnel.Type
 	for _, p := range Config().ProxyAddr {
 		if strings.HasPrefix(p, "ws://") {
-			proxyAddr = strings.TrimPrefix(p, "ws://")
+			proxyAddr = p
+			proxyType = tunnel.WST
+			break
+		}
+		if strings.HasPrefix(p, "wss://") {
+			proxyAddr = p
 			proxyType = tunnel.WST
 			break
 		}
 		if strings.HasPrefix(p, "grpc://") {
+			proxyAddr = p
+			proxyType = tunnel.GRT
+			break
+		}
+		if strings.HasPrefix(p, "grpcs://") {
 			proxyAddr = p
 			proxyType = tunnel.GRT
 			break

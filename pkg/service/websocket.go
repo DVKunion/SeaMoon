@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
-	"path"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -51,9 +50,7 @@ func (s *WSService) Conn(ctx context.Context, t transfer.Type, sOpts ...Option) 
 		wsDialer.EnableCompression = srvOpts.buffers.EnableCompression
 	}
 
-	url := path.Join(srvOpts.addr, t.String())
-
-	wsConn, _, err := wsDialer.Dial("ws://"+url, nil)
+	wsConn, _, err := wsDialer.Dial(t.Path(srvOpts.addr), nil)
 
 	if err != nil {
 		return nil, err
