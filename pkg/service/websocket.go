@@ -42,7 +42,7 @@ func (s *WSService) Conn(ctx context.Context, t transfer.Type, sOpts ...Option) 
 		HandshakeTimeout:  defaultTimeout,
 		ReadBufferSize:    defaultReadBufferSize,
 		WriteBufferSize:   defaultReadBufferSize,
-		EnableCompression: true,
+		EnableCompression: false,
 	}
 
 	if srvOpts.buffers != nil {
@@ -72,7 +72,7 @@ func (s *WSService) Serve(ln net.Listener, sOpts ...Option) error {
 		HandshakeTimeout:  defaultTimeout,
 		ReadBufferSize:    defaultReadBufferSize,
 		WriteBufferSize:   defaultReadBufferSize,
-		EnableCompression: true,
+		EnableCompression: false,
 		CheckOrigin:       func(r *http.Request) bool { return true },
 	}
 

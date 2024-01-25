@@ -22,11 +22,9 @@ func Control(ctx context.Context, sg *SigGroup) {
 		case t := <-sg.StartChannel:
 			slog.Info(consts.LISTEN_START, "type", t)
 			sg.wg.Add(1)
-			go func() {
-				if err := doListen(c, t); err != nil {
-					slog.Error(consts.LISTEN_ERROR, "type", t, "err", err)
-				}
-			}()
+			if err := doListen(c, t); err != nil {
+				slog.Error(consts.LISTEN_ERROR, "type", t, "err", err)
+			}
 			sg.wg.Done()
 		case t := <-sg.StopChannel:
 			slog.Info(consts.LISTEN_STOP, "type", t)
@@ -40,6 +38,7 @@ func doListen(ctx context.Context, t transfer.Type) error {
 	if err != nil {
 		return err
 	}
+	defer server.Close()
 	var proxyAddr string
 	var proxyType tunnel.Type
 	for _, p := range Config().ProxyAddr {
@@ -63,7 +62,6 @@ func doListen(ctx context.Context, t transfer.Type) error {
 }
 
 func listen(ctx context.Context, server net.Listener, pa string, pt tunnel.Type, t transfer.Type) {
-	defer server.Close()
 	for {
 		conn, err := server.Accept()
 		if err != nil {
@@ -75,9 +73,11 @@ func listen(ctx context.Context, server net.Listener, pa string, pt tunnel.Type,
 				slog.Error(consts.CONNECT_RMOET_ERROR, "err", err)
 				continue
 			}
-			if err := network.Transport(conn, destConn); err != nil {
-				slog.Error(consts.CONNECT_TRANS_ERROR, "err", err)
-			}
+			go func() {
+				if err := network.Transport(conn, destConn); err != nil {
+					slog.Error(consts.CONNECT_TRANS_ERROR, "err", err)
+				}
+			}()
 		}
 	}
 }
