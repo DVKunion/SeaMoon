@@ -14,7 +14,7 @@ vars:
 
 actions:
   pre-deploy:
-    - run: wget https://github.com/DVKunion/SeaMoon/releases/download/1.2.0-beta.1/SeaMoon_1.2.0-beta.1_linux_amd64.tar.gz
+    - run: wget https://github.com/DVKunion/SeaMoon/releases/download/1.2.0-beta.2/SeaMoon_1.2.0-beta.2_linux_amd64.tar.gz
       path: ./
     - run: tar -zvxf SeaMoon_1.2.0-beta.1_linux_amd64.tar.gz
       path: ./
