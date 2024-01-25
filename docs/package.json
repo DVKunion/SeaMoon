@@ -6,8 +6,8 @@
   "repository": "https://github.com/DVKunion/SeaMoon",
   "author": "DVKunion",
   "scripts": {
-    "dev": "vuepress dev .",
-    "build": "vuepress build .",
+    "dev": "NODE_OPTIONS=--openssl-legacy-provider vuepress dev .",
+    "build": "NODE_OPTIONS=--openssl-legacy-provider vuepress build .",
     "updateTheme": "yarn remove vuepress-theme-vdoing && rm -rf node_modules && yarn && yarn add vuepress-theme-vdoing -D",
     "editFm": "node utils/editFrontmatter.js"
   },
