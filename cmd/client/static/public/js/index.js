@@ -38,6 +38,7 @@ function post() {
         Control: {
             ConfigAddr: $("#controlAddr").val(),
             LogPath: $("#controlLog").val(),
+            TorEnable:  $(".tor.ui.toggle.checkbox").hasClass("checked"),
         },
         Http: {
             Enabled: $(".http.ui.toggle.checkbox").hasClass("checked"),
@@ -70,6 +71,10 @@ function setValue(config) {
     console.log(config.Control.ConfigAddr)
     $('#controlAddr').attr("value", config.Control.ConfigAddr)
     $('#controlLog').attr("value", config.Control.LogPath)
+    if (config.Control.TorEnable) {
+        $('.tor.ui.toggle.checkbox').addClass("checked")
+        $("#torEnable").attr("checked", "checked")
+    }
     if (config.Http.Enabled) {
         $('.http.ui.toggle.checkbox').addClass("checked")
         $(".http.two.fields").attr("style", "display: block;")

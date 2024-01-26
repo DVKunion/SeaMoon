@@ -32,13 +32,15 @@
             <div class="content center">
                 <p>SeaMoon - 月海</p>
                 <p align="center">
-                    <img src="https://goreportcard.com/badge/github.com/DVKunion/SeaMoon" />
-                    <img src="https://img.shields.io/github/stars/DVKunion/SeaMoon.svg"  alt="stars"/>
-                    <img src="https://img.shields.io/github/downloads/dvkunion/seamoon/total?color=orange" alt="downloads" />
-                    <img src="https://img.shields.io/github/languages/top/DVKunion/SeaMoon.svg?&color=blueviolet" alt="languages">
-                    <img src="https://img.shields.io/badge/LICENSE-MIT-777777.svg"  alt="license"/>
+                    <img src="https://goreportcard.com/badge/github.com/DVKunion/SeaMoon"/>
+                    <img src="https://img.shields.io/github/stars/DVKunion/SeaMoon.svg" alt="stars"/>
+                    <img src="https://img.shields.io/github/downloads/dvkunion/seamoon/total?color=orange"
+                         alt="downloads"/>
+                    <img src="https://img.shields.io/github/languages/top/DVKunion/SeaMoon.svg?&color=blueviolet"
+                         alt="languages">
+                    <img src="https://img.shields.io/badge/LICENSE-MIT-777777.svg" alt="license"/>
                     <a href='https://github.com/DVKunion/SeaMoon'><img
-                            src="https://img.shields.io/github/watchers/dvkunion/seamoon?style=social"/></a>
+                                src="https://img.shields.io/github/watchers/dvkunion/seamoon?style=social"/></a>
                 </p>
                 <div class="sub header">
                     🌕 月出于云却隐于海
@@ -84,6 +86,13 @@
                                 <input id="controlLog" placeholder="日志路径" type="text">
                             </div>
                         </div>
+                        <br />
+                        <div class="field">
+                            <div class="tor ui toggle checkbox">
+                                <input id="torEnable" type="checkbox" tabindex="0" class="hidden">
+                                <label>开启 tor 网络(仅支持 socks5 代理 + websocket 隧道)</label>
+                            </div>
+                        </div>
                         <h4 class="ui inverted dividing header"><i class="cloud icon"></i>云端配置</h4>
                         <div class="fifteen wide field">
                             <label>代理地址: </label>
@@ -118,19 +127,8 @@ e.g. http-proxy.example.com" type="text"></textarea>
                                 <input id="socksAddr" placeholder="socks代理地址" type="text">
                             </div>
                         </div>
-                        <h4 class="ui dividing inverted header"><i class="ellipsis horizontal icon"></i>高级功能</h4>
-{{/*                        <div class="inline field">*/}}
-{{/*                            <div class="ui checkbox">*/}}
-{{/*                                <input type="checkbox" tabindex="0" class="hidden">*/}}
-{{/*                                <label>开启webshell动态代理功能(待实现)</label>*/}}
-{{/*                            </div>*/}}
-{{/*                        </div>*/}}
-                        <!--                        <div class="inline field">-->
-                        <!--                            <div class="ui checkbox">-->
-                        <!--                                <input type="checkbox" tabindex="0" class="hidden">-->
-                        <!--                                <label>其他一些乱七八糟的功能,占个位置</label>-->
-                        <!--                            </div>-->
-                        <!--                        </div>-->
+{{/*                        <h4 class="ui dividing inverted header"><i class="ellipsis horizontal icon"></i>高级功能</h4>*/}}
+
                     </form>
                 </div>
                 <div class="actions">
@@ -159,6 +157,6 @@ e.g. http-proxy.example.com" type="text"></textarea>
 <script src="/static/public/js/index.js"></script>
 <script>
     const config = {{ . }}
-    setValue(config);
+        setValue(config);
 </script>
 </html>

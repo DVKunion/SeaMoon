@@ -31,6 +31,7 @@ func (c *clientConfig) Addr(t transfer.Type) string {
 type controlConfig struct {
 	ConfigAddr string `toml:"addr"`
 	LogPath    string `toml:"logPath"`
+	TorEnable  bool   `toml:"tor_enable"`
 }
 
 type proxyConfig struct {
@@ -58,6 +59,7 @@ func defaultConfig() *clientConfig {
 			// is dangerous to open Control page for everyone, do not set value like: ":7777" / "0.0.0.0:7777"
 			ConfigAddr: ":7777",
 			LogPath:    "web.log",
+			TorEnable:  false,
 		},
 		Http: proxyConfig{
 			false, ":9000", "inactive",

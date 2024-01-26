@@ -50,7 +50,13 @@ func (s *WSService) Conn(ctx context.Context, t transfer.Type, sOpts ...Option) 
 		wsDialer.EnableCompression = srvOpts.buffers.EnableCompression
 	}
 
-	wsConn, _, err := wsDialer.Dial(t.Path(srvOpts.addr), nil)
+	var requestHeader = http.Header{}
+
+	if srvOpts.tor {
+		requestHeader.Add("SM-ONION", "enable")
+	}
+
+	wsConn, _, err := wsDialer.Dial(t.Path(srvOpts.addr), requestHeader)
 
 	if err != nil {
 		return nil, err
@@ -115,6 +121,7 @@ func (s *WSService) http(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *WSService) socks5(w http.ResponseWriter, r *http.Request) {
+	onion := r.Header.Get("SM-ONION")
 	// means use socks5 to connector
 	conn, err := s.upGrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -122,8 +129,15 @@ func (s *WSService) socks5(w http.ResponseWriter, r *http.Request) {
 	}
 	t := tunnel.WsWrapConn(conn)
 	go func() {
-		if err := transfer.Socks5Transport(t); err != nil {
-			slog.Error("connection error", "msg", err)
+		// 检测是否存在 onion 标识，代表着是否要开启 tor 转发
+		if onion != "" {
+			if err := transfer.TorTransport(t); err != nil {
+				slog.Error("connection error", "msg", err)
+			}
+		} else {
+			if err := transfer.Socks5Transport(t); err != nil {
+				slog.Error("connection error", "msg", err)
+			}
 		}
 	}()
 }
