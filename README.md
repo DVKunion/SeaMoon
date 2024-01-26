@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-    月海(Sea Moon) 是一款 FaaS/BaaS 实现的 Serverless 云渗透工具集，致力于开启云原生的渗透模式。  
+    月海(Sea Moon) 是一款 FaaS/BaaS 实现的 Serverless 网络工具集，期望利用云原生的优势，实现更简单、更便宜的网络功能。
 </p>
 <p align="center">
     月海之名取自于苏轼的《西江月·顷在黄州》，寓意月海取自于传统安全工具，用之于云，最终达到隐匿于海的效果。

@@ -1,4 +1,42 @@
 # CHANGELOG
+## SeaMoon 1.2.0-beta.2
+
+### ❤️ What's New
+* 📝 docs: 订正手册 (#49)
+* 📝 docs: 手册增加了 [gost](https://github.com/go-gost/gost) 作为本地客户端的使用方式 (#57)
+* 🔧 fix(client): 修复 ISSUE 提到的连接缓慢问题 (#48)(#23)(#44)
+
+### What's Changed
+* fix: use release binary instead of self compiling by @DVKunion in https://github.com/DVKunion/SeaMoon/pull/24
+* fix: client error && websocket compress error by @DVKunion in https://github.com/DVKunion/SeaMoon/pull/48
+* docs: update manual && update yarn && fix a little bug by @DVKunion in https://github.com/DVKunion/SeaMoon/pull/49
+* fix: roll back vdoing by @DVKunion in https://github.com/DVKunion/SeaMoon/pull/50
+
+**Full Changelog**: https://github.com/DVKunion/SeaMoon/compare/1.2.0-beta.1...1.2.0-beta.2
+
+## SeaMoon 1.2.0-beta.1
+
+>  1.2.0 是一个临时版本，由于想要加入一些新的功能与适配，整体代码改动量较大。因此先拆分了部分功能代码。
+>  整体的稳定性上会有所欠缺，更多的是下一个版本的新功能尝试
+
+### ❤️ What's New
+* 📝 docs: 修正了首页的一些图床丢失 (#18)
+* ✨ feat(server): 新增隧道协议：grpc (#19)
+* ⚡️ zap(server):  将协议解码转移在服务端处理，轻量化客户端 (#17)
+* 🎨 refartor(server): 重构服务端模式，参考 gost 代理项目优化网络传输 (#15)
+* 🎨 refartor(client): 减轻客户端传递功能，做更多兼容性适配，配合server重构 (#20)
+* 🔧 fix(ci): 修正一些重构导致的ci错误(#16)(#21)(#22)
+
+**Full Changelog**: https://github.com/DVKunion/SeaMoon/compare/1.1.3...1.2.0-beta.1
+
+* 75db770 feat: support grpc tunnel (#19)
+* 122435f fix: Dockerfile (#22)
+* ae49ee0 fix: page ci dir changes (#16)
+* be04fa1 fix: tag ci error (#21)
+* f40e8f0 refactor: client (#20)
+* 22bc49c refactor: server code && upgrade go mod (#15)
+* ef2bf71 zap: change socks handle from client to server. (#17)
+
 
 ## SeaMoon 1.1.3
 
