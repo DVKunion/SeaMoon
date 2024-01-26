@@ -1,7 +1,7 @@
 module.exports = {
     title: "SeaMoon",
     theme: 'vdoing',
-    description: "月海(Sea Moon) 是一款 FaaS/BaaS 实现的 Serverless 云渗透工具集，致力于开启云原生的渗透模式。",
+    description: "月海(Sea Moon) 是一款 FaaS/BaaS 实现的 Serverless 网络工具集，期望利用云原生的优势，实现更简单、更便宜的网络功能。",
 
     head: [ // 注入到页面<head> 中的标签，格式[tagName, { attrName: attrValue }, innerHTML?]
         ['link', {rel: 'icon', href: '/img/favicon.ico'}], //favicons，资源放在public文件夹
