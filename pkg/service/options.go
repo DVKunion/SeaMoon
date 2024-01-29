@@ -8,6 +8,7 @@ import (
 type Options struct {
 	addr string
 
+	tor       bool
 	tlsConf   *tls.Config
 	keepalive *KeepAliveOpt
 	buffers   *BufferOpt
@@ -34,6 +35,12 @@ type BufferOpt struct {
 func WithAddr(addr string) Option {
 	return func(o *Options) {
 		o.addr = addr
+	}
+}
+
+func WithTorFlag(tor bool) Option {
+	return func(o *Options) {
+		o.tor = tor
 	}
 }
 

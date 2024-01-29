@@ -15,22 +15,49 @@
     月海(Sea Moon) 是一款 FaaS/BaaS 实现的 Serverless 网络工具集，期望利用云原生的优势，实现更简单、更便宜的网络功能。
 </p>
 <p align="center">
-    月海之名取自于苏轼的《西江月·顷在黄州》，寓意月海取自于传统安全工具，用之于云，最终达到隐匿于海的效果。
+    月海之名取自于苏轼的《西江月·顷在黄州》，寓意月海取自于传统工具，用之于云，最终达到隐匿于海的效果。
 </p>
 
 ## ☁️ 什么是月海
 
 > 🌕 月出于云却隐于海
 
+> 🔥 新增 seamoon 支持 tor 网络访问 onion 域名 
+
 月海(Sea Moon) 是一款 FaaS/BaaS 实现的 Serverless 网络工具集，期望利用云原生的优势，实现更简单、更便宜的网络功能。
 
 月海之名取自于苏轼的《西江月·顷在黄州》，寓意月海取自于传统工具，用之于云，最终达到隐匿于海的效果。
 
-月海基于 Serverless 的动态特性、分别从网络层、应用层实现对应的安全能力，并利用serverless-devs工具来实现快捷的部署/跨厂商操作。
+月海基于 Serverless 的动态特性、分别从网络层、应用层实现对应的能力，并利用serverless-devs工具来实现快捷的部署/跨厂商操作。
 
 想要了解更多，请移步 [官方手册](https://seamoon.dvkunion.cn)
 
 觉得项目不错的话，[还请给一个star ✨](https://github.com/DVKunion/SeaMoon), 你的支持是更新的最大动力～
+
+## 🔨 功能简要
+
+
+**网络隧道**
+
+| 隧道类型      | 技术文档 |  支持情况  |
+|-----------|------|:------:|
+| websockst | []() |   ✅    |
+| grpc      | []() |   ✅    |
+
+
+**网络代理**
+
+| 代理类型        | 技术文档                                                      | Seamoon 客户端支持 | 其他客户端支持 |
+|-------------|-----------------------------------------------------------|:-------------:|:-------:|
+| HTTP(S)     | [HTTP.md](https://seamoon.dvkunion.cn/tech/net/http/)     |       ✅       |    ✅    |
+| Socks5      | [Socks5.md](https://seamoon.dvkunion.cn/tech/net/socks5/) |       ✅       |    ✅    |
+| Socks4      | []()                                                      |       ❌       |    ✅    |
+| shadowsocks | []()                                                      |       ❌       |    ✅    |
+
+**其他**
+
++  🧅 Tor 网络 .onion 支持. [如何开启 Tor 代理](https://seamoon.dvkunion.cn/guide/client/tor/)
++ ......
 
 ## 🔥 使用展示
 

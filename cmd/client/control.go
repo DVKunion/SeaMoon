@@ -78,7 +78,7 @@ func listen(ctx context.Context, server net.Listener, pa string, pt tunnel.Type,
 			slog.Error(consts.ACCEPT_ERROR, "err", err)
 		}
 		if srv, ok := service.Factory.Load(pt); ok {
-			destConn, err := srv.(service.Service).Conn(ctx, t, service.WithAddr(pa))
+			destConn, err := srv.(service.Service).Conn(ctx, t, service.WithAddr(pa), service.WithTorFlag(Config().Control.TorEnable))
 			if err != nil {
 				slog.Error(consts.CONNECT_RMOET_ERROR, "err", err)
 				continue
