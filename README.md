@@ -22,8 +22,6 @@
 
 > 🌕 月出于云却隐于海
 
-> 🔥 新增 seamoon 支持 tor 网络访问 onion 域名 
-
 月海(Sea Moon) 是一款 FaaS/BaaS 实现的 Serverless 网络工具集，期望利用云原生的优势，实现更简单、更便宜的网络功能。
 
 月海之名取自于苏轼的《西江月·顷在黄州》，寓意月海取自于传统工具，用之于云，最终达到隐匿于海的效果。
@@ -34,16 +32,41 @@
 
 觉得项目不错的话，[还请给一个star ✨](https://github.com/DVKunion/SeaMoon), 你的支持是更新的最大动力～
 
-## 🔨 功能简要
+## 🕹 快速开始
 
+[⚡️ 快速开始](https://seamoon.dvkunion.cn/guide/start)
+
+[✨ 新增Render部署, 完全免费的套餐且功能不减！！！](https://seamoon.dvkunion.cn/guide/deploy/render)
+
+[✨ 新增Sealos部署, 价格更低更实惠！](https://seamoon.dvkunion.cn/guide/deploy/sealos)
+
+[🔥 新增 seamoon 支持 tor 网络访问 onion 域名](https://seamoon.dvkunion.cn/guide/client/tor/)
+
+## 🧭 支持平台
+
+| 平台名称             | 是否支持  |                          部署文档                          | 
+|------------------|:-----:|:------------------------------------------------------:|
+| 阿里云              |   ✅   | [部署](https://seamoon.dvkunion.cn/guide/deploy/aliyun)  |
+| 腾讯云              |   ✅   | [部署](https://seamoon.dvkunion.cn/guide/deploy/tencent) |
+| 🔥Sealos         |   ✅   | [部署](https://seamoon.dvkunion.cn/guide/deploy/sealos)  |
+| 🔥🔥Render(完全免费) |   ✅   | [部署](https://seamoon.dvkunion.cn/guide/deploy/render)  |
+| 华为云              |   ✅   |                         [部署]()                         |
+| 百度云              |   ✅   |                         [部署]()                         |
+| AWS              | 🐷调研中 |                         [部署]()                         |
+| Google           | 🐷调研中 |                         [部署]()                         |
+
+## 🔥 使用展示
+
+![client](https://seamoon.oss-cn-hangzhou.aliyuncs.com/0dd37f5600364e59a9457e38eaf77b1f.png)
+
+## 🔨 功能简要
 
 **网络隧道**
 
-| 隧道类型      | 技术文档 |  支持情况  |
-|-----------|------|:------:|
-| websockst | []() |   ✅    |
-| grpc      | []() |   ✅    |
-
+| 隧道类型      | 技术文档 | 支持情况 |
+|-----------|------|:----:|
+| websockst | []() |  ✅   |
+| grpc      | []() |  ✅   |
 
 **网络代理**
 
@@ -56,18 +79,8 @@
 
 **其他**
 
-+  🧅 Tor 网络 .onion 支持. [如何开启 Tor 代理](https://seamoon.dvkunion.cn/guide/client/tor/)
++ 🧅 Tor 网络 .onion 支持. [如何开启 Tor 代理](https://seamoon.dvkunion.cn/guide/client/tor/)
 + ......
-
-## 🔥 使用展示
-
-![client](https://seamoon.oss-cn-hangzhou.aliyuncs.com/0dd37f5600364e59a9457e38eaf77b1f.png)
-
-## 🕹 快速开始
-
-[⚡️ 快速开始](https://seamoon.dvkunion.cn/guide/start)
-
-[✨ 新增Sealos部署, 价格更低更实惠！](https://seamoon.dvkunion.cn/guide/deploy/sealos)
 
 ## 💻 技术文档
 
@@ -86,6 +99,7 @@ Serverless in Cybersecurity 讨论微信群:
 也可以在 项目 Discuss 处发起讨论。
 
 ## ✨ CTStack
+
 <img src="https://ctstack-oss.oss-cn-beijing.aliyuncs.com/CT%20Stack-2.png" width="30%" />
 
 SeaMoon 现已加入 [CTStack](https://stack.chaitin.com/tool/detail?id=186) 社区
