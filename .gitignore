@@ -31,3 +31,4 @@ node_modules
 bootstrap
 .s/
 .seamoom
+.seamoon.db

@@ -2,84 +2,63 @@ package client
 
 import (
 	"context"
-	"html/template"
 	"io"
+	"io/fs"
 	"log/slog"
 	"net/http"
+	_ "net/http/pprof"
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
-	_ "net/http/pprof"
-
+	"github.com/DVKunion/SeaMoon/cmd/client/api"
+	"github.com/DVKunion/SeaMoon/cmd/client/api/service"
+	"github.com/DVKunion/SeaMoon/cmd/client/api/signal"
 	"github.com/DVKunion/SeaMoon/cmd/client/static"
 	"github.com/DVKunion/SeaMoon/pkg/consts"
+	"github.com/DVKunion/SeaMoon/pkg/xlog"
 )
 
-func Serve(ctx context.Context, verbose bool, debug bool) {
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-	sg := NewSigGroup()
-	go API(sg, verbose, debug)
-	go Control(ctx, sg)
-
-	Config().Load(sg)
-	<-sg.WatchChannel
-
-	sg.StopProxy()
-	cancel()
-
-	sg.wg.Wait()
+func Serve(ctx context.Context, debug bool) {
+	go signal.Signal().Run(ctx)
+	// Restful API 服务
+	runApi(debug)
 }
 
-func API(sg *SigGroup, verbose bool, debug bool) {
-	slog.Info(consts.CONTROLLER_START, "addr", Config().Control.ConfigAddr)
+func runApi(debug bool) {
+	logPath := service.GetService("config").(service.SystemConfigService).GetByName("control_log").Value
+	addr := service.GetService("config").(service.SystemConfigService).GetByName("control_addr").Value
+	port := service.GetService("config").(service.SystemConfigService).GetByName("control_port").Value
+
+	xlog.Info("API", xlog.CONTROLLER_START, "addr", addr, "port", port)
 
 	if consts.Version != "dev" || !debug {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	webLogger, err := os.OpenFile(Config().Control.LogPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+	webLogger, err := os.OpenFile(logPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		gin.DefaultWriter = io.MultiWriter(os.Stdout)
-	} else if verbose {
-		gin.DefaultWriter = io.MultiWriter(webLogger, os.Stdout)
 	} else {
 		gin.DefaultWriter = io.MultiWriter(webLogger)
 	}
 
 	server := gin.Default()
 
-	tmpl := template.Must(template.New("").ParseFS(static.HtmlFiles, "templates/*.html"))
-	server.SetHTMLTemplate(tmpl)
+	api.Register(server, debug)
 
-	server.StaticFS("/static", http.FS(static.AssetFiles))
-	server.StaticFileFS("/favicon.ico", "public/img/favicon.ico", http.FS(static.AssetFiles))
+	subFS, err := fs.Sub(static.WebViews, "dist")
 
-	// controller page
-	server.GET("/", func(ctx *gin.Context) {
-		ctx.HTML(200, "index.html", Config())
-	})
-
-	// pprof
-	if debug {
-		server.GET("/debug/pprof/*any", gin.WrapH(http.DefaultServeMux))
+	if err != nil {
+		panic("web static file error: " + err.Error())
 	}
 
-	// controller set
-	server.POST("/", func(ctx *gin.Context) {
-		if err := ctx.ShouldBindJSON(Config()); err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"msg":    "服务异常",
-				"result": err.Error(),
-			})
-			return
-		}
-		sg.Detection()
-		ctx.JSON(http.StatusOK, Config())
+	server.NoRoute(func(c *gin.Context) {
+		c.FileFromFS(c.Request.URL.Path, http.FS(subFS))
 	})
 
-	if err := server.Run(Config().Control.ConfigAddr); err != http.ErrServerClosed {
+	if err := server.Run(strings.Join([]string{addr, port}, ":")); err != http.ErrServerClosed {
 		slog.Error("client running error", "err", err)
 	}
 }

@@ -59,7 +59,7 @@ func HttpTransport(conn net.Conn) error {
 	}
 
 	// 同时处理客户端到服务器和服务器到客户端的数据传输
-	if err := network.Transport(destConn, conn); err != nil {
+	if _, _, err := network.Transport(destConn, conn); err != nil {
 		return err
 	}
 

@@ -6,8 +6,8 @@ import (
 	"net"
 	"time"
 
-	"github.com/DVKunion/SeaMoon/pkg/consts"
 	"github.com/DVKunion/SeaMoon/pkg/network"
+	"github.com/DVKunion/SeaMoon/pkg/xlog"
 )
 
 func Socks5Transport(conn net.Conn) error {
@@ -15,7 +15,7 @@ func Socks5Transport(conn net.Conn) error {
 	b, err := br.Peek(1)
 
 	if err != nil || b[0] != network.SOCKS5Version {
-		slog.Error(consts.CLIENT_PROTOCOL_UNSUPPORT_ERROR, "err", err)
+		slog.Error(xlog.CLIENT_PROTOCOL_UNSUPPORT_ERROR, "err", err)
 		return err
 	} else {
 		// select method
@@ -56,13 +56,13 @@ func Socks5Transport(conn net.Conn) error {
 }
 
 func handleConnect(conn net.Conn, req *network.SOCKS5Request) {
-	slog.Info(consts.SOCKS5_CONNECT_SERVER, "src", conn.RemoteAddr(), "dest", req.Addr)
+	slog.Info(xlog.SOCKS5_CONNECT_SERVER, "src", conn.RemoteAddr(), "dest", req.Addr)
 	// default socks timeout : 10
 	dialer := net.Dialer{Timeout: 10 * time.Second}
 	destConn, err := dialer.Dial("tcp", req.Addr.String())
 
 	if err != nil {
-		slog.Error(consts.SOCKS5_CONNECT_DIAL_ERROR, "err", err)
+		slog.Error(xlog.SOCKS5_CONNECT_DIAL_ERROR, "err", err)
 		return
 	}
 
@@ -70,17 +70,17 @@ func handleConnect(conn net.Conn, req *network.SOCKS5Request) {
 	defer destConn.Close()
 
 	if err := network.NewReply(network.SOCKS5RespSucceeded, nil).Write(conn); err != nil {
-		slog.Error(consts.SOCKS5_CONNECT_WRITE_ERROR, "err", err)
+		slog.Error(xlog.SOCKS5_CONNECT_WRITE_ERROR, "err", err)
 		return
 	}
 
-	slog.Info(consts.SOCKS5_CONNECT_ESTAB, "src", conn.RemoteAddr(), "dest", req.Addr)
+	slog.Info(xlog.SOCKS5_CONNECT_ESTAB, "src", conn.RemoteAddr(), "dest", req.Addr)
 
-	if err := network.Transport(conn, destConn); err != nil {
-		slog.Error(consts.CONNECT_TRANS_ERROR, "err", err)
+	if _, _, err := network.Transport(conn, destConn); err != nil {
+		slog.Error(xlog.CONNECT_TRANS_ERROR, "err", err)
 	}
 
-	slog.Info(consts.SOCKS5_CONNECT_DIS, "src", conn.RemoteAddr(), "dest", req.Addr)
+	slog.Info(xlog.SOCKS5_CONNECT_DIS, "src", conn.RemoteAddr(), "dest", req.Addr)
 }
 
 func handleBind() {

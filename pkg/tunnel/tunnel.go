@@ -10,6 +10,16 @@ type Tunnel interface {
 	net.Conn
 }
 
+type Status int8
+
+const (
+	INITIALIZING Status = iota + 1 // 初始化
+	ACTIVE                         // 可用
+	INACTIVE                       // 停用
+	ERROR                          // 不可用
+	WAITING                        // 异常
+)
+
 type Type string
 
 const (
@@ -17,6 +27,12 @@ const (
 	WST  = "websocket-tunnel"
 	GRT  = "grpc-tunnel"
 )
+
+var tpMaps = map[Type]string{
+	NULL: "",
+	WST:  "ws",
+	GRT:  "grpc",
+}
 
 func TranType(t string) Type {
 	switch t {
@@ -27,4 +43,12 @@ func TranType(t string) Type {
 	default:
 		return NULL
 	}
+}
+
+func (t Type) TranAddr(tls bool) string {
+	proto := tpMaps[t]
+	if tls {
+		return proto + "s://"
+	}
+	return proto + "://"
 }

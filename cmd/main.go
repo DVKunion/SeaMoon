@@ -12,8 +12,7 @@ import (
 )
 
 var (
-	debug   bool
-	verbose bool
+	debug bool
 
 	// server params
 	addr  string
@@ -44,7 +43,7 @@ var (
 )
 
 func Proxy(cmd *cobra.Command, args []string) {
-	client.Serve(cmd.Context(), verbose, debug)
+	client.Serve(cmd.Context(), debug)
 }
 
 func Server(cmd *cobra.Command, args []string) error {
@@ -62,7 +61,6 @@ func Server(cmd *cobra.Command, args []string) error {
 }
 
 func init() {
-	proxyCommand.Flags().BoolVarP(&verbose, "verbose", "v", false, "proxy detail log")
 	proxyCommand.Flags().BoolVarP(&debug, "debug", "d", false, "proxy detail log")
 
 	serverCommand.Flags().StringVarP(&addr, "addr", "a", "0.0.0.0", "server listen addr")
