@@ -1,6 +1,7 @@
 before:
   hooks:
     - go mod tidy
+    -
 builds:
   - binary: seamoon
     env:
@@ -14,7 +15,7 @@ builds:
       - 6
       - 7
     ldflags:
-      - -s -w -X github.com/DVKunion/SeaMoon/pkg/consts.Version={{.Version}}
+      - -s -w -X github.com/DVKunion/SeaMoon/pkg/consts.Version={{.Version}} -X github.com/DVKunion/SeaMoon/pkg/consts.Commit={{.Sha}}
 checksum:
   name_template: 'checksums.txt'
 snapshot:

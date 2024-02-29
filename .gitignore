@@ -22,7 +22,8 @@
 *.crt
 *.key
 
-dist/
+cmd/client/static/dist/*
+web/
 *.log
 *.toml
 .config
