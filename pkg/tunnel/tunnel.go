@@ -24,8 +24,8 @@ type Type string
 
 const (
 	NULL = "unknown"
-	WST  = "websocket-tunnel"
-	GRT  = "grpc-tunnel"
+	WST  = "websocket"
+	GRT  = "grpc"
 )
 
 var tpMaps = map[Type]string{

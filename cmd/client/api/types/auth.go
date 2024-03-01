@@ -10,11 +10,12 @@ const (
 
 	Signature // FC Signature 认证, 这类认证好处在于认证失败 403 不计次数
 	Jwt       // FC Jwt 认证。 需要 jwks
+	Paris     // SCF 网管密钥对认证
 )
 
 func TransAuthType(t string) AuthType {
 	switch t {
-	case "anonymous":
+	case "anonymous", "NONE":
 		return Empty
 	case "function":
 		return Signature

@@ -1,4 +1,4 @@
-package sdk
+package sealos
 
 import (
 	"context"
@@ -24,12 +24,13 @@ import (
 
 	"github.com/DVKunion/SeaMoon/cmd/client/api/models"
 	"github.com/DVKunion/SeaMoon/cmd/client/api/service"
+	"github.com/DVKunion/SeaMoon/cmd/client/sdk"
 	"github.com/DVKunion/SeaMoon/pkg/consts"
 	"github.com/DVKunion/SeaMoon/pkg/tools"
 	"github.com/DVKunion/SeaMoon/pkg/tunnel"
 )
 
-type SealosSDK struct {
+type SDK struct {
 }
 
 var (
@@ -38,7 +39,7 @@ var (
 	fl           = false
 )
 
-type SealosAmount struct {
+type Amount struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
 	Data    struct {
@@ -50,9 +51,9 @@ type SealosAmount struct {
 	} `json:"data"`
 }
 
-func (s SealosSDK) Auth(providerId uint) error {
+func (s *SDK) Auth(providerId uint) error {
 	provider := service.GetService("provider").GetById(providerId).(*models.CloudProvider)
-	amountUrl := fmt.Sprintf("https://costcenter.%s/api/account/getAmount", SealosRegionMap[*provider.Region])
+	amountUrl := fmt.Sprintf("https://costcenter.%s/api/account/getAmount", sdk.SealosRegionMap[*provider.Region])
 
 	req, err := http.NewRequest("GET", amountUrl, nil)
 	if err != nil {
@@ -80,7 +81,7 @@ func (s SealosSDK) Auth(providerId uint) error {
 		return err
 	}
 
-	var sa = SealosAmount{}
+	var sa = Amount{}
 	err = json.Unmarshal(body, &sa)
 	if err != nil {
 		return err
@@ -94,13 +95,13 @@ func (s SealosSDK) Auth(providerId uint) error {
 	return nil
 }
 
-func (s SealosSDK) Billing(providerId uint, tunnel models.Tunnel) error {
+func (s *SDK) Billing(providerId uint, tunnel models.Tunnel) error {
 	// 详细计算某个隧道花费数据
 	//url := fmt.Sprintf("https://costcenter.%s/api/billing", SealosRegionMap[provider.Region])
 	return nil
 }
 
-func (s SealosSDK) Deploy(providerId uint, tun *models.Tunnel) error {
+func (s *SDK) Deploy(providerId uint, tun *models.Tunnel) error {
 	provider := service.GetService("provider").GetById(providerId).(*models.CloudProvider)
 	// sealos 部署十分简单，直接调用 k8s client-go 即可。
 	ctx := context.TODO()
@@ -278,7 +279,7 @@ func (s SealosSDK) Deploy(providerId uint, tun *models.Tunnel) error {
 		Spec: networkingv1.IngressSpec{
 			Rules: []networkingv1.IngressRule{
 				{
-					Host: fmt.Sprintf("%s.%s", hostName, SealosRegionMap[*provider.Region]),
+					Host: fmt.Sprintf("%s.%s", hostName, sdk.SealosRegionMap[*provider.Region]),
 					IngressRuleValue: networkingv1.IngressRuleValue{
 						HTTP: &networkingv1.HTTPIngressRuleValue{
 							Paths: []networkingv1.HTTPIngressPath{
@@ -301,7 +302,7 @@ func (s SealosSDK) Deploy(providerId uint, tun *models.Tunnel) error {
 			},
 			TLS: []networkingv1.IngressTLS{
 				{
-					Hosts:      []string{fmt.Sprintf("%s.%s", hostName, SealosRegionMap[*provider.Region])},
+					Hosts:      []string{fmt.Sprintf("%s.%s", hostName, sdk.SealosRegionMap[*provider.Region])},
 					SecretName: "wildcard-cloud-sealos-io-cert",
 				},
 			},
@@ -313,12 +314,12 @@ func (s SealosSDK) Deploy(providerId uint, tun *models.Tunnel) error {
 	}
 	fmt.Println("Ingress创建成功！")
 	*tun.Status = tunnel.ACTIVE
-	*tun.Addr = fmt.Sprintf("%s.%s", hostName, SealosRegionMap[*provider.Region])
+	*tun.Addr = fmt.Sprintf("%s.%s", hostName, sdk.SealosRegionMap[*provider.Region])
 	service.GetService("tunnel").Update(tun.ID, tun)
 	return nil
 }
 
-func (s SealosSDK) Destroy(providerId uint, tun *models.Tunnel) error {
+func (s *SDK) Destroy(providerId uint, tun *models.Tunnel) error {
 	provider := service.GetService("provider").GetById(providerId).(*models.CloudProvider)
 	ctx := context.TODO()
 
@@ -346,7 +347,7 @@ func (s SealosSDK) Destroy(providerId uint, tun *models.Tunnel) error {
 	return nil
 }
 
-func (s SealosSDK) SyncFC(providerId uint) error {
+func (s *SDK) SyncFC(providerId uint) error {
 	provider := service.GetService("provider").GetById(providerId).(*models.CloudProvider)
 	tunList := make([]models.Tunnel, 0)
 	ctx := context.TODO()
@@ -374,10 +375,10 @@ func (s SealosSDK) SyncFC(providerId uint) error {
 			*tun.Name = strings.Split(svc.Name, "-")[1]
 			*tun.Port = strconv.Itoa(int(svc.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort))
 			*tun.Type = func() tunnel.Type {
-				if strings.HasSuffix(svc.Name, "websocket-tunnel") {
+				if strings.HasSuffix(svc.Name, "websocket") {
 					return tunnel.WST
 				}
-				if strings.HasSuffix(svc.Name, "grpc-tunnel") {
+				if strings.HasSuffix(svc.Name, "grpc") {
 					return tunnel.GRT
 				}
 				return tunnel.NULL

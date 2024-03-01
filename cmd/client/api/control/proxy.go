@@ -8,8 +8,8 @@ import (
 
 	"github.com/DVKunion/SeaMoon/cmd/client/api/models"
 	"github.com/DVKunion/SeaMoon/cmd/client/api/service"
-	"github.com/DVKunion/SeaMoon/cmd/client/api/signal"
 	"github.com/DVKunion/SeaMoon/cmd/client/api/types"
+	"github.com/DVKunion/SeaMoon/cmd/client/signal"
 	"github.com/DVKunion/SeaMoon/pkg/tunnel"
 )
 

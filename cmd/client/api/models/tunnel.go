@@ -18,7 +18,6 @@ type Tunnel struct {
 	Name   *string        // 隧道名称，建议英文
 	Addr   *string        // 服务地址
 	Port   *string        // 服务端口
-	Cost   *float32       // 累计花费
 	Type   *tunnel.Type   // 隧道协议类型
 	Status *tunnel.Status // 隧道状态
 

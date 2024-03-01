@@ -65,8 +65,6 @@ func Listen(ctx context.Context, server net.Listener, p uint) {
 				service.WithAddr(tun.GetAddr()), service.WithTorFlag(tun.TunnelConfig.Tor))
 			if err != nil {
 				slog.Error(xlog.CONNECT_RMOET_ERROR, "err", err)
-				// 说明远程连接失败了，直接把当前的这个 conn 关掉，然后数量 -1
-				//_ = conn.Close()
 				count(dbProxy, pro.ID, -1, m)
 				continue
 			}
