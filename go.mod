@@ -13,6 +13,10 @@ require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/gorilla/websocket v1.5.1
 	github.com/spf13/cobra v1.8.0
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/billing v1.0.866
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cam v1.0.866
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.866
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/scf v1.0.866
 	github.com/tg123/go-htpasswd v1.2.0
 	google.golang.org/grpc v1.37.0
 	google.golang.org/protobuf v1.31.0

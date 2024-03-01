@@ -1,4 +1,4 @@
-package sdk
+package aliyun
 
 import (
 	"encoding/json"
@@ -22,12 +22,13 @@ import (
 )
 
 var (
-	// 阿里云在 fc 上层还有一套 service 的概念，为了方便管理，这里硬编码了 service 的内容。
+	// 阿里云 在 fc 上层还有一套 service 的概念，为了方便管理，这里硬编码了 service 的内容。
 	serviceName = "seamoon"
 	serviceDesc = "seamoon service"
 )
 
-type ALiYunSDK struct {
+// SDK FC
+type SDK struct {
 }
 
 type Resp struct {
@@ -42,7 +43,7 @@ type Resp struct {
 	} `json:"body"`
 }
 
-func (a *ALiYunSDK) Auth(providerId uint) error {
+func (a *SDK) Auth(providerId uint) error {
 	provider := service.GetService("provider").GetById(providerId).(*models.CloudProvider)
 	config := &openapi.Config{
 		// 必填，您的 AccessKey ID
@@ -106,7 +107,7 @@ func (a *ALiYunSDK) Auth(providerId uint) error {
 	return nil
 }
 
-func (a *ALiYunSDK) Deploy(providerId uint, tun *models.Tunnel) error {
+func (a *SDK) Deploy(providerId uint, tun *models.Tunnel) error {
 	provider := service.GetService("provider").GetById(providerId).(*models.CloudProvider)
 	// 原生的库是真tm的难用，
 	client, err := fc.NewClient(
@@ -181,11 +182,11 @@ func (a *ALiYunSDK) Deploy(providerId uint, tun *models.Tunnel) error {
 	return nil
 }
 
-func (a *ALiYunSDK) Destroy(providerId uint, tun *models.Tunnel) error {
+func (a *SDK) Destroy(providerId uint, tun *models.Tunnel) error {
 	return nil
 }
 
-func (a *ALiYunSDK) SyncFC(providerId uint) error {
+func (a *SDK) SyncFC(providerId uint) error {
 	provider := service.GetService("provider").GetById(providerId).(*models.CloudProvider)
 	client, err := fc.NewClient(
 		fmt.Sprintf("%s.%s.fc.aliyuncs.com", provider.CloudAuth.AccessId, *provider.Region),
