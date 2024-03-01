@@ -1,6 +1,6 @@
-package sdk
+package aliyun
 
-var ALiYunBillingMap = map[string]string{
+var BillingMap = map[string]string{
 	"cn-qingdao":            "business.aliyuncs.com",
 	"cn-beijing":            "business.aliyuncs.com",
 	"cn-zhangjiakou":        "business.aliyuncs.com",
@@ -27,9 +27,4 @@ var ALiYunBillingMap = map[string]string{
 	"us-east-1":             "business.ap-southeast-1.aliyuncs.com",
 	"us-west-1":             "business.ap-southeast-1.aliyuncs.com",
 	"eu-west-1":             "business.ap-southeast-1.aliyuncs.com",
-}
-
-var SealosRegionMap = map[string]string{
-	"internal": "cloud.sealos.run",
-	"external": "cloud.sealos.io",
 }

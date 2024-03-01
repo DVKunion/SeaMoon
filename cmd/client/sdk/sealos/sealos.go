@@ -24,7 +24,6 @@ import (
 
 	"github.com/DVKunion/SeaMoon/cmd/client/api/models"
 	"github.com/DVKunion/SeaMoon/cmd/client/api/service"
-	"github.com/DVKunion/SeaMoon/cmd/client/sdk"
 	"github.com/DVKunion/SeaMoon/pkg/consts"
 	"github.com/DVKunion/SeaMoon/pkg/tools"
 	"github.com/DVKunion/SeaMoon/pkg/tunnel"
@@ -53,7 +52,7 @@ type Amount struct {
 
 func (s *SDK) Auth(providerId uint) error {
 	provider := service.GetService("provider").GetById(providerId).(*models.CloudProvider)
-	amountUrl := fmt.Sprintf("https://costcenter.%s/api/account/getAmount", sdk.SealosRegionMap[*provider.Region])
+	amountUrl := fmt.Sprintf("https://costcenter.%s/api/account/getAmount", RegionMap[*provider.Region])
 
 	req, err := http.NewRequest("GET", amountUrl, nil)
 	if err != nil {
@@ -279,7 +278,7 @@ func (s *SDK) Deploy(providerId uint, tun *models.Tunnel) error {
 		Spec: networkingv1.IngressSpec{
 			Rules: []networkingv1.IngressRule{
 				{
-					Host: fmt.Sprintf("%s.%s", hostName, sdk.SealosRegionMap[*provider.Region]),
+					Host: fmt.Sprintf("%s.%s", hostName, RegionMap[*provider.Region]),
 					IngressRuleValue: networkingv1.IngressRuleValue{
 						HTTP: &networkingv1.HTTPIngressRuleValue{
 							Paths: []networkingv1.HTTPIngressPath{
@@ -302,7 +301,7 @@ func (s *SDK) Deploy(providerId uint, tun *models.Tunnel) error {
 			},
 			TLS: []networkingv1.IngressTLS{
 				{
-					Hosts:      []string{fmt.Sprintf("%s.%s", hostName, sdk.SealosRegionMap[*provider.Region])},
+					Hosts:      []string{fmt.Sprintf("%s.%s", hostName, RegionMap[*provider.Region])},
 					SecretName: "wildcard-cloud-sealos-io-cert",
 				},
 			},
@@ -314,7 +313,7 @@ func (s *SDK) Deploy(providerId uint, tun *models.Tunnel) error {
 	}
 	fmt.Println("Ingress创建成功！")
 	*tun.Status = tunnel.ACTIVE
-	*tun.Addr = fmt.Sprintf("%s.%s", hostName, sdk.SealosRegionMap[*provider.Region])
+	*tun.Addr = fmt.Sprintf("%s.%s", hostName, RegionMap[*provider.Region])
 	service.GetService("tunnel").Update(tun.ID, tun)
 	return nil
 }
