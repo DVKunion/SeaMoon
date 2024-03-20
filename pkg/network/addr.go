@@ -4,6 +4,8 @@ import (
 	"encoding/binary"
 	"net"
 	"strconv"
+
+	"github.com/DVKunion/SeaMoon/pkg/system/errors"
 )
 
 /*
@@ -99,7 +101,7 @@ func (addr *Addr) Decode(b []byte) error {
 		addr.Host = string(b[pos : pos+addrlen])
 		pos += addrlen
 	default:
-		return ErrBadAddrType
+		return errors.New(errors.NetworkAddrTypeError)
 	}
 
 	addr.Port = binary.BigEndian.Uint16(b[pos:])

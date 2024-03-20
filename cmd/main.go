@@ -8,7 +8,8 @@ import (
 
 	"github.com/DVKunion/SeaMoon/cmd/client"
 	"github.com/DVKunion/SeaMoon/cmd/server"
-	"github.com/DVKunion/SeaMoon/pkg/consts"
+	"github.com/DVKunion/SeaMoon/pkg/api/database/drivers"
+	"github.com/DVKunion/SeaMoon/pkg/system/consts"
 )
 
 var (
@@ -31,6 +32,12 @@ var (
 		Use:   "proxy",
 		Short: "SeaMoon proxy mod",
 		Run:   Proxy,
+	}
+
+	generateCommand = &cobra.Command{
+		Use:   "generate",
+		Short: "SeaMoon generate devs code",
+		RunE:  drivers.Drive().Generate,
 	}
 
 	versionCommand = &cobra.Command{
@@ -70,6 +77,7 @@ func init() {
 	rootCommand.AddCommand(versionCommand)
 	rootCommand.AddCommand(proxyCommand)
 	rootCommand.AddCommand(serverCommand)
+	rootCommand.AddCommand(generateCommand)
 }
 
 func main() {
