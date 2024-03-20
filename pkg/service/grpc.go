@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/keepalive"
 
+	"github.com/DVKunion/SeaMoon/pkg/api/enum"
 	pb "github.com/DVKunion/SeaMoon/pkg/proto"
 	"github.com/DVKunion/SeaMoon/pkg/transfer"
 	"github.com/DVKunion/SeaMoon/pkg/tunnel"
@@ -26,10 +27,10 @@ type GRPCService struct {
 }
 
 func init() {
-	register(tunnel.GRT, &GRPCService{})
+	register(enum.TunnelTypeGRT, &GRPCService{})
 }
 
-func (g GRPCService) Conn(ctx context.Context, t transfer.Type, sOpts ...Option) (net.Conn, error) {
+func (g GRPCService) Conn(ctx context.Context, t enum.ProxyType, sOpts ...Option) (tunnel.Tunnel, error) {
 	var cs grpc.ClientStream
 	var srvOpts = &Options{}
 	var err error
@@ -84,9 +85,9 @@ func (g GRPCService) Conn(ctx context.Context, t transfer.Type, sOpts ...Option)
 	client := pb.NewTunnelClient(g.cc)
 
 	switch t {
-	case transfer.HTTP:
+	case enum.ProxyTypeHTTP:
 		cs, err = client.Http(ctx)
-	case transfer.SOCKS5:
+	case enum.ProxyTypeSOCKS5:
 		cs, err = client.Socks5(ctx)
 	}
 

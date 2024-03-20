@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+
+	"github.com/DVKunion/SeaMoon/pkg/system/errors"
 )
 
 // Address types
@@ -77,11 +79,11 @@ func ReadMethods(r io.Reader) ([]uint8, error) {
 	}
 
 	if b[0] != SOCKS5Version {
-		return nil, ErrBadVersion
+		return nil, errors.New(errors.NetworkVersionError)
 	}
 
 	if b[1] == 0 {
-		return nil, ErrBadMethod
+		return nil, errors.New(errors.NetworkMethodError)
 	}
 
 	length := 2 + int(b[1])
@@ -147,7 +149,7 @@ func ReadUserPassRequest(r io.Reader) (*UserPassRequest, error) {
 	}
 
 	if b[0] != SOCKS5UserPassVer {
-		return nil, ErrBadVersion
+		return nil, errors.New(errors.NetworkVersionError)
 	}
 
 	req := &UserPassRequest{
@@ -233,7 +235,7 @@ func ReadUserPassResponse(r io.Reader) (*UserPassResponse, error) {
 	}
 
 	if b[0] != SOCKS5UserPassVer {
-		return nil, ErrBadVersion
+		return nil, errors.New(errors.NetworkVersionError)
 	}
 
 	res := &UserPassResponse{
@@ -289,7 +291,7 @@ func ReadSOCKS5Request(r io.Reader) (*SOCKS5Request, error) {
 	}
 
 	if b[0] != SOCKS5Version {
-		return nil, ErrBadVersion
+		return nil, errors.New(errors.NetworkVersionError)
 	}
 
 	request := &SOCKS5Request{
@@ -306,7 +308,7 @@ func ReadSOCKS5Request(r io.Reader) (*SOCKS5Request, error) {
 	case AddrDomain:
 		length = 7 + int(b[4])
 	default:
-		return nil, ErrBadAddrType
+		return nil, errors.New(errors.NetworkAddrTypeError)
 	}
 
 	if n < length {
@@ -387,7 +389,7 @@ func ReadReply(r io.Reader) (*Reply, error) {
 	}
 
 	if b[0] != SOCKS5Version {
-		return nil, ErrBadVersion
+		return nil, errors.New(errors.NetworkVersionError)
 	}
 
 	reply := &Reply{
@@ -404,7 +406,7 @@ func ReadReply(r io.Reader) (*Reply, error) {
 	case AddrDomain:
 		length = 7 + int(b[4])
 	default:
-		return nil, ErrBadAddrType
+		return nil, errors.New(errors.NetworkAddrTypeError)
 	}
 
 	if n < length {
@@ -540,7 +542,7 @@ func ReadUDPDatagram(r io.Reader) (*UDPDatagram, error) {
 	case AddrDomain:
 		hlen = 7 + int(b[4])
 	default:
-		return nil, ErrBadAddrType
+		return nil, errors.New(errors.NetworkAddrTypeError)
 	}
 
 	dlen := int(header.Rsv)

@@ -10,7 +10,8 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	"github.com/DVKunion/SeaMoon/pkg/consts"
+	"github.com/DVKunion/SeaMoon/pkg/api/enum"
+	"github.com/DVKunion/SeaMoon/pkg/system/consts"
 	"github.com/DVKunion/SeaMoon/pkg/transfer"
 	"github.com/DVKunion/SeaMoon/pkg/tunnel"
 )
@@ -26,10 +27,10 @@ type WSService struct {
 }
 
 func init() {
-	register(tunnel.WST, &WSService{})
+	register(enum.TunnelTypeWST, &WSService{})
 }
 
-func (s *WSService) Conn(ctx context.Context, t transfer.Type, sOpts ...Option) (net.Conn, error) {
+func (s *WSService) Conn(ctx context.Context, t enum.ProxyType, sOpts ...Option) (tunnel.Tunnel, error) {
 	// todo: useless ctx
 	var srvOpts = &Options{}
 

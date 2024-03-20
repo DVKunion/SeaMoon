@@ -28,6 +28,10 @@ func GRPCWrapConn(addr net.Addr, cc grpc.Stream) Tunnel {
 	}
 }
 
+func (c *grpcConn) Delay() int64 {
+	return 0
+}
+
 func (c *grpcConn) Read(b []byte) (n int, err error) {
 	if len(c.rb) == 0 {
 		chunk, err := c.recv()

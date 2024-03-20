@@ -21,6 +21,7 @@
 *.pem
 *.crt
 *.key
+*.sql
 
 cmd/client/static/dist/*
 web/
