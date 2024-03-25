@@ -10,6 +10,10 @@ var defaultLog = slog.Default()
 
 var index = "UNEXPECT"
 
+func Logger() *slog.Logger {
+	return defaultLog
+}
+
 // Debug logs at LevelDebug.
 func Debug(msg string, args ...any) {
 	if strings.Contains(msg, " ") {

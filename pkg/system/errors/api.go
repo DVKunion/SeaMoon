@@ -14,7 +14,7 @@ type APIError struct {
 type APIErrorMsg string
 
 func (a APIError) Error() string {
-	xlog.Error("API", a.s, "err", a.e)
+	xlog.Error(a.s, "err", a.e)
 	return a.s
 }
 

@@ -10,33 +10,43 @@ import (
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
-func Socks5Transport(conn net.Conn) error {
+func Socks5Check(conn net.Conn) (net.Conn, error) {
 	br := &network.BufferedConn{Conn: conn, Br: bufio.NewReader(conn)}
 	b, err := br.Peek(1)
 
 	if err != nil || b[0] != network.SOCKS5Version {
-		return errors.Wrap(err, errors.ServiceProtocolNotSupportError)
+		return nil, errors.Wrap(err, errors.ServiceProtocolNotSupportError)
 	}
+	return br, nil
+}
 
+func Socks5Transport(conn net.Conn, check bool) error {
+
+	var err error
+	if !check {
+		if conn, err = Socks5Check(conn); err != nil {
+			return err
+		}
+	}
 	// todo AUTH
 
 	// select method
-	if _, err = network.ReadMethods(br); err != nil {
+	if _, err = network.ReadMethods(conn); err != nil {
 		return errors.Wrap(err, errors.ServiceSocks5ReadMethodError)
 	}
 
-	if err = network.WriteMethod(network.MethodNoAuth, br); err != nil {
+	if err = network.WriteMethod(network.MethodNoAuth, conn); err != nil {
 		return errors.Wrap(err, errors.ServiceSocks5WriteMethodError)
 	}
 
 	// read command
-	request, err := network.ReadSOCKS5Request(br)
+	request, err := network.ReadSOCKS5Request(conn)
 	if err != nil {
 		return errors.Wrap(err, errors.ServiceSocks5ReadCmdError)
 	}
 	switch request.Cmd {
 	case network.SOCKS5CmdConnect:
-		handleConnect(br, request)
+		handleConnect(conn, request)
 	case network.SOCKS5CmdBind:
 		// todo: support cmd bind
 		xlog.Debug("unexpect not support cmd bind")

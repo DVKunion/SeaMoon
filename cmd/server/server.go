@@ -2,12 +2,13 @@ package server
 
 import (
 	"context"
-	"errors"
-	"log/slog"
+	"os"
 	"strings"
 
 	net "github.com/DVKunion/SeaMoon/pkg/network"
 	"github.com/DVKunion/SeaMoon/pkg/service"
+	"github.com/DVKunion/SeaMoon/pkg/system/errors"
+	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
 type Server struct {
@@ -56,14 +57,17 @@ func (s *Server) Serve(ctx context.Context) error {
 		return err
 	}
 
-	slog.Info("seamoon server start with", "options", s.opts)
+	xlog.Info(xlog.ApiServerStart, "options", s.opts)
 
 	var srvOpt []service.Option
 
 	srvOpt = append(srvOpt, service.WithAddr(serverAddr))
+	srvOpt = append(srvOpt, service.WithUid(os.Getenv("SM_UID")))
+	srvOpt = append(srvOpt, service.WithPassword(os.Getenv("SM_SS_PASS")))
+	srvOpt = append(srvOpt, service.WithCrypt(os.Getenv("SM_SS_CRYPT")))
 
 	if err := s.srv.Serve(ln, srvOpt...); err != nil {
-		slog.Error("server error", err)
+		xlog.Error(errors.ServiceError, err)
 		return err
 	}
 	return nil

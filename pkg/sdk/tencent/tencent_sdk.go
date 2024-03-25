@@ -2,7 +2,6 @@ package tencent
 
 import (
 	"encoding/json"
-	"errors"
 	"strconv"
 	"strings"
 	"time"
@@ -17,6 +16,7 @@ import (
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
 	"github.com/DVKunion/SeaMoon/pkg/api/models"
 	"github.com/DVKunion/SeaMoon/pkg/system/consts"
+	"github.com/DVKunion/SeaMoon/pkg/system/errors"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
@@ -262,9 +262,9 @@ func deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, error) {
 			return "", err
 		}
 		if *fc.Response.TotalCount != 1 {
-			return "", errors.New("查询到多余的函数")
+			return "", errors.New(errors.SDKFCInfoError)
 		}
-		xlog.Info("SDK", "正在等待函数创建成功...", "status", *fc.Response.Functions[0].Status, "cnt", cnt)
+		xlog.Info(xlog.SDKWaitingFCStatus, "status", *fc.Response.Functions[0].Status, "cnt", cnt)
 		switch *fc.Response.Functions[0].Status {
 		case "Active":
 			cnt = 31
@@ -415,19 +415,19 @@ func sync(ca *models.CloudAuth, regions []string) ([]fcInfo, error) {
 			req.Namespace = fc.Namespace
 			fcd, err := client.GetFunction(req)
 			if err != nil {
-				xlog.Error("SDK", "get function detail error", "name", *fc.FunctionName, "err", err)
+				xlog.Error(errors.SDKFCDetailError, "name", *fc.FunctionName, "err", err)
 				continue
 			} else {
 				target.detail = fcd.Response
 				// 解析触发器
 				trigger := fcd.Response.Triggers
 				if len(trigger) < 1 {
-					xlog.Error("SDK", "get function triggers error", "name", *fc.FunctionName, "err", err)
+					xlog.Error(errors.SDKTriggerError, "name", *fc.FunctionName, "err", err)
 				} else {
 					var tri triggerDesc
 					err := json.Unmarshal([]byte(*trigger[0].TriggerDesc), &tri)
 					if err != nil {
-						xlog.Error("SDK", "get function triggers json error", "name", *fc.FunctionName, "err", err)
+						xlog.Error(errors.SDKTriggerUnmarshalError, "name", *fc.FunctionName, "err", err)
 					}
 					target.addr = strings.Replace(tri.Service.SubDomain, "https://", "", -1)
 					target.auth = tri.Api.AuthType

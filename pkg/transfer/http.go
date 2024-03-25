@@ -9,8 +9,6 @@ import (
 )
 
 func HttpTransport(conn net.Conn) error {
-	defer conn.Close()
-
 	// 接收客户端的连接，并从第一条消息中获取目标地址
 	request, err := http.ReadRequest(bufio.NewReader(conn))
 	if err != nil {

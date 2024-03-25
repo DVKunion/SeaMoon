@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"crypto/tls"
-	"log/slog"
 	"net"
 	"strings"
 	"time"
@@ -14,6 +13,8 @@ import (
 
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
 	pb "github.com/DVKunion/SeaMoon/pkg/proto"
+	"github.com/DVKunion/SeaMoon/pkg/system/errors"
+	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 	"github.com/DVKunion/SeaMoon/pkg/transfer"
 	"github.com/DVKunion/SeaMoon/pkg/tunnel"
 )
@@ -137,7 +138,7 @@ func (g GRPCService) Http(server pb.Tunnel_HttpServer) error {
 	gt := tunnel.GRPCWrapConn(g.addr, server)
 
 	if err := transfer.HttpTransport(gt); err != nil {
-		slog.Error("connection error", "msg", err)
+		xlog.Error(errors.ServiceTransportError, "type", "http", "err", err)
 		return err
 	}
 
@@ -147,8 +148,8 @@ func (g GRPCService) Http(server pb.Tunnel_HttpServer) error {
 func (g GRPCService) Socks5(server pb.Tunnel_Socks5Server) error {
 	gt := tunnel.GRPCWrapConn(g.addr, server)
 
-	if err := transfer.Socks5Transport(gt); err != nil {
-		slog.Error("connection error", "msg", err)
+	if err := transfer.Socks5Transport(gt, false); err != nil {
+		xlog.Error(errors.ServiceTransportError, "type", "socks5", "err", err)
 		return err
 	}
 	return nil
