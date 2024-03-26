@@ -56,7 +56,7 @@ type ProxyCreateApi struct {
 	ListenPort      *string           `json:"listen_port"`
 	Status          *enum.ProxyStatus `json:"status"`
 	StatusMessage   *string           `json:"status_message"`
-	TunnelId        uint              `json:"tunnel_id"`
+	TunnelID        uint              `json:"tunnel_id"`
 	TunnelCreateApi *TunnelCreateApi  `json:"tunnel_create_api"`
 }
 
@@ -65,6 +65,10 @@ func (p Proxy) Addr() string {
 }
 
 func (p Proxy) ProtoAddr() string {
+	if *p.Type == enum.ProxyTypeAUTO || *p.Type == enum.ProxyTypeSOCKS5Vmess || *p.Type == enum.ProxyTypeSOCKS5Vless || *p.Type == enum.ProxyTypeSOCKS5Ssr {
+		// 随便选好了
+		return fmt.Sprintf("%s://%s", enum.ProxyTypeSOCKS5, strings.Join([]string{*p.ListenAddr, *p.ListenPort}, ":"))
+	}
 	return fmt.Sprintf("%s://%s", p.Type, strings.Join([]string{*p.ListenAddr, *p.ListenPort}, ":"))
 }
 

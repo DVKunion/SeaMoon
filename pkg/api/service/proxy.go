@@ -135,16 +135,13 @@ func (p *proxy) SpeedProxy(ctx context.Context, obj *models.Proxy) error {
 		return err
 	}
 	s := targets[0]
-	err = s.PingTest(nil)
-	if err != nil {
+	if err = s.PingTest(nil); err != nil {
 		return err
 	}
-	err = s.DownloadTest()
-	if err != nil {
+	if err = s.DownloadTest(); err != nil {
 		return err
 	}
-	err = s.UploadTest()
-	if err != nil {
+	if err = s.UploadTest(); err != nil {
 		return err
 	}
 
