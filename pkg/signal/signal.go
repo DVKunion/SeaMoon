@@ -56,7 +56,8 @@ func (sb *Bus) Daemon(ctx context.Context) {
 			// proxy sync change task
 			proxy, err := service.SVC.GetProxyById(ctx, pys.id)
 			if err != nil {
-				xlog.Error(errors.SignalGetObjError, "err", err)
+				_ = service.SVC.UpdateProxyStatus(ctx, pys.id, enum.ProxyStatusError, err.Error())
+				xlog.Error(errors.SignalGetObjError, "obj", "proxy", "err", err)
 				continue
 			}
 			switch pys.next {
@@ -64,7 +65,8 @@ func (sb *Bus) Daemon(ctx context.Context) {
 				sigCtx, cancel := context.WithCancel(ctx)
 				tun, err := service.SVC.GetTunnelById(ctx, proxy.TunnelID)
 				if err != nil {
-					xlog.Error(errors.SignalGetObjError, "err", err)
+					_ = service.SVC.UpdateProxyStatus(ctx, pys.id, enum.ProxyStatusError, err.Error())
+					xlog.Error(errors.SignalGetObjError, "obj", "tunnel", "err", err)
 					continue
 				}
 				server, err := listener.TCPListen(sigCtx, proxy, tun)
@@ -74,6 +76,7 @@ func (sb *Bus) Daemon(ctx context.Context) {
 				sb.canceler[pys.id] = cancel
 				sb.listener[pys.id] = server
 				xlog.Info(xlog.SignalListenStart, "id", pys.id, "type", proxy.Type, "addr", proxy.Addr())
+				_ = service.SVC.UpdateProxyStatus(ctx, pys.id, enum.ProxyStatusActive, "")
 			case enum.ProxyStatusInactive:
 				if cancel, ok := sb.canceler[pys.id]; ok {
 					// 先调一下 cancel
@@ -92,6 +95,7 @@ func (sb *Bus) Daemon(ctx context.Context) {
 				if err = service.SVC.SpeedProxy(ctx, proxy); err != nil {
 					_ = service.SVC.UpdateProxyStatus(ctx, proxy.ID, enum.ProxyStatusError, err.Error())
 					xlog.Error(errors.SignalSpeedTestError, "id", pys.id, "type", proxy.Type, "addr", proxy.Addr(), "err", err)
+					continue
 				}
 				if err = service.SVC.UpdateProxyStatus(ctx, proxy.ID, enum.ProxyStatusActive, ""); err != nil {
 					xlog.Error(errors.SignalUpdateObjError, "id", pys.id, "type", proxy.Type, "addr", proxy.Addr(), "err", err)
@@ -101,13 +105,13 @@ func (sb *Bus) Daemon(ctx context.Context) {
 			// todo: provider sync change task
 			_, err := service.SVC.GetProviderById(ctx, prs.id)
 			if err != nil {
-				xlog.Error(errors.SignalGetObjError, "err", err)
+				xlog.Error(errors.SignalGetObjError, "obj", "provider", "err", err)
 			}
 		case ts := <-sb.tunnelChannel:
 			// todo: provider sync change task
 			_, err := service.SVC.GetTunnelById(ctx, ts.id)
 			if err != nil {
-				xlog.Error(errors.SignalGetObjError, "err", err)
+				xlog.Error(errors.SignalGetObjError, "obj", "tunnel", "err", err)
 			}
 		}
 	}

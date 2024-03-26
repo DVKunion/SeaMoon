@@ -61,16 +61,18 @@ func CreateProxy(c *gin.Context) {
 			*obj.StatusMessage = err.Error()
 		} else {
 			// todo: 发送部署请求
-			obj.TunnelId = tun.ID
+			obj.TunnelID = tun.ID
 		}
 	}
+
+	// 非账户来的，直接带着
 
 	if res, err := service.SVC.CreateProxy(c, obj.ToModel(true)); err != nil {
 		servant.ErrorMsg(c, http.StatusInternalServerError, errors.ApiError(errors.ApiServiceError, err))
 		return
 	} else {
 		// 发送启动通知
-		signal.Signal().SendProxySignal(res.ID, *res.Status)
+		signal.Signal().SendProxySignal(res.ID, enum.ProxyStatusActive)
 		servant.SuccessMsg(c, 1, res.ToApi())
 	}
 }

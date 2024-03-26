@@ -9,7 +9,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	pb "github.com/DVKunion/SeaMoon/pkg/proto"
+	"github.com/DVKunion/SeaMoon/pkg/service/proto"
 )
 
 type grpcConn struct {
@@ -47,7 +47,7 @@ func (c *grpcConn) Read(b []byte) (n int, err error) {
 }
 
 func (c *grpcConn) Write(b []byte) (n int, err error) {
-	chunk := &pb.Chunk{
+	chunk := &proto.Chunk{
 		Body: b,
 		Size: int32(len(b)),
 	}
@@ -62,8 +62,8 @@ func (c *grpcConn) Write(b []byte) (n int, err error) {
 
 func (c *grpcConn) Close() error {
 	switch cost := c.cc.(type) {
-	case pb.Tunnel_HttpClient:
-	case pb.Tunnel_Socks5Client:
+	case proto.Tunnel_HttpClient:
+	case proto.Tunnel_Socks5Client:
 		return cost.CloseSend()
 	}
 	return nil
@@ -96,9 +96,9 @@ func (c *grpcConn) context() context.Context {
 	return context.Background()
 }
 
-func (c *grpcConn) send(data *pb.Chunk) error {
+func (c *grpcConn) send(data *proto.Chunk) error {
 	sender, ok := c.cc.(interface {
-		Send(*pb.Chunk) error
+		Send(*proto.Chunk) error
 	})
 	if !ok {
 		// todo
@@ -107,9 +107,9 @@ func (c *grpcConn) send(data *pb.Chunk) error {
 	return sender.Send(data)
 }
 
-func (c *grpcConn) recv() (*pb.Chunk, error) {
+func (c *grpcConn) recv() (*proto.Chunk, error) {
 	receiver, ok := c.cc.(interface {
-		Recv() (*pb.Chunk, error)
+		Recv() (*proto.Chunk, error)
 	})
 	if !ok {
 		// todo

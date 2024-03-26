@@ -12,7 +12,9 @@ import (
 	"google.golang.org/grpc/keepalive"
 
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
-	pb "github.com/DVKunion/SeaMoon/pkg/proto"
+	pb "github.com/DVKunion/SeaMoon/pkg/service/proto"
+	"github.com/DVKunion/SeaMoon/pkg/service/proto/gost"
+	"github.com/DVKunion/SeaMoon/pkg/system/consts"
 	"github.com/DVKunion/SeaMoon/pkg/system/errors"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 	"github.com/DVKunion/SeaMoon/pkg/transfer"
@@ -20,11 +22,12 @@ import (
 )
 
 type GRPCService struct {
-	addr   net.Addr
-	cc     *grpc.ClientConn
-	server *grpc.Server
-
+	addr    net.Addr
+	cc      *grpc.ClientConn
+	server  *grpc.Server
+	startAt time.Time
 	pb.UnimplementedTunnelServer
+	gost.UnimplementedGostTunelServer
 }
 
 func init() {
@@ -130,8 +133,20 @@ func (g GRPCService) Serve(ln net.Listener, srvOpt ...Option) error {
 	server := grpc.NewServer(gRPCOpts...)
 
 	pb.RegisterTunnelServer(server, &g)
+	gost.RegisterGostTunelServer(server, &g)
 
+	g.startAt = time.Now()
 	return server.Serve(ln)
+}
+
+func (g GRPCService) Auto(server pb.Tunnel_AutoServer) error {
+	gt := tunnel.GRPCWrapConn(g.addr, server)
+
+	if err := transfer.AutoTransport(gt); err != nil {
+		xlog.Error(errors.ServiceTransportError, "type", "socks5", "err", err)
+		return err
+	}
+	return nil
 }
 
 func (g GRPCService) Http(server pb.Tunnel_HttpServer) error {
@@ -153,4 +168,54 @@ func (g GRPCService) Socks5(server pb.Tunnel_Socks5Server) error {
 		return err
 	}
 	return nil
+}
+
+func (g GRPCService) V2RaySsr(server pb.Tunnel_V2RaySsrServer) error {
+	gt := tunnel.GRPCWrapConn(g.addr, server)
+
+	if err := transfer.V2rayTransport(gt, "shadowsocks"); err != nil {
+		xlog.Error(errors.ServiceTransportError, "type", "v2ray-ssr", "err", err)
+		return err
+	}
+	return nil
+}
+
+func (g GRPCService) V2RayVmess(server pb.Tunnel_V2RayVmessServer) error {
+	gt := tunnel.GRPCWrapConn(g.addr, server)
+
+	if err := transfer.V2rayTransport(gt, "vmess"); err != nil {
+		xlog.Error(errors.ServiceTransportError, "type", "vmess", "err", err)
+		return err
+	}
+	return nil
+}
+
+func (g GRPCService) V2RayVless(server pb.Tunnel_V2RayVlessServer) error {
+	gt := tunnel.GRPCWrapConn(g.addr, server)
+
+	if err := transfer.V2rayTransport(gt, "vless"); err != nil {
+		xlog.Error(errors.ServiceTransportError, "type", "vless", "err", err)
+		return err
+	}
+	return nil
+}
+
+// Tunnel gost grpc 适配, 实际上直接做一个 auto 协议就好了
+func (g GRPCService) Tunnel(server gost.GostTunel_TunnelServer) error {
+	gt := tunnel.GRPCWrapConn(g.addr, server)
+
+	if err := transfer.AutoTransport(gt); err != nil {
+		xlog.Error(errors.ServiceTransportError, "type", "socks5", "err", err)
+		return err
+	}
+	return nil
+}
+
+func (g GRPCService) Health(ctx context.Context, p *pb.Ping) (*pb.Pong, error) {
+	return &pb.Pong{
+		Status:  "OK",
+		Time:    g.startAt.Format("2006-01-02 15:04:05"),
+		Version: consts.Version,
+		Commit:  consts.Commit,
+	}, nil
 }
