@@ -11,6 +11,7 @@ import (
 	"github.com/DVKunion/SeaMoon/pkg/api/service"
 	"github.com/DVKunion/SeaMoon/pkg/signal"
 	"github.com/DVKunion/SeaMoon/pkg/system/errors"
+	"github.com/DVKunion/SeaMoon/pkg/tools"
 )
 
 func ListProxies(c *gin.Context) {
@@ -88,8 +89,12 @@ func UpdateProxy(c *gin.Context) {
 
 	// 朝着队列发送控制信号
 	signal.Signal().SendProxySignal(obj.ID, *obj.Status)
-
-	if res, err := service.SVC.UpdateProxy(c, uint(id), obj.ToModel(false)); err != nil {
+	m := obj.ToModel(false)
+	// 这里愚蠢de做一个特殊处理: 当代理关闭时，自动将连接数清零
+	if *obj.Status == enum.ProxyStatusInactive {
+		m.Conn = tools.IntPtr(0)
+	}
+	if res, err := service.SVC.UpdateProxy(c, uint(id), m); err != nil {
 		servant.ErrorMsg(c, http.StatusInternalServerError, errors.ApiError(errors.ApiServiceError, err))
 	} else {
 		servant.SuccessMsg(c, 1, res.ToApi())

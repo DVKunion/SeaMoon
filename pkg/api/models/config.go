@@ -20,6 +20,10 @@ var DefaultConfig = []Config{
 		Value: "seamoon-web.log",
 	},
 	{
+		Key:   "auto_start",
+		Value: "true",
+	},
+	{
 		Key:   "version",
 		Value: consts.Version,
 	},
@@ -41,6 +45,7 @@ type ConfigApi struct {
 	ControlAddr string `json:"control_addr"`
 	ControlPort string `json:"control_port"`
 	ControlLog  string `json:"control_log"`
+	AutoStart   string `json:"auto_start"`
 
 	Version string `json:"version"`
 }
@@ -60,11 +65,10 @@ func (c *ConfigApi) ToModel() ConfigList {
 		Key:   "control_log",
 		Value: c.ControlLog,
 	})
-	// 不处理 version
-	//res = append(res, &Config{
-	//	Key:   "version",
-	//	Value: c.Version,
-	//})
+	res = append(res, &Config{
+		Key:   "auto_start",
+		Value: c.AutoStart,
+	})
 
 	return res
 }
@@ -79,6 +83,8 @@ func (cl ConfigList) ToApi() *ConfigApi {
 			res.ControlPort = s.Value
 		case "control_log":
 			res.ControlLog = s.Value
+		case "auto_start":
+			res.AutoStart = s.Value
 		case "version":
 			res.Version = s.Value
 		}

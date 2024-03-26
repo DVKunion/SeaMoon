@@ -69,11 +69,11 @@ func (sb *Bus) Daemon(ctx context.Context) {
 				}
 				server, err := listener.TCPListen(sigCtx, proxy, tun)
 				if err != nil {
-					xlog.Error(errors.SignalListenerError, "id", pys.id, "addr", proxy.Addr(), "err", err)
+					xlog.Error(errors.SignalListenerError, "id", pys.id, "type", proxy.Type, "addr", proxy.Addr(), "err", err)
 				}
 				sb.canceler[pys.id] = cancel
 				sb.listener[pys.id] = server
-				xlog.Info(xlog.SignalListenStart, "id", pys.id, "addr", proxy.Addr())
+				xlog.Info(xlog.SignalListenStart, "id", pys.id, "type", proxy.Type, "addr", proxy.Addr())
 			case enum.ProxyStatusInactive:
 				if cancel, ok := sb.canceler[pys.id]; ok {
 					// 先调一下 cancel
@@ -83,18 +83,18 @@ func (sb *Bus) Daemon(ctx context.Context) {
 						err := ln.Close()
 						if err != nil {
 							// 错了就错了吧，说明 ctx 挂了一般 goroutines 也跟着挂了
-							xlog.Error(errors.SignalListenerError, "id", pys.id, "addr", proxy.Addr(), "err", err)
+							xlog.Error(errors.SignalListenerError, "id", pys.id, "type", proxy.Type, "addr", proxy.Addr(), "err", err)
 						}
 					}
 				}
-				xlog.Info(xlog.SignalListenStop, "id", pys.id, "addr", proxy.Addr())
+				xlog.Info(xlog.SignalListenStop, "id", pys.id, "type", proxy.Type, "addr", proxy.Addr())
 			case enum.ProxyStatusSpeeding:
 				if err = service.SVC.SpeedProxy(ctx, proxy); err != nil {
 					_ = service.SVC.UpdateProxyStatus(ctx, proxy.ID, enum.ProxyStatusError, err.Error())
-					xlog.Error(errors.SignalSpeedTestError, "id", pys.id, "addr", proxy.Addr(), "err", err)
+					xlog.Error(errors.SignalSpeedTestError, "id", pys.id, "type", proxy.Type, "addr", proxy.Addr(), "err", err)
 				}
 				if err = service.SVC.UpdateProxyStatus(ctx, proxy.ID, enum.ProxyStatusActive, ""); err != nil {
-					xlog.Error(errors.SignalUpdateObjError, "id", pys.id, "addr", proxy.Addr(), "err", err)
+					xlog.Error(errors.SignalUpdateObjError, "id", pys.id, "type", proxy.Type, "addr", proxy.Addr(), "err", err)
 				}
 			}
 		case prs := <-sb.providerChannel:
@@ -109,6 +109,22 @@ func (sb *Bus) Daemon(ctx context.Context) {
 			if err != nil {
 				xlog.Error(errors.SignalGetObjError, "err", err)
 			}
+		}
+	}
+}
+
+func (sb *Bus) Recover(ctx context.Context, recover string) {
+	// 首先看一下是否需要恢复运行状态的服务
+	proxies, err := service.SVC.ListActiveProxies(ctx)
+	if err != nil {
+		xlog.Error(errors.SignalRecoverProxyError, "err", err)
+	}
+	for _, p := range proxies {
+		if recover == "true" {
+			xlog.Info(xlog.SignalListenRecover, "id", p.ID, "type", p.Type, "addr", p.Addr())
+			sb.SendProxySignal(p.ID, *p.Status)
+		} else {
+			_ = service.SVC.UpdateProxyStatus(ctx, p.ID, enum.ProxyStatusInactive, "reboot")
 		}
 	}
 }

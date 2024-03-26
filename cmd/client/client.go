@@ -21,10 +21,22 @@ import (
 )
 
 func Serve(ctx context.Context, debug bool) {
-	// 控制总线，用于管控服务相关
-	go signal.Signal().Daemon(ctx)
+	// Signal 异步服务
+	runSignal(ctx)
 	// Restful API 服务
 	runApi(ctx, debug)
+}
+
+func runSignal(ctx context.Context) {
+	// 控制总线，用于管控服务相关
+	go signal.Signal().Daemon(ctx)
+	// 如果配置了自动恢复设置，尝试发送恢复信号
+	rec, err := service.SVC.GetConfigByName(ctx, "auto_start")
+	if err != nil {
+		xlog.Error(errors.SignalGetObjError, "err", err)
+		return
+	}
+	signal.Signal().Recover(ctx, rec.Value)
 }
 
 func runApi(ctx context.Context, debug bool) {
@@ -40,9 +52,9 @@ func runApi(ctx context.Context, debug bool) {
 
 	webLogger, err := os.OpenFile(logPath.Value, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
-		gin.DefaultWriter = io.MultiWriter(os.Stdout)
+		gin.DefaultWriter = io.MultiWriter(xlog.Logger())
 	} else {
-		gin.DefaultWriter = io.MultiWriter(webLogger)
+		gin.DefaultWriter = io.MultiWriter(xlog.Logger(), webLogger)
 	}
 
 	server := gin.Default()

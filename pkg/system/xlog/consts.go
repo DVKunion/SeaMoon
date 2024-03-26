@@ -17,8 +17,9 @@ const (
 
 // SIGNAL 相关日志
 const (
-	SignalListenStart = "signal start proxy listener"
-	SignalListenStop  = "signal stop proxy listener"
+	SignalListenStart   = "signal start proxy listener"
+	SignalListenStop    = "signal stop proxy listener"
+	SignalListenRecover = "signal send recover proxy signal"
 )
 
 // DB 相关日志
