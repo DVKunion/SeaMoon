@@ -1,8 +1,6 @@
 package errors
 
 import (
-	"github.com/pkg/errors"
-
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
@@ -18,15 +16,9 @@ func (a APIError) Error() string {
 	return a.s
 }
 
-func ApiError(msg APIErrorMsg, e ...error) APIError {
-	res := APIError{
+func ApiError(msg APIErrorMsg, e error) APIError {
+	return APIError{
 		s: string(msg),
-		e: errors.New(""),
+		e: e,
 	}
-	if len(e) > 0 {
-		for _, es := range e {
-			res.e = errors.Wrap(res.e, es.Error())
-		}
-	}
-	return res
 }

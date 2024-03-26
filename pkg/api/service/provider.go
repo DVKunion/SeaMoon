@@ -140,7 +140,7 @@ func (p *provider) SyncProvider(ctx context.Context, id uint) error {
 			continue
 		}
 		tun.ProviderId = id
-		if _, err = SVC.CreateTunnel(ctx, tun.ToModel()); err != nil {
+		if _, err = SVC.CreateTunnel(ctx, tun.ToModel(true)); err != nil {
 			return err
 		}
 	}

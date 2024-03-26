@@ -26,6 +26,9 @@ func toApi(src interface{}, dst interface{}, extras ...func(api interface{})) in
 func toModel(src interface{}, dst interface{}, full bool) interface{} {
 	copyReflect(src, dst)
 	if full {
+		// 实际上这里自动填充防止空指针，做了很多次的改动
+		// 最终决定，只有 create 一个新对象时候是需要自动填充的，
+		// update 不要帮别人填充，null 就是 null
 		autoFull(dst)
 	}
 	return dst

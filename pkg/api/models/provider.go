@@ -85,8 +85,8 @@ func (p Provider) ToApi() *ProviderApi {
 	return toApi(p, &ProviderApi{}, p.extra()).(*ProviderApi)
 }
 
-func (pa ProviderCreateApi) ToModel() *Provider {
-	return toModel(pa, &Provider{}, true).(*Provider)
+func (pa ProviderCreateApi) ToModel(full bool) *Provider {
+	return toModel(pa, &Provider{}, full).(*Provider)
 }
 
 func (p Provider) extra() func(api interface{}) {

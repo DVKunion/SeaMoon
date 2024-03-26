@@ -105,8 +105,8 @@ func (tl TunnelList) ToApi(extra ...func(api interface{})) []*TunnelApi {
 	return res
 }
 
-func (ta TunnelCreateApi) ToModel() *Tunnel {
-	return toModel(ta, &Tunnel{}, true).(*Tunnel)
+func (ta TunnelCreateApi) ToModel(full bool) *Tunnel {
+	return toModel(ta, &Tunnel{}, full).(*Tunnel)
 }
 
 func NewTunnelCreateApi() *TunnelCreateApi {

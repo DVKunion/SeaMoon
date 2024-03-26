@@ -65,7 +65,7 @@ func CreateProvider(c *gin.Context) {
 		return
 	}
 
-	if res, err := service.SVC.CreateProvider(c, obj.ToModel()); err != nil {
+	if res, err := service.SVC.CreateProvider(c, obj.ToModel(true)); err != nil {
 		servant.ErrorMsg(c, http.StatusInternalServerError, errors.ApiError(errors.ApiServiceError, err))
 	} else {
 		servant.SuccessMsg(c, 1, res.ToApi())
@@ -87,7 +87,7 @@ func UpdateProvider(c *gin.Context) {
 
 	obj.ID = uint(id)
 
-	if res, err := service.SVC.UpdateProvider(c, obj.ToModel()); err != nil {
+	if res, err := service.SVC.UpdateProvider(c, obj.ToModel(false)); err != nil {
 		servant.ErrorMsg(c, http.StatusInternalServerError, errors.ApiError(errors.ApiServiceError, err))
 	} else {
 		servant.SuccessMsg(c, 1, res.ToApi())

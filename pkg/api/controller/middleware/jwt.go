@@ -17,7 +17,7 @@ func JWTAuthMiddleware(c *gin.Context) {
 	tokenString := c.GetHeader("Authorization")
 
 	if tokenString == "" {
-		servant.ErrorMsg(c, http.StatusUnauthorized, errors.ApiError(errors.ApiParamsRequire))
+		servant.ErrorMsg(c, http.StatusUnauthorized, errors.ApiError(errors.ApiParamsRequire, nil))
 		c.Abort()
 		return
 	}
