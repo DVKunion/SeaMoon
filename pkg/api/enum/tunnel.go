@@ -35,6 +35,10 @@ func TransTunnelType(t string) TunnelType {
 	}
 }
 
+func (t TunnelType) ToPtr() *string {
+	return (*string)(&t)
+}
+
 func (t TunnelType) TranAddr(tls bool) string {
 	proto := tpMaps[t]
 	if tls {

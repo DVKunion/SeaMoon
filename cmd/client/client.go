@@ -4,7 +4,6 @@ import (
 	"context"
 	"io"
 	"io/fs"
-	"log/slog"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -17,6 +16,7 @@ import (
 	"github.com/DVKunion/SeaMoon/pkg/api/service"
 	"github.com/DVKunion/SeaMoon/pkg/signal"
 	"github.com/DVKunion/SeaMoon/pkg/system/consts"
+	"github.com/DVKunion/SeaMoon/pkg/system/errors"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
@@ -32,7 +32,7 @@ func runApi(ctx context.Context, debug bool) {
 	addr, err := service.SVC.GetConfigByName(ctx, "control_addr")
 	port, err := service.SVC.GetConfigByName(ctx, "control_port")
 
-	xlog.Info(xlog.ApiServerStart, "addr", addr.Value, "port", port.Value)
+	xlog.Info(xlog.ApiServiceStart, "addr", addr.Value, "port", port.Value)
 
 	if consts.Version != "dev" || !debug {
 		gin.SetMode(gin.ReleaseMode)
@@ -60,6 +60,6 @@ func runApi(ctx context.Context, debug bool) {
 	})
 
 	if err := server.Run(strings.Join([]string{addr.Value, port.Value}, ":")); err != http.ErrServerClosed {
-		slog.Error("client running error", "err", err)
+		xlog.Error(errors.ApiServeError, "err", err)
 	}
 }

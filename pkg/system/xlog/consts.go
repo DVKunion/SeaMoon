@@ -2,7 +2,8 @@ package xlog
 
 // API 相关日志
 const (
-	ApiServerStart = "api service start"
+	ApiServiceStart = "seamoon api service start"
+	ApiServerStart  = "seamoon server start"
 )
 
 // SERVICE 相关日志
@@ -15,8 +16,19 @@ const (
 )
 
 // SIGNAL 相关日志
-
 const (
 	SignalListenStart = "signal start proxy listener"
 	SignalListenStop  = "signal stop proxy listener"
+)
+
+// DB 相关日志
+const (
+	DatabaseInit       = "database not found, start init ......"
+	DatabaseConfigInit = "database not found config table, start init ......"
+	DatabaseUserInit   = "database not found user table, start init ......"
+)
+
+// SDK 相关日志
+const (
+	SDKWaitingFCStatus = "sdk waiting for function create success"
 )

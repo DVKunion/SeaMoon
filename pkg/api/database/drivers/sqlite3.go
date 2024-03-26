@@ -1,7 +1,6 @@
 package drivers
 
 import (
-	"log/slog"
 	"os"
 
 	"github.com/glebarez/sqlite"
@@ -12,6 +11,7 @@ import (
 
 	"github.com/DVKunion/SeaMoon/pkg/api/database/dao"
 	"github.com/DVKunion/SeaMoon/pkg/api/models"
+	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
 const dbPath string = ".seamoon.db"
@@ -30,7 +30,7 @@ func (s *sqlite3) Init(migrateFunc []func()) {
 
 	if _, exist := os.Stat(dbPath); os.IsNotExist(exist) {
 		defer func() {
-			slog.Info("初始化数据库......")
+			xlog.Info(xlog.DatabaseInit)
 			for _, m := range models.ModelList {
 				// 初始化表
 				s.db.AutoMigrate(m)
