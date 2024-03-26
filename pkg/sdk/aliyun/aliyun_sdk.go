@@ -16,6 +16,7 @@ import (
 
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
 	"github.com/DVKunion/SeaMoon/pkg/api/models"
+	"github.com/DVKunion/SeaMoon/pkg/system/consts"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
@@ -115,7 +116,7 @@ func deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, error) {
 		WithInstanceType("e1"). // 性能实例
 		WithTimeout(300).
 		WithCustomContainerConfig(fc.NewCustomContainerConfig().
-			WithImage("registry.cn-hongkong.aliyuncs.com/seamoon/seamoon:dev").
+			WithImage(fmt.Sprintf("%s:%s", registryEndPoint[tun.Config.Region], consts.Version)).
 			WithCommand("[\"./seamoon\"]").
 			WithArgs("[\"server\"]"))); err != nil {
 		return "", err
