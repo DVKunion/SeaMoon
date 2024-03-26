@@ -21,7 +21,7 @@ func SuccessMsg(c *gin.Context, total int64, data interface{}) {
 // ErrorMsg 通用错误响应
 func ErrorMsg(c *gin.Context, code int, err error) {
 	if err == nil {
-		err = errors.ApiError(errors.ApiCommonError)
+		err = errors.ApiError(errors.ApiCommonError, nil)
 	}
 	c.JSON(code, gin.H{
 		"success": false,

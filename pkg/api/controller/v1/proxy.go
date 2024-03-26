@@ -55,7 +55,7 @@ func CreateProxy(c *gin.Context) {
 
 	// 判断是否从账户来的，账户来的需要先创建 tunnel
 	if obj.TunnelCreateApi != nil {
-		if tun, err := service.SVC.CreateTunnel(c, obj.TunnelCreateApi.ToModel()); err != nil {
+		if tun, err := service.SVC.CreateTunnel(c, obj.TunnelCreateApi.ToModel(true)); err != nil {
 			*obj.Status = enum.ProxyStatusError
 			*obj.StatusMessage = err.Error()
 		} else {
@@ -64,7 +64,7 @@ func CreateProxy(c *gin.Context) {
 		}
 	}
 
-	if res, err := service.SVC.CreateProxy(c, obj.ToModel()); err != nil {
+	if res, err := service.SVC.CreateProxy(c, obj.ToModel(true)); err != nil {
 		servant.ErrorMsg(c, http.StatusInternalServerError, errors.ApiError(errors.ApiServiceError, err))
 		return
 	} else {
@@ -89,7 +89,7 @@ func UpdateProxy(c *gin.Context) {
 	// 朝着队列发送控制信号
 	signal.Signal().SendProxySignal(obj.ID, *obj.Status)
 
-	if res, err := service.SVC.UpdateProxy(c, uint(id), obj.ToModel()); err != nil {
+	if res, err := service.SVC.UpdateProxy(c, uint(id), obj.ToModel(false)); err != nil {
 		servant.ErrorMsg(c, http.StatusInternalServerError, errors.ApiError(errors.ApiServiceError, err))
 	} else {
 		servant.SuccessMsg(c, 1, res.ToApi())

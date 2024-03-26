@@ -53,7 +53,7 @@ func CreateTunnel(c *gin.Context) {
 		return
 	}
 
-	if res, err := service.SVC.CreateTunnel(c, obj.ToModel()); err != nil {
+	if res, err := service.SVC.CreateTunnel(c, obj.ToModel(true)); err != nil {
 		servant.ErrorMsg(c, http.StatusInternalServerError, errors.ApiError(errors.ApiServiceError, err))
 	} else {
 		servant.SuccessMsg(c, 1, res.ToApi(extra()))
@@ -75,7 +75,7 @@ func UpdateTunnel(c *gin.Context) {
 
 	obj.ID = uint(id)
 
-	if res, err := service.SVC.UpdateTunnel(c, obj.ToModel()); err != nil {
+	if res, err := service.SVC.UpdateTunnel(c, obj.ToModel(false)); err != nil {
 		servant.ErrorMsg(c, http.StatusInternalServerError, errors.ApiError(errors.ApiServiceError, err))
 	} else {
 		servant.SuccessMsg(c, 1, res.ToApi(extra()))

@@ -81,6 +81,6 @@ func (pl ProxyList) ToApi() []*ProxyApi {
 	return res
 }
 
-func (pa ProxyCreateApi) ToModel() *Proxy {
-	return toModel(pa, &Proxy{}, true).(*Proxy)
+func (pa ProxyCreateApi) ToModel(full bool) *Proxy {
+	return toModel(pa, &Proxy{}, full).(*Proxy)
 }
