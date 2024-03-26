@@ -1,6 +1,6 @@
 package aliyun
 
-var BillingMap = map[string]string{
+var billingMap = map[string]string{
 	"cn-qingdao":            "business.aliyuncs.com",
 	"cn-beijing":            "business.aliyuncs.com",
 	"cn-zhangjiakou":        "business.aliyuncs.com",
@@ -27,4 +27,28 @@ var BillingMap = map[string]string{
 	"us-east-1":             "business.ap-southeast-1.aliyuncs.com",
 	"us-west-1":             "business.ap-southeast-1.aliyuncs.com",
 	"eu-west-1":             "business.ap-southeast-1.aliyuncs.com",
+}
+
+var registryEndPoint = map[string]string{
+	"cn-hangzhou":    "registry.cn-hangzhou.aliyuncs.com/seamoon/seamoon",
+	"cn-shanghai":    "registry.cn-shanghai.aliyuncs.com/seamoon/seamoon",
+	"cn-qingdao":     "registry.cn-qingdao.aliyuncs.com/seamoon/seamoon",
+	"cn-beijing":     "registry.cn-beijing.aliyuncs.com/seamoon/seamoon",
+	"cn-zhangjiakou": "registry.cn-zhangjiakou.aliyuncs.com/seamoon/seamoon",
+	"cn-huhehaote":   "registry.cn-huhehaote.aliyuncs.com/seamoon/seamoon",
+	"cn-shenzhen":    "registry.cn-shenzhen.aliyuncs.com/seamoon/seamoon",
+	"cn-chengdu":     "registry.cn-chengdu.aliyuncs.com/seamoon/seamoon",
+	"cn-hongkong":    "registry.cn-hongkong.aliyuncs.com/seamoon/seamoon",
+	"ap-northeast-1": "registry.ap-northeast-1.aliyuncs.com/seamoon/seamoon",
+	//"ap-northeast-2": "registry.ap-northeast-2.aliyuncs.com/seamoon/seamoon",
+	"ap-southeast-1": "registry.ap-southeast-1.aliyuncs.com/seamoon/seamoon",
+	"ap-southeast-2": "registry.ap-southeast-2.aliyuncs.com/seammon/seamoon",
+	"ap-southeast-3": "registry.ap-southeast-3.aliyuncs.com/seamoon/seamoon",
+	"ap-southeast-5": "registry.ap-southeast-5.aliyuncs.com/seamoon/seamoon",
+	//"ap-southeast-7": "泰国(曼谷)",
+	"ap-south-1":   "registry.ap-south-1.aliyuncs.com/seamoon/seamoon",
+	"eu-central-1": "registry.eu-central-1.aliyuncs.com/seamoon/seamoon",
+	"eu-west-1":    "registry.eu-west-1.aliyuncs.com/seamoon/seamoon",
+	"us-west-1":    "registry.us-west-1.aliyuncs.com/seamoon/seamoon",
+	"us-east-1":    "registry.us-east-1.aliyuncs.com/seamoon/seamoon",
 }
