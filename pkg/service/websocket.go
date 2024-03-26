@@ -186,7 +186,7 @@ func (s *WSService) v2ray(proto string) func(http.ResponseWriter, *http.Request)
 		t := tunnel.WsWrapConn(conn)
 		go func() {
 			if err := transfer.V2rayTransport(t, proto); err != nil {
-				xlog.Error(errors.ServiceTransportError, "type", "vmess", "err", err)
+				xlog.Error(errors.ServiceTransportError, "type", "v2ray", "proto", proto, "err", err)
 			}
 		}()
 	}

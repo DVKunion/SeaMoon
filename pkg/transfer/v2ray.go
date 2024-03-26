@@ -13,6 +13,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/features/inbound"
 	"github.com/v2fly/v2ray-core/v5/features/routing"
 	"github.com/v2fly/v2ray-core/v5/infra/conf/cfgcommon"
+	"github.com/v2fly/v2ray-core/v5/infra/conf/synthetic/log"
 	v4 "github.com/v2fly/v2ray-core/v5/infra/conf/v4"
 	_ "github.com/v2fly/v2ray-core/v5/main/distro/all"
 
@@ -103,6 +104,11 @@ func renderSetting(proto string, crypt string, pass string) *[]byte {
 
 func renderConfig(port uint32, id string, pass string, crypt string, tp enum.TunnelType, tor bool, tls bool) (*core.Config, error) {
 	t := v4.Config{
+		LogConfig: &log.LogConfig{
+			AccessLog: "v2ray_access.log",
+			ErrorLog:  "v2ray_error.log",
+			LogLevel:  "ERROR",
+		},
 		InboundConfigs: make([]v4.InboundDetourConfig, 0),
 		OutboundConfigs: []v4.OutboundDetourConfig{
 			outboundConfig(tor),
@@ -158,7 +164,7 @@ func renderConfig(port uint32, id string, pass string, crypt string, tp enum.Tun
 				To:   port,
 			},
 			Settings: (*json.RawMessage)(renderSetting("shadowsocks", crypt, pass)),
-			Tag:      handleTag + "ss",
+			Tag:      handleTag + "shadowsocks",
 			StreamSetting: &v4.StreamConfig{
 				Network:  (*v4.TransportProtocol)(tp.ToPtr()),
 				Security: "tls",
@@ -180,6 +186,7 @@ func outboundConfig(tor bool) v4.OutboundDetourConfig {
                     }
                 ]
             }`)
+	empty := []byte("{}")
 	if tor {
 		return v4.OutboundDetourConfig{
 			Protocol: "socks",
@@ -188,6 +195,6 @@ func outboundConfig(tor bool) v4.OutboundDetourConfig {
 	}
 	return v4.OutboundDetourConfig{
 		Protocol: "freedom",
-		Settings: &json.RawMessage{},
+		Settings: (*json.RawMessage)(&empty),
 	}
 }
