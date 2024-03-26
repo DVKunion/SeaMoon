@@ -11,6 +11,7 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/glebarez/sqlite v1.10.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
+	github.com/gookit/color v1.5.4
 	github.com/gorilla/websocket v1.5.1
 	github.com/pkg/errors v0.9.1
 	github.com/showwin/speedtest-go v1.6.10
@@ -19,7 +20,6 @@ require (
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cam v1.0.866
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.866
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/scf v1.0.866
-	github.com/tg123/go-htpasswd v1.2.0
 	github.com/v2fly/v2ray-core/v5 v5.15.1
 	google.golang.org/grpc v1.62.1
 	google.golang.org/protobuf v1.33.0
@@ -32,7 +32,6 @@ require (
 )
 
 require (
-	github.com/GehirnInc/crypt v0.0.0-20200316065508-bb7000b8a962 // indirect
 	github.com/adrg/xdg v0.4.0 // indirect
 	github.com/aead/cmac v0.0.0-20160719120800-7af84192f0b1 // indirect
 	github.com/ajg/form v1.5.1 // indirect
@@ -123,6 +122,7 @@ require (
 	github.com/v2fly/ss-bloomring v0.0.0-20210312155135-28617310f63e // indirect
 	github.com/vincent-petithory/dataurl v1.0.0 // indirect
 	github.com/xiaokangwang/VLite v0.0.0-20220418190619-cff95160a432 // indirect
+	github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778 // indirect
 	github.com/xtaci/smux v1.5.24 // indirect
 	go.starlark.net v0.0.0-20230612165344-9532f5667272 // indirect
 	go.uber.org/mock v0.3.0 // indirect

@@ -55,8 +55,9 @@ const (
 
 // SIGNAL 相关错误
 const (
-	SignalGetObjError    = "signal try to get object from db error"
-	SignalUpdateObjError = "signal try to update object from db error"
-	SignalListenerError  = "signal listener unexpect error"
-	SignalSpeedTestError = "signal try test speed error"
+	SignalGetObjError       = "signal try to get object from db error"
+	SignalUpdateObjError    = "signal try to update object from db error"
+	SignalListenerError     = "signal listener unexpect error"
+	SignalSpeedTestError    = "signal try test speed error"
+	SignalRecoverProxyError = "signal try recover active proxy error"
 )
