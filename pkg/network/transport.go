@@ -6,8 +6,6 @@ import (
 	"sync"
 
 	"github.com/gorilla/websocket"
-
-	"github.com/DVKunion/SeaMoon/pkg/system/errors"
 )
 
 const bufferSize = 64 * 1024
@@ -57,10 +55,12 @@ func Transport(src, dest net.Conn) (int64, int64, error) {
 		case e := <-done:
 			wg.Wait()
 			// 忽略 websocket 正常断开
-			if errors.As(e, net.OpError{}) &&
-				errors.As(e.(*net.OpError).Err, websocket.CloseError{}) &&
-				e.(*net.OpError).Err.(*websocket.CloseError).Code == websocket.CloseNormalClosure {
-				e = nil
+			if opErr, ok := e.(*net.OpError); ok {
+				if closeErr, ok := opErr.Err.(*websocket.CloseError); ok {
+					if closeErr.Code == websocket.CloseNormalClosure {
+						e = nil
+					}
+				}
 			}
 			return inbound, outbound, e
 		}

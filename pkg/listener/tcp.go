@@ -11,7 +11,6 @@ import (
 	"github.com/DVKunion/SeaMoon/pkg/service"
 	"github.com/DVKunion/SeaMoon/pkg/system/errors"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
-	"github.com/DVKunion/SeaMoon/pkg/tools"
 )
 
 func TCPListen(ctx context.Context, py *models.Proxy) (net.Listener, error) {
@@ -52,19 +51,15 @@ func listen(ctx context.Context, server net.Listener, id uint, t *enum.ProxyType
 				continue
 			}
 			go func() {
-				if _, err = db_service.SVC.UpdateProxy(ctx, id, &models.Proxy{
-					Lag: tools.Int64Ptr(destConn.Delay()),
-				}); err != nil {
-					xlog.Error(xlog.ListenerLagError, "id", id, "err", err)
-				}
-			}()
-			go func() {
 				in, out, err := network.Transport(conn, destConn)
 				if err != nil {
 					xlog.Error(xlog.NetworkTransportError, "err", err)
 				}
 				db_service.SVC.UpdateProxyConn(ctx, id, -1)
 				db_service.SVC.UpdateProxyNetworkInfo(ctx, id, in, out)
+			}()
+			go func() {
+				db_service.SVC.UpdateProxyNetworkLag(ctx, id, destConn.Delay())
 			}()
 		}
 	}

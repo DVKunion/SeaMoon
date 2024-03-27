@@ -13,12 +13,11 @@ const (
 type ProviderStatus int8
 
 const (
-	ProvStatusCrete ProviderStatus = iota + 1
+	ProvStatusCreate ProviderStatus = iota + 1
 	ProvStatusSuccess
 	ProvStatusFailed
 	ProvStatusSync
 	ProvStatusForbidden
 	ProvStatusSyncError
-	ProvStatusArrearsError
 	ProvStatusDelete
 )

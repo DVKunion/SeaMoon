@@ -4,12 +4,15 @@ import (
 	"context"
 	"net/http"
 	"reflect"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 
 	"github.com/DVKunion/SeaMoon/pkg/api/controller/servant"
+	"github.com/DVKunion/SeaMoon/pkg/api/enum"
 	"github.com/DVKunion/SeaMoon/pkg/api/models"
 	"github.com/DVKunion/SeaMoon/pkg/api/service"
+	"github.com/DVKunion/SeaMoon/pkg/signal"
 	"github.com/DVKunion/SeaMoon/pkg/system/errors"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
@@ -90,11 +93,12 @@ func DeleteTunnel(c *gin.Context) {
 		return
 	}
 
-	if err = service.SVC.DeleteTunnel(c, uint(id)); err != nil {
-		servant.ErrorMsg(c, http.StatusInternalServerError, errors.ApiError(xlog.ApiServiceError, err))
-	} else {
-		servant.SuccessMsg(c, 1, nil)
-	}
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	signal.Signal().SendTunnelSignal(uint(id), enum.TunnelDelete, wg)
+	wg.Wait()
+
+	servant.SuccessMsg(c, 1, nil)
 }
 
 func extra() func(api interface{}) {
