@@ -103,7 +103,6 @@ const (
 const (
 	ListenerAcceptError = "listener unexpect error"
 	ListenerDailError   = "listener dail to remote error"
-	ListenerLagError    = "listener latency calculation error"
 )
 
 // SIGNAL 相关错误
@@ -113,7 +112,7 @@ const (
 	SignalListenerError     = "signal listener unexpect error"
 	SignalRecoverProxyError = "signal try recover active proxy error"
 	SignalSpeedProxyError   = "signal try test speed error"
-	SignalSyncProviderError = " signal try sync provider error"
+	SignalSyncProviderError = "signal try sync provider error"
 	SignalDeployTunError    = "signal try deploy tunnel error"
 	SignalStopTunError      = "signal try stop tunnel error"
 	SignalDeleteTunError    = "signal try delete tunnel error"

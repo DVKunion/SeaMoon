@@ -8,7 +8,6 @@ import (
 	"github.com/DVKunion/SeaMoon/pkg/api/database/dao"
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
 	"github.com/DVKunion/SeaMoon/pkg/api/models"
-	"github.com/DVKunion/SeaMoon/pkg/system/errors"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
@@ -61,7 +60,7 @@ func (p *proxy) UpdateProxyConn(ctx context.Context, id uint, op int) {
 		if _, err := query.WithContext(ctx).Where(query.ID.Eq(id)).UpdateSimple(query.Conn.Add(1)); err != nil {
 			xlog.Error(xlog.ServiceDBUpdateFiledError, "type", "proxy_conn", "err", err)
 		}
-	case 2:
+	case -1:
 		if _, err := query.WithContext(ctx).Where(query.ID.Eq(id)).UpdateSimple(query.Conn.Sub(1)); err != nil {
 			xlog.Error(xlog.ServiceDBUpdateFiledError, "type", "proxy_conn", "err", err)
 		}
@@ -79,6 +78,16 @@ func (p *proxy) UpdateProxyNetworkInfo(ctx context.Context, id uint, in int64, o
 	}
 }
 
+func (p *proxy) UpdateProxyNetworkLag(ctx context.Context, id uint, lag int64) {
+	query := dao.Q.Proxy
+
+	if _, err := query.WithContext(ctx).Where(query.ID.Eq(id)).Update(
+		query.Lag, lag,
+	); err != nil {
+		xlog.Error(xlog.ServiceDBUpdateFiledError, "type", "proxy_lag", "err", err)
+	}
+}
+
 func (p *proxy) UpdateProxyStatus(ctx context.Context, id uint, status enum.ProxyStatus, msg string) {
 	query := dao.Q.Proxy
 
@@ -91,13 +100,6 @@ func (p *proxy) UpdateProxyStatus(ctx context.Context, id uint, status enum.Prox
 }
 
 func (p *proxy) DeleteProxy(ctx context.Context, id uint) error {
-	target, err := p.GetProxyById(ctx, id)
-	if err != nil {
-		return err
-	}
-	if *target.Status == enum.ProxyStatusActive {
-		return errors.New(xlog.ServiceDBDeleteError)
-	}
 	query := dao.Q.Proxy
 	res, err := query.WithContext(ctx).Where(query.ID.Eq(id)).Delete()
 	if err != nil || res.Error != nil {
