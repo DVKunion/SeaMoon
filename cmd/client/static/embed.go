@@ -2,8 +2,5 @@ package static
 
 import "embed"
 
-//go:embed public/*
-var AssetFiles embed.FS
-
-//go:embed templates/*
-var HtmlFiles embed.FS
+//go:embed dist/*
+var WebViews embed.FS

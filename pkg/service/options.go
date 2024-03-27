@@ -9,6 +9,9 @@ type Options struct {
 	addr string
 
 	tor       bool
+	pass      string
+	uid       string
+	crypt     string
 	tlsConf   *tls.Config
 	keepalive *KeepAliveOpt
 	buffers   *BufferOpt
@@ -47,6 +50,24 @@ func WithTorFlag(tor bool) Option {
 func WithTLSConf(t *tls.Config) Option {
 	return func(o *Options) {
 		o.tlsConf = t
+	}
+}
+
+func WithPassword(pass string) Option {
+	return func(o *Options) {
+		o.pass = pass
+	}
+}
+
+func WithUid(uid string) Option {
+	return func(o *Options) {
+		o.uid = uid
+	}
+}
+
+func WithCrypt(c string) Option {
+	return func(o *Options) {
+		o.crypt = c
 	}
 }
 

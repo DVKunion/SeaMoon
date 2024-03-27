@@ -2,67 +2,72 @@ package transfer
 
 import (
 	"bufio"
-	"log/slog"
 	"net"
 	"time"
 
-	"github.com/DVKunion/SeaMoon/pkg/consts"
 	"github.com/DVKunion/SeaMoon/pkg/network"
+	"github.com/DVKunion/SeaMoon/pkg/system/errors"
+	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
-func Socks5Transport(conn net.Conn) error {
+func Socks5Check(conn net.Conn) (net.Conn, error) {
 	br := &network.BufferedConn{Conn: conn, Br: bufio.NewReader(conn)}
 	b, err := br.Peek(1)
 
 	if err != nil || b[0] != network.SOCKS5Version {
-		slog.Error(consts.CLIENT_PROTOCOL_UNSUPPORT_ERROR, "err", err)
-		return err
-	} else {
-		// select method
-		_, err := network.ReadMethods(br)
-		if err != nil {
-			slog.Error(`[socks5] read methods failed`, "err", err)
-			return err
-		}
+		return nil, errors.Wrap(err, xlog.ServiceProtocolNotSupportError)
+	}
+	return br, nil
+}
 
-		// TODO AUTH
-		if err := network.WriteMethod(network.MethodNoAuth, br); err != nil {
-			if err != nil {
-				slog.Error(`[socks5] write method failed`, "err", err)
-			} else {
-				slog.Error(`[socks5] methods is not acceptable`)
-			}
-			return err
-		}
+func Socks5Transport(conn net.Conn, check bool) error {
 
-		// read command
-		request, err := network.ReadSOCKS5Request(br)
-		if err != nil {
-			slog.Error(`[socks5] read command failed`, "err", err)
+	var err error
+	if !check {
+		if conn, err = Socks5Check(conn); err != nil {
 			return err
-		}
-		switch request.Cmd {
-		case network.SOCKS5CmdConnect:
-			handleConnect(br, request)
-		case network.SOCKS5CmdBind:
-			slog.Error("not support cmd bind")
-			//handleBind(conn, request)
-		case network.SOCKS5CmdUDPOverTCP:
-			//handleUDP(conn, request)
-			slog.Error("not support cmd upd")
 		}
 	}
+	// todo AUTH
+
+	// select method
+	if _, err = network.ReadMethods(conn); err != nil {
+		return errors.Wrap(err, xlog.ServiceSocks5ReadMethodError)
+	}
+
+	if err = network.WriteMethod(network.MethodNoAuth, conn); err != nil {
+		return errors.Wrap(err, xlog.ServiceSocks5WriteMethodError)
+	}
+
+	// read command
+	request, err := network.ReadSOCKS5Request(conn)
+	if err != nil {
+		return errors.Wrap(err, xlog.ServiceSocks5ReadCmdError)
+	}
+	switch request.Cmd {
+	case network.SOCKS5CmdConnect:
+		handleConnect(conn, request)
+	case network.SOCKS5CmdBind:
+		// todo: support cmd bind
+		xlog.Debug("unexpect not support cmd bind")
+		handleBind(conn, request)
+	case network.SOCKS5CmdUDPOverTCP:
+		// todo: support upd proxy
+		xlog.Debug("unexpect not support upd")
+		handleUDPOverTCP(conn, request)
+	}
+
 	return nil
 }
 
 func handleConnect(conn net.Conn, req *network.SOCKS5Request) {
-	slog.Info(consts.SOCKS5_CONNECT_SERVER, "src", conn.RemoteAddr(), "dest", req.Addr)
+	xlog.Info(xlog.ServiceSocks5ConnectServer, "src", conn.RemoteAddr(), "dest", req.Addr)
 	// default socks timeout : 10
 	dialer := net.Dialer{Timeout: 10 * time.Second}
 	destConn, err := dialer.Dial("tcp", req.Addr.String())
 
 	if err != nil {
-		slog.Error(consts.SOCKS5_CONNECT_DIAL_ERROR, "err", err)
+		xlog.Error(xlog.ServiceSocks5DailError, "err", err)
 		return
 	}
 
@@ -70,23 +75,23 @@ func handleConnect(conn net.Conn, req *network.SOCKS5Request) {
 	defer destConn.Close()
 
 	if err := network.NewReply(network.SOCKS5RespSucceeded, nil).Write(conn); err != nil {
-		slog.Error(consts.SOCKS5_CONNECT_WRITE_ERROR, "err", err)
+		xlog.Error(xlog.ServiceSocks5ReplyError, "err", err)
 		return
 	}
 
-	slog.Info(consts.SOCKS5_CONNECT_ESTAB, "src", conn.RemoteAddr(), "dest", req.Addr)
+	xlog.Info(xlog.ServiceSocks5Establish, "src", conn.RemoteAddr(), "dest", req.Addr)
 
-	if err := network.Transport(conn, destConn); err != nil {
-		slog.Error(consts.CONNECT_TRANS_ERROR, "err", err)
+	if _, _, err := network.Transport(conn, destConn); err != nil {
+		xlog.Error(xlog.NetworkTransportError, "err", err)
 	}
 
-	slog.Info(consts.SOCKS5_CONNECT_DIS, "src", conn.RemoteAddr(), "dest", req.Addr)
+	xlog.Info(xlog.ServiceSocks5DisConnect, "src", conn.RemoteAddr(), "dest", req.Addr)
 }
 
-func handleBind() {
+func handleBind(conn net.Conn, req *network.SOCKS5Request) {
 	// TODO
 }
 
-func handleUDPOverTCP() {
+func handleUDPOverTCP(conn net.Conn, req *network.SOCKS5Request) {
 	// TODO
 }

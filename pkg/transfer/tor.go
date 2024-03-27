@@ -1,12 +1,11 @@
 package transfer
 
 import (
-	"log/slog"
 	"net"
 	"time"
 
-	"github.com/DVKunion/SeaMoon/pkg/consts"
 	"github.com/DVKunion/SeaMoon/pkg/network"
+	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
 const defaultTorAddr = "127.0.0.1:9050"
@@ -22,13 +21,13 @@ func TorTransport(conn net.Conn) error {
 
 	defer destConn.Close()
 
-	slog.Info(consts.SOCKS5_CONNECT_ESTAB, "src", conn.RemoteAddr(), "dest", defaultTorAddr)
+	xlog.Info(xlog.ServiceTorConnectServer, "src", conn.RemoteAddr(), "dest", defaultTorAddr)
 
-	if err := network.Transport(conn, destConn); err != nil {
-		slog.Error(consts.CONNECT_TRANS_ERROR, "err", err)
+	if _, _, err := network.Transport(conn, destConn); err != nil {
+		xlog.Error(xlog.NetworkTransportError, "err", err)
 	}
 
-	slog.Info(consts.SOCKS5_CONNECT_DIS, "src", conn.RemoteAddr(), "dest", defaultTorAddr)
+	xlog.Info(xlog.ServiceTorDisConnect, "src", conn.RemoteAddr(), "dest", defaultTorAddr)
 
 	return nil
 }

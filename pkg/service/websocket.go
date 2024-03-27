@@ -3,14 +3,16 @@ package service
 import (
 	"context"
 	"crypto/tls"
-	"log/slog"
 	"net"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gorilla/websocket"
 
-	"github.com/DVKunion/SeaMoon/pkg/consts"
+	"github.com/DVKunion/SeaMoon/pkg/api/enum"
+	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 	"github.com/DVKunion/SeaMoon/pkg/transfer"
 	"github.com/DVKunion/SeaMoon/pkg/tunnel"
 )
@@ -26,10 +28,10 @@ type WSService struct {
 }
 
 func init() {
-	register(tunnel.WST, &WSService{})
+	register(enum.TunnelTypeWST, &WSService{})
 }
 
-func (s *WSService) Conn(ctx context.Context, t transfer.Type, sOpts ...Option) (net.Conn, error) {
+func (s *WSService) Conn(ctx context.Context, t enum.ProxyType, sOpts ...Option) (tunnel.Tunnel, error) {
 	// todo: useless ctx
 	var srvOpts = &Options{}
 
@@ -89,12 +91,29 @@ func (s *WSService) Serve(ln net.Listener, sOpts ...Option) error {
 		ln = tls.NewListener(ln, srvOpts.tlsConf)
 	}
 
+	addr := strings.Split(ln.Addr().String(), ":")
+	port := 443 // 默认端口
+	if len(addr) > 1 {
+		if p, err := strconv.Atoi(addr[1]); err == nil {
+			port = p
+		}
+	}
+
 	mux := http.NewServeMux()
+	mux.HandleFunc("/auto", s.auto)
 	// websocket http proxy handler
 	mux.HandleFunc("/http", s.http)
 
 	// websocket socks5 proxy handler
 	mux.HandleFunc("/socks5", s.socks5)
+
+	if err := transfer.InitV2ray(uint32(port), srvOpts.uid, srvOpts.pass, srvOpts.crypt, enum.TunnelTypeWST, srvOpts.tor, srvOpts.tlsConf != nil); err == nil {
+		mux.HandleFunc("/vmess", s.v2ray("vmess"))
+		mux.HandleFunc("/vless", s.v2ray("vless"))
+		mux.HandleFunc("/v-shadowsocks", s.v2ray("shadowsocks"))
+	} else {
+		xlog.Error(xlog.ServiceV2rayInitError, "err", err)
+	}
 
 	s.startAt = time.Now()
 	// inject
@@ -106,6 +125,20 @@ func (s *WSService) Serve(ln net.Listener, sOpts ...Option) error {
 	return server.Serve(ln)
 }
 
+func (s *WSService) auto(w http.ResponseWriter, r *http.Request) {
+	// means use http to connector
+	conn, err := s.upGrader.Upgrade(w, r, nil)
+	if err != nil {
+		return
+	}
+	t := tunnel.WsWrapConn(conn)
+	go func() {
+		if err := transfer.AutoTransport(t); err != nil {
+			xlog.Error(xlog.ServiceTransportError, "type", "auto", "err", err)
+		}
+	}()
+}
+
 func (s *WSService) http(w http.ResponseWriter, r *http.Request) {
 	// means use http to connector
 	conn, err := s.upGrader.Upgrade(w, r, nil)
@@ -115,7 +148,7 @@ func (s *WSService) http(w http.ResponseWriter, r *http.Request) {
 	t := tunnel.WsWrapConn(conn)
 	go func() {
 		if err := transfer.HttpTransport(t); err != nil {
-			slog.Error("connection error", "msg", err)
+			xlog.Error(xlog.ServiceTransportError, "type", "http", "err", err)
 		}
 	}()
 }
@@ -132,22 +165,37 @@ func (s *WSService) socks5(w http.ResponseWriter, r *http.Request) {
 		// 检测是否存在 onion 标识，代表着是否要开启 tor 转发
 		if onion != "" {
 			if err := transfer.TorTransport(t); err != nil {
-				slog.Error("connection error", "msg", err)
+				xlog.Error(xlog.ServiceTransportError, "type", "socks5+tor", "err", err)
 			}
 		} else {
-			if err := transfer.Socks5Transport(t); err != nil {
-				slog.Error("connection error", "msg", err)
+			if err := transfer.Socks5Transport(t, false); err != nil {
+				xlog.Error(xlog.ServiceTransportError, "type", "socks5", "err", err)
 			}
 		}
 	}()
 }
 
+func (s *WSService) v2ray(proto string) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		conn, err := s.upGrader.Upgrade(w, r, nil)
+		if err != nil {
+			return
+		}
+		t := tunnel.WsWrapConn(conn)
+		go func() {
+			if err := transfer.V2rayTransport(t, proto); err != nil {
+				xlog.Error(xlog.ServiceTransportError, "type", "v2ray", "proto", proto, "err", err)
+			}
+		}()
+	}
+}
+
 func (s *WSService) health(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
-	_, err := w.Write([]byte("OK\n" + s.startAt.Format("2006-01-02 15:04:05") + "\n" + consts.Version + "-" + consts.Commit))
+	_, err := w.Write([]byte("OK\n" + s.startAt.Format("2006-01-02 15:04:05") + "\n" + xlog.Version + "-" + xlog.Commit))
 	if err != nil {
-		slog.Error("server status error", "msg", err)
+		xlog.Error(xlog.ServiceStatusError, "err", err)
 		return
 	}
 }

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [ "$TOR" = "true" ]; then
+if [ "$SEAMOON_TOR" = "true" ] || [ "$SEAMOON_TOR" = true ]; then
   tor
 fi
 

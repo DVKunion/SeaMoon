@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"crypto/tls"
-	"log/slog"
 	"net"
 	"strings"
 	"time"
@@ -12,24 +11,28 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/keepalive"
 
-	pb "github.com/DVKunion/SeaMoon/pkg/proto"
+	"github.com/DVKunion/SeaMoon/pkg/api/enum"
+	pb "github.com/DVKunion/SeaMoon/pkg/service/proto"
+	"github.com/DVKunion/SeaMoon/pkg/service/proto/gost"
+	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 	"github.com/DVKunion/SeaMoon/pkg/transfer"
 	"github.com/DVKunion/SeaMoon/pkg/tunnel"
 )
 
 type GRPCService struct {
-	addr   net.Addr
-	cc     *grpc.ClientConn
-	server *grpc.Server
-
+	addr    net.Addr
+	cc      *grpc.ClientConn
+	server  *grpc.Server
+	startAt time.Time
 	pb.UnimplementedTunnelServer
+	gost.UnimplementedGostTunelServer
 }
 
 func init() {
-	register(tunnel.GRT, &GRPCService{})
+	register(enum.TunnelTypeGRT, &GRPCService{})
 }
 
-func (g GRPCService) Conn(ctx context.Context, t transfer.Type, sOpts ...Option) (net.Conn, error) {
+func (g GRPCService) Conn(ctx context.Context, t enum.ProxyType, sOpts ...Option) (tunnel.Tunnel, error) {
 	var cs grpc.ClientStream
 	var srvOpts = &Options{}
 	var err error
@@ -84,9 +87,9 @@ func (g GRPCService) Conn(ctx context.Context, t transfer.Type, sOpts ...Option)
 	client := pb.NewTunnelClient(g.cc)
 
 	switch t {
-	case transfer.HTTP:
+	case enum.ProxyTypeHTTP:
 		cs, err = client.Http(ctx)
-	case transfer.SOCKS5:
+	case enum.ProxyTypeSOCKS5:
 		cs, err = client.Socks5(ctx)
 	}
 
@@ -128,15 +131,27 @@ func (g GRPCService) Serve(ln net.Listener, srvOpt ...Option) error {
 	server := grpc.NewServer(gRPCOpts...)
 
 	pb.RegisterTunnelServer(server, &g)
+	gost.RegisterGostTunelServer(server, &g)
 
+	g.startAt = time.Now()
 	return server.Serve(ln)
+}
+
+func (g GRPCService) Auto(server pb.Tunnel_AutoServer) error {
+	gt := tunnel.GRPCWrapConn(g.addr, server)
+
+	if err := transfer.AutoTransport(gt); err != nil {
+		xlog.Error(xlog.ServiceTransportError, "type", "socks5", "err", err)
+		return err
+	}
+	return nil
 }
 
 func (g GRPCService) Http(server pb.Tunnel_HttpServer) error {
 	gt := tunnel.GRPCWrapConn(g.addr, server)
 
 	if err := transfer.HttpTransport(gt); err != nil {
-		slog.Error("connection error", "msg", err)
+		xlog.Error(xlog.ServiceTransportError, "type", "http", "err", err)
 		return err
 	}
 
@@ -146,9 +161,59 @@ func (g GRPCService) Http(server pb.Tunnel_HttpServer) error {
 func (g GRPCService) Socks5(server pb.Tunnel_Socks5Server) error {
 	gt := tunnel.GRPCWrapConn(g.addr, server)
 
-	if err := transfer.Socks5Transport(gt); err != nil {
-		slog.Error("connection error", "msg", err)
+	if err := transfer.Socks5Transport(gt, false); err != nil {
+		xlog.Error(xlog.ServiceTransportError, "type", "socks5", "err", err)
 		return err
 	}
 	return nil
+}
+
+func (g GRPCService) V2RaySsr(server pb.Tunnel_V2RaySsrServer) error {
+	gt := tunnel.GRPCWrapConn(g.addr, server)
+
+	if err := transfer.V2rayTransport(gt, "shadowsocks"); err != nil {
+		xlog.Error(xlog.ServiceTransportError, "type", "v2ray-ssr", "err", err)
+		return err
+	}
+	return nil
+}
+
+func (g GRPCService) V2RayVmess(server pb.Tunnel_V2RayVmessServer) error {
+	gt := tunnel.GRPCWrapConn(g.addr, server)
+
+	if err := transfer.V2rayTransport(gt, "vmess"); err != nil {
+		xlog.Error(xlog.ServiceTransportError, "type", "vmess", "err", err)
+		return err
+	}
+	return nil
+}
+
+func (g GRPCService) V2RayVless(server pb.Tunnel_V2RayVlessServer) error {
+	gt := tunnel.GRPCWrapConn(g.addr, server)
+
+	if err := transfer.V2rayTransport(gt, "vless"); err != nil {
+		xlog.Error(xlog.ServiceTransportError, "type", "vless", "err", err)
+		return err
+	}
+	return nil
+}
+
+// Tunnel gost grpc 适配, 实际上直接做一个 auto 协议就好了
+func (g GRPCService) Tunnel(server gost.GostTunel_TunnelServer) error {
+	gt := tunnel.GRPCWrapConn(g.addr, server)
+
+	if err := transfer.AutoTransport(gt); err != nil {
+		xlog.Error(xlog.ServiceTransportError, "type", "socks5", "err", err)
+		return err
+	}
+	return nil
+}
+
+func (g GRPCService) Health(ctx context.Context, p *pb.Ping) (*pb.Pong, error) {
+	return &pb.Pong{
+		Status:  "OK",
+		Time:    g.startAt.Format("2006-01-02 15:04:05"),
+		Version: xlog.Version,
+		Commit:  xlog.Commit,
+	}, nil
 }

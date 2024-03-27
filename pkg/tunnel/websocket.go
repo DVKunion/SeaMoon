@@ -13,6 +13,38 @@ type websocketConn struct {
 	mux sync.Mutex
 }
 
+func (c *websocketConn) Delay() int64 {
+
+	if c.Conn == nil {
+		return 0
+	}
+
+	// 设置一个超时时间
+	const timeout = 10 * time.Second
+
+	// 创建一个通道用于接收pong消息的回复时间
+	pongReceived := make(chan time.Time, 1) // 缓冲为1，避免潜在的阻塞
+
+	// 设置Pong处理程序
+	c.Conn.SetPongHandler(func(appData string) error {
+		pongReceived <- time.Now()
+		return nil
+	})
+
+	pingSentTime := time.Now()
+	if err := c.WriteMessage(websocket.PingMessage, []byte("")); err != nil {
+		return 0
+	}
+
+	select {
+	case pongTime := <-pongReceived:
+		res := pongTime.Sub(pingSentTime).Milliseconds()
+		return res
+	case <-time.After(timeout):
+		return 99999
+	}
+}
+
 func WsWrapConn(conn *websocket.Conn) Tunnel {
 	return &websocketConn{
 		Conn: conn,

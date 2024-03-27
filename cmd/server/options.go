@@ -1,11 +1,13 @@
 package server
 
-import "github.com/DVKunion/SeaMoon/pkg/tunnel"
+import (
+	"github.com/DVKunion/SeaMoon/pkg/api/enum"
+)
 
 type Options struct {
-	host  string      // 监听地址
-	port  string      // 监听端口
-	proto tunnel.Type // 监听协议
+	host  string          // 监听地址
+	port  string          // 监听端口
+	proto enum.TunnelType // 监听协议
 
 	mtcp bool //
 }
@@ -28,8 +30,8 @@ func WithPort(port string) Option {
 
 func WithProto(t string) Option {
 	return func(o *Options) (err error) {
-		tt := tunnel.TranType(t)
-		if tt == tunnel.NULL {
+		tt := enum.TransTunnelType(t)
+		if tt == enum.TunnelTypeNULL {
 			// todo
 		}
 		o.proto = tt

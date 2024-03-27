@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package tunnel;
+option go_package = "github.com/dvkunion/seamoon/proto";
+
+message Ping {
+  string version = 1;
+}
+
+message Pong {
+  string status = 1;
+  string time = 2;
+  string version = 3;
+  string commit = 4;
+}
+
+message Chunk {
+  bytes body = 1;
+  int32 size = 2;
+}
+
+service Tunnel {
+  rpc Auto (stream Chunk) returns (stream Chunk);
+  rpc Http (stream Chunk) returns (stream Chunk);
+  rpc Socks5 (stream Chunk) returns (stream Chunk);
+  rpc V2raySsr (stream Chunk) returns (stream Chunk);
+  rpc V2rayVmess (stream Chunk) returns (stream Chunk);
+  rpc V2rayVless (stream Chunk) returns (stream Chunk);
+  rpc Health(Ping) returns (Pong);
+}
