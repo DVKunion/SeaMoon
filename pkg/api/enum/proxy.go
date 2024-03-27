@@ -10,6 +10,8 @@ const (
 	ProxyStatusInactive
 	ProxyStatusError
 	ProxyStatusSpeeding
+	ProxyStatusRecover
+	ProxyStatusDelete
 )
 
 type ProxyType string

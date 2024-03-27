@@ -73,7 +73,3 @@ func Error(msg string, args ...any) {
 	}
 	defaultLog.Error(color.Red.Sprintf("[%s] %s", index, msg), args...)
 }
-
-func renderArgs(args ...any) {
-
-}

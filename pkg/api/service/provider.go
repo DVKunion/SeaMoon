@@ -2,13 +2,13 @@ package service
 
 import (
 	"context"
-	"errors"
 
 	"github.com/DVKunion/SeaMoon/pkg/api/database/dao"
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
 	"github.com/DVKunion/SeaMoon/pkg/api/models"
 	"github.com/DVKunion/SeaMoon/pkg/sdk"
-	"github.com/DVKunion/SeaMoon/pkg/tools"
+	"github.com/DVKunion/SeaMoon/pkg/system/errors"
+	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
 type provider struct {
@@ -37,67 +37,43 @@ func (p *provider) GetProviderByName(ctx context.Context, name string) (*models.
 
 func (p *provider) CreateProvider(ctx context.Context, obj *models.Provider) (*models.Provider, error) {
 	if obj.Type == nil || obj.CloudAuth == nil || len(obj.Regions) <= 0 {
-		return nil, errors.New("empty auth info")
-	}
-	// do auth check
-	info, err := sdk.GetSDK(*obj.Type).Auth(obj.CloudAuth, obj.Regions[0])
-	if err != nil {
-		obj.Info = &models.ProviderInfo{
-			Amount: tools.Float64Ptr(0),
-			Cost:   tools.Float64Ptr(0),
-		}
-		*obj.Status = enum.ProvStatusAuthError
-		*obj.StatusMessage = err.Error()
-	} else {
-		*obj.Status = enum.ProvStatusSuccess
-		obj.Info = info
+		return nil, errors.New(xlog.ServiceDBNeedParamsError)
 	}
 
-	if err = dao.Q.Provider.WithContext(ctx).Create(obj); err != nil {
+	if err := dao.Q.Provider.WithContext(ctx).Create(obj); err != nil {
 		return nil, err
 	}
 	return p.GetProviderByName(ctx, *obj.Name)
 }
 
+// UpdateProvider 用于通用式更新
 func (p *provider) UpdateProvider(ctx context.Context, obj *models.Provider) (*models.Provider, error) {
 	if obj.ID == 0 {
-		return nil, errors.New("empty object")
-	}
-
-	info, err := sdk.GetSDK(*obj.Type).Auth(obj.CloudAuth, obj.Regions[0])
-	if err != nil {
-		obj.Info = &models.ProviderInfo{
-			Amount: tools.Float64Ptr(0),
-			Cost:   tools.Float64Ptr(0),
-		}
-		*obj.Status = enum.ProvStatusAuthError
-		*obj.StatusMessage = err.Error()
-	} else {
-		*obj.Status = enum.ProvStatusSuccess
-		obj.Info = info
+		return nil, errors.New(xlog.ServiceDBNeedParamsError)
 	}
 
 	query := dao.Q.Provider
 
-	if _, err = query.WithContext(ctx).Where(query.ID.Eq(obj.ID)).Updates(obj); err != nil {
+	if _, err := query.WithContext(ctx).Where(query.ID.Eq(obj.ID)).Updates(obj); err != nil {
 		return nil, err
 	}
 
 	return p.GetProviderById(ctx, obj.ID)
 }
 
+// UpdateProviderStatus 用于更新状态，通常吞掉了状态更新时的错误
+func (p *provider) UpdateProviderStatus(ctx context.Context, id uint, status enum.ProviderStatus, msg string) {
+	query := dao.Q.Provider
+
+	if _, err := query.WithContext(ctx).Where(query.ID.Eq(id)).Updates(&models.Provider{
+		Status:        &status,
+		StatusMessage: &msg,
+	}); err != nil {
+		xlog.Error(xlog.ServiceDBUpdateStatusError, "type", "provider_status", "err", err)
+	}
+}
+
 func (p *provider) DeleteProvider(ctx context.Context, id uint) error {
-	prov, err := p.GetProviderById(ctx, id)
-	if err != nil {
-		return err
-	}
-	for _, tun := range prov.Tunnels {
-		// 具体清理逻辑下落到了 tunnel 身上
-		if err = SVC.DeleteTunnel(ctx, tun.ID); err != nil {
-			return err
-		}
-	}
-	// 然后删除数据
 	query := dao.Q.Provider
 	res, err := query.WithContext(ctx).Where(query.ID.Eq(id)).Delete()
 	if err != nil || res.Error != nil {
@@ -106,31 +82,19 @@ func (p *provider) DeleteProvider(ctx context.Context, id uint) error {
 	return nil
 }
 
-func (p *provider) SyncProvider(ctx context.Context, id uint) error {
-	prov, err := p.GetProviderById(ctx, id)
-	if err != nil {
-		return err
-	}
-
+func (p *provider) SyncProvider(ctx context.Context, prov *models.Provider) error {
 	// 先同步账户
 	// do auth check
 	info, err := sdk.GetSDK(*prov.Type).Auth(prov.CloudAuth, prov.Regions[0])
 	if err != nil {
-		*prov.Status = enum.ProvStatusAuthError
-		*prov.StatusMessage = err.Error()
-		_, err = p.UpdateProvider(ctx, prov)
 		return err
-	} else {
-		*prov.Status = enum.ProvStatusSuccess
-		prov.Info = info
 	}
+
+	prov.Info = info
 
 	// 自动同步函数
 	tuns, err := sdk.GetSDK(*prov.Type).SyncFC(prov.CloudAuth, prov.Regions)
 	if err != nil {
-		*prov.Status = enum.ProvStatusSyncError
-		*prov.StatusMessage = err.Error()
-		_, err = p.UpdateProvider(ctx, prov)
 		return err
 	}
 
@@ -139,7 +103,7 @@ func (p *provider) SyncProvider(ctx context.Context, id uint) error {
 		if SVC.ExistTunnel(ctx, nil, tun.UniqID) {
 			continue
 		}
-		tun.ProviderId = id
+		tun.ProviderId = prov.ID
 		if _, err = SVC.CreateTunnel(ctx, tun.ToModel(true)); err != nil {
 			return err
 		}

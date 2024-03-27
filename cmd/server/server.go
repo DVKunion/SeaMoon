@@ -67,7 +67,7 @@ func (s *Server) Serve(ctx context.Context) error {
 	srvOpt = append(srvOpt, service.WithCrypt(os.Getenv("SM_SS_CRYPT")))
 
 	if err := s.srv.Serve(ln, srvOpt...); err != nil {
-		xlog.Error(errors.ServiceError, err)
+		xlog.Error(xlog.ServiceError, err)
 		return err
 	}
 	return nil

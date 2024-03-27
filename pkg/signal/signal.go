@@ -3,11 +3,10 @@ package signal
 import (
 	"context"
 	"net"
+	"sync"
 
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
 	"github.com/DVKunion/SeaMoon/pkg/api/service"
-	"github.com/DVKunion/SeaMoon/pkg/listener"
-	"github.com/DVKunion/SeaMoon/pkg/system/errors"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
@@ -24,16 +23,19 @@ type Bus struct {
 type proxySignal struct {
 	id   uint
 	next enum.ProxyStatus
+	wg   *sync.WaitGroup
 }
 
 type providerSignal struct {
 	id   uint
 	next enum.ProviderStatus
+	wg   *sync.WaitGroup
 }
 
 type tunnelSignal struct {
 	id   uint
 	next enum.TunnelStatus
+	wg   *sync.WaitGroup
 }
 
 var signalBus = &Bus{
@@ -53,103 +55,48 @@ func (sb *Bus) Daemon(ctx context.Context) {
 	for {
 		select {
 		case pys := <-sb.proxyChannel:
-			// proxy sync change task
-			proxy, err := service.SVC.GetProxyById(ctx, pys.id)
-			if err != nil {
-				_ = service.SVC.UpdateProxyStatus(ctx, pys.id, enum.ProxyStatusError, err.Error())
-				xlog.Error(errors.SignalGetObjError, "obj", "proxy", "err", err)
-				continue
-			}
-			switch pys.next {
-			case enum.ProxyStatusActive:
-				sigCtx, cancel := context.WithCancel(ctx)
-				tun, err := service.SVC.GetTunnelById(ctx, proxy.TunnelID)
-				if err != nil {
-					_ = service.SVC.UpdateProxyStatus(ctx, pys.id, enum.ProxyStatusError, err.Error())
-					xlog.Error(errors.SignalGetObjError, "obj", "tunnel", "err", err)
-					continue
-				}
-				server, err := listener.TCPListen(sigCtx, proxy, tun)
-				if err != nil {
-					xlog.Error(errors.SignalListenerError, "id", pys.id, "type", proxy.Type, "addr", proxy.Addr(), "err", err)
-				}
-				sb.canceler[pys.id] = cancel
-				sb.listener[pys.id] = server
-				xlog.Info(xlog.SignalListenStart, "id", pys.id, "type", proxy.Type, "addr", proxy.Addr())
-				_ = service.SVC.UpdateProxyStatus(ctx, pys.id, enum.ProxyStatusActive, "")
-			case enum.ProxyStatusInactive:
-				if cancel, ok := sb.canceler[pys.id]; ok {
-					// 先调一下 cancel
-					cancel()
-					if ln, exist := sb.listener[pys.id]; exist {
-						// 尝试着去停一下 ln, 防止泄漏
-						err := ln.Close()
-						if err != nil {
-							// 错了就错了吧，说明 ctx 挂了一般 goroutines 也跟着挂了
-							xlog.Error(errors.SignalListenerError, "id", pys.id, "type", proxy.Type, "addr", proxy.Addr(), "err", err)
-						}
-					}
-				}
-				xlog.Info(xlog.SignalListenStop, "id", pys.id, "type", proxy.Type, "addr", proxy.Addr())
-			case enum.ProxyStatusSpeeding:
-				if err = service.SVC.SpeedProxy(ctx, proxy); err != nil {
-					_ = service.SVC.UpdateProxyStatus(ctx, proxy.ID, enum.ProxyStatusError, err.Error())
-					xlog.Error(errors.SignalSpeedTestError, "id", pys.id, "type", proxy.Type, "addr", proxy.Addr(), "err", err)
-					continue
-				}
-				if err = service.SVC.UpdateProxyStatus(ctx, proxy.ID, enum.ProxyStatusActive, ""); err != nil {
-					xlog.Error(errors.SignalUpdateObjError, "id", pys.id, "type", proxy.Type, "addr", proxy.Addr(), "err", err)
-				}
-			}
+			sb.proxyHandler(ctx, pys)
 		case prs := <-sb.providerChannel:
-			// todo: provider sync change task
-			_, err := service.SVC.GetProviderById(ctx, prs.id)
-			if err != nil {
-				xlog.Error(errors.SignalGetObjError, "obj", "provider", "err", err)
-			}
+			sb.providerHandler(ctx, prs)
 		case ts := <-sb.tunnelChannel:
-			// todo: provider sync change task
-			_, err := service.SVC.GetTunnelById(ctx, ts.id)
-			if err != nil {
-				xlog.Error(errors.SignalGetObjError, "obj", "tunnel", "err", err)
-			}
+			sb.tunnelHandler(ctx, ts)
 		}
 	}
 }
 
 func (sb *Bus) Recover(ctx context.Context, recover string) {
-	// 首先看一下是否需要恢复运行状态的服务
-	proxies, err := service.SVC.ListActiveProxies(ctx)
-	if err != nil {
-		xlog.Error(errors.SignalRecoverProxyError, "err", err)
-	}
-	for _, p := range proxies {
-		if recover == "true" {
-			xlog.Info(xlog.SignalListenRecover, "id", p.ID, "type", p.Type, "addr", p.Addr())
-			sb.SendProxySignal(p.ID, *p.Status)
-		} else {
-			_ = service.SVC.UpdateProxyStatus(ctx, p.ID, enum.ProxyStatusInactive, "reboot")
+	if recover == "true" {
+		// 首先看一下是否需要恢复运行状态的服务
+		proxies, err := service.SVC.ListActiveProxies(ctx)
+		if err != nil {
+			xlog.Error(xlog.SignalRecoverProxyError, "err", err)
+		}
+		for _, p := range proxies {
+			sb.SendProxySignal(p.ID, enum.ProxyStatusRecover, nil)
 		}
 	}
 }
 
-func (sb *Bus) SendProxySignal(p uint, tp enum.ProxyStatus) {
+func (sb *Bus) SendProxySignal(p uint, tp enum.ProxyStatus, wg *sync.WaitGroup) {
 	sb.proxyChannel <- &proxySignal{
 		id:   p,
 		next: tp,
+		wg:   wg,
 	}
 }
 
-func (sb *Bus) SendProviderSignal(p uint, tp enum.ProviderStatus) {
+func (sb *Bus) SendProviderSignal(p uint, tp enum.ProviderStatus, wg *sync.WaitGroup) {
 	sb.providerChannel <- &providerSignal{
 		id:   p,
 		next: tp,
+		wg:   wg,
 	}
 }
 
-func (sb *Bus) SendTunnelSignal(p uint, tp enum.TunnelStatus) {
+func (sb *Bus) SendTunnelSignal(p uint, tp enum.TunnelStatus, wg *sync.WaitGroup) {
 	sb.tunnelChannel <- &tunnelSignal{
 		id:   p,
 		next: tp,
+		wg:   wg,
 	}
 }

@@ -15,8 +15,6 @@ import (
 	"github.com/DVKunion/SeaMoon/cmd/client/static"
 	"github.com/DVKunion/SeaMoon/pkg/api/service"
 	"github.com/DVKunion/SeaMoon/pkg/signal"
-	"github.com/DVKunion/SeaMoon/pkg/system/consts"
-	"github.com/DVKunion/SeaMoon/pkg/system/errors"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
@@ -33,7 +31,7 @@ func runSignal(ctx context.Context) {
 	// 如果配置了自动恢复设置，尝试发送恢复信号
 	rec, err := service.SVC.GetConfigByName(ctx, "auto_start")
 	if err != nil {
-		xlog.Error(errors.SignalGetObjError, "err", err)
+		xlog.Error(xlog.SignalGetObjError, "err", err)
 		return
 	}
 	signal.Signal().Recover(ctx, rec.Value)
@@ -46,7 +44,7 @@ func runApi(ctx context.Context, debug bool) {
 
 	xlog.Info(xlog.ApiServiceStart, "addr", addr.Value, "port", port.Value)
 
-	if consts.Version != "dev" || !debug {
+	if xlog.Version != "dev" || !debug {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
@@ -72,6 +70,6 @@ func runApi(ctx context.Context, debug bool) {
 	})
 
 	if err := server.Run(strings.Join([]string{addr.Value, port.Value}, ":")); err != http.ErrServerClosed {
-		xlog.Error(errors.ApiServeError, "err", err)
+		xlog.Error(xlog.ApiServeError, "err", err)
 	}
 }

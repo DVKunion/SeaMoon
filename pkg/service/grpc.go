@@ -14,8 +14,6 @@ import (
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
 	pb "github.com/DVKunion/SeaMoon/pkg/service/proto"
 	"github.com/DVKunion/SeaMoon/pkg/service/proto/gost"
-	"github.com/DVKunion/SeaMoon/pkg/system/consts"
-	"github.com/DVKunion/SeaMoon/pkg/system/errors"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 	"github.com/DVKunion/SeaMoon/pkg/transfer"
 	"github.com/DVKunion/SeaMoon/pkg/tunnel"
@@ -143,7 +141,7 @@ func (g GRPCService) Auto(server pb.Tunnel_AutoServer) error {
 	gt := tunnel.GRPCWrapConn(g.addr, server)
 
 	if err := transfer.AutoTransport(gt); err != nil {
-		xlog.Error(errors.ServiceTransportError, "type", "socks5", "err", err)
+		xlog.Error(xlog.ServiceTransportError, "type", "socks5", "err", err)
 		return err
 	}
 	return nil
@@ -153,7 +151,7 @@ func (g GRPCService) Http(server pb.Tunnel_HttpServer) error {
 	gt := tunnel.GRPCWrapConn(g.addr, server)
 
 	if err := transfer.HttpTransport(gt); err != nil {
-		xlog.Error(errors.ServiceTransportError, "type", "http", "err", err)
+		xlog.Error(xlog.ServiceTransportError, "type", "http", "err", err)
 		return err
 	}
 
@@ -164,7 +162,7 @@ func (g GRPCService) Socks5(server pb.Tunnel_Socks5Server) error {
 	gt := tunnel.GRPCWrapConn(g.addr, server)
 
 	if err := transfer.Socks5Transport(gt, false); err != nil {
-		xlog.Error(errors.ServiceTransportError, "type", "socks5", "err", err)
+		xlog.Error(xlog.ServiceTransportError, "type", "socks5", "err", err)
 		return err
 	}
 	return nil
@@ -174,7 +172,7 @@ func (g GRPCService) V2RaySsr(server pb.Tunnel_V2RaySsrServer) error {
 	gt := tunnel.GRPCWrapConn(g.addr, server)
 
 	if err := transfer.V2rayTransport(gt, "shadowsocks"); err != nil {
-		xlog.Error(errors.ServiceTransportError, "type", "v2ray-ssr", "err", err)
+		xlog.Error(xlog.ServiceTransportError, "type", "v2ray-ssr", "err", err)
 		return err
 	}
 	return nil
@@ -184,7 +182,7 @@ func (g GRPCService) V2RayVmess(server pb.Tunnel_V2RayVmessServer) error {
 	gt := tunnel.GRPCWrapConn(g.addr, server)
 
 	if err := transfer.V2rayTransport(gt, "vmess"); err != nil {
-		xlog.Error(errors.ServiceTransportError, "type", "vmess", "err", err)
+		xlog.Error(xlog.ServiceTransportError, "type", "vmess", "err", err)
 		return err
 	}
 	return nil
@@ -194,7 +192,7 @@ func (g GRPCService) V2RayVless(server pb.Tunnel_V2RayVlessServer) error {
 	gt := tunnel.GRPCWrapConn(g.addr, server)
 
 	if err := transfer.V2rayTransport(gt, "vless"); err != nil {
-		xlog.Error(errors.ServiceTransportError, "type", "vless", "err", err)
+		xlog.Error(xlog.ServiceTransportError, "type", "vless", "err", err)
 		return err
 	}
 	return nil
@@ -205,7 +203,7 @@ func (g GRPCService) Tunnel(server gost.GostTunel_TunnelServer) error {
 	gt := tunnel.GRPCWrapConn(g.addr, server)
 
 	if err := transfer.AutoTransport(gt); err != nil {
-		xlog.Error(errors.ServiceTransportError, "type", "socks5", "err", err)
+		xlog.Error(xlog.ServiceTransportError, "type", "socks5", "err", err)
 		return err
 	}
 	return nil
@@ -215,7 +213,7 @@ func (g GRPCService) Health(ctx context.Context, p *pb.Ping) (*pb.Pong, error) {
 	return &pb.Pong{
 		Status:  "OK",
 		Time:    g.startAt.Format("2006-01-02 15:04:05"),
-		Version: consts.Version,
-		Commit:  consts.Commit,
+		Version: xlog.Version,
+		Commit:  xlog.Commit,
 	}, nil
 }

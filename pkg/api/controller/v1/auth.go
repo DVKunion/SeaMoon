@@ -9,17 +9,18 @@ import (
 	"github.com/DVKunion/SeaMoon/pkg/api/models"
 	"github.com/DVKunion/SeaMoon/pkg/api/service"
 	"github.com/DVKunion/SeaMoon/pkg/system/errors"
+	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
 func Login(c *gin.Context) {
 	var obj *models.AuthApi
 	if err := c.ShouldBindJSON(&obj); err != nil {
-		servant.ErrorMsg(c, http.StatusBadRequest, errors.ApiError(errors.ApiParamsError, err))
+		servant.ErrorMsg(c, http.StatusBadRequest, errors.ApiError(xlog.ApiParamsError, err))
 		return
 	}
 
 	if token, err := service.SVC.Login(c, obj); err != nil {
-		servant.ErrorMsg(c, http.StatusInternalServerError, errors.ApiError(errors.ApiServiceError, err))
+		servant.ErrorMsg(c, http.StatusInternalServerError, errors.ApiError(xlog.ApiServiceError, err))
 	} else {
 		servant.SuccessMsg(c, 1, token)
 	}
@@ -28,12 +29,12 @@ func Login(c *gin.Context) {
 func Passwd(c *gin.Context) {
 	var obj *models.AuthApi
 	if err := c.ShouldBindJSON(&obj); err != nil {
-		servant.ErrorMsg(c, http.StatusBadRequest, errors.ApiError(errors.ApiParamsError, err))
+		servant.ErrorMsg(c, http.StatusBadRequest, errors.ApiError(xlog.ApiParamsError, err))
 		return
 	}
 
 	if err := service.SVC.UpdatePassword(c, obj); err != nil {
-		servant.ErrorMsg(c, http.StatusInternalServerError, errors.ApiError(errors.ApiServiceError, err))
+		servant.ErrorMsg(c, http.StatusInternalServerError, errors.ApiError(xlog.ApiServiceError, err))
 	} else {
 		servant.SuccessMsg(c, 1, "更新成功")
 	}
