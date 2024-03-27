@@ -9,7 +9,7 @@ import (
 	"github.com/DVKunion/SeaMoon/cmd/client"
 	"github.com/DVKunion/SeaMoon/cmd/server"
 	"github.com/DVKunion/SeaMoon/pkg/api/database/drivers"
-	"github.com/DVKunion/SeaMoon/pkg/system/consts"
+	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
 var (
@@ -44,7 +44,7 @@ var (
 		Use:   "version",
 		Short: "SeaMoon version info",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(consts.Version)
+			fmt.Println(xlog.Version)
 		},
 	}
 )

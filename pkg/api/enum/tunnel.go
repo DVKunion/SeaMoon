@@ -8,6 +8,7 @@ const (
 	TunnelInactive                             // 停用
 	TunnelError                                // 不可用
 	TunnelWaiting                              // 异常
+	TunnelDelete                               // 删除
 )
 
 type TunnelType string

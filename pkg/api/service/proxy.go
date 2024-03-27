@@ -2,13 +2,14 @@ package service
 
 import (
 	"context"
-	"errors"
 
 	"github.com/showwin/speedtest-go/speedtest"
 
 	"github.com/DVKunion/SeaMoon/pkg/api/database/dao"
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
 	"github.com/DVKunion/SeaMoon/pkg/api/models"
+	"github.com/DVKunion/SeaMoon/pkg/system/errors"
+	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
 type proxy struct {
@@ -52,47 +53,41 @@ func (p *proxy) UpdateProxy(ctx context.Context, id uint, obj *models.Proxy) (*m
 	return p.GetProxyById(ctx, id)
 }
 
-func (p *proxy) UpdateProxyConn(ctx context.Context, id uint, op int) error {
+func (p *proxy) UpdateProxyConn(ctx context.Context, id uint, op int) {
 	query := dao.Q.Proxy
 
-	if op == 1 {
+	switch op {
+	case 1:
 		if _, err := query.WithContext(ctx).Where(query.ID.Eq(id)).UpdateSimple(query.Conn.Add(1)); err != nil {
-			return err
+			xlog.Error(xlog.ServiceDBUpdateFiledError, "type", "proxy_conn", "err", err)
 		}
-	}
-
-	if op == -1 {
+	case 2:
 		if _, err := query.WithContext(ctx).Where(query.ID.Eq(id)).UpdateSimple(query.Conn.Sub(1)); err != nil {
-			return err
+			xlog.Error(xlog.ServiceDBUpdateFiledError, "type", "proxy_conn", "err", err)
 		}
 	}
-
-	return nil
 }
 
-func (p *proxy) UpdateProxyNetFlow(ctx context.Context, id uint, in int64, out int64) error {
+func (p *proxy) UpdateProxyNetworkInfo(ctx context.Context, id uint, in int64, out int64) {
 	query := dao.Q.Proxy
 
 	if _, err := query.WithContext(ctx).Where(query.ID.Eq(id)).UpdateSimple(
 		query.InBound.Add(in),
 		query.OutBound.Add(out),
 	); err != nil {
-		return err
+		xlog.Error(xlog.ServiceDBUpdateFiledError, "type", "proxy_network", "err", err)
 	}
-
-	return nil
 }
 
-func (p *proxy) UpdateProxyStatus(ctx context.Context, id uint, status enum.ProxyStatus, msg string) error {
+func (p *proxy) UpdateProxyStatus(ctx context.Context, id uint, status enum.ProxyStatus, msg string) {
 	query := dao.Q.Proxy
 
 	if _, err := query.WithContext(ctx).Where(query.ID.Eq(id)).Updates(&models.Proxy{
 		Status:        &status,
 		StatusMessage: &msg,
 	}); err != nil {
-		return err
+		xlog.Error(xlog.ServiceDBUpdateStatusError, "type", "proxy_status", "err", err)
 	}
-	return nil
 }
 
 func (p *proxy) DeleteProxy(ctx context.Context, id uint) error {
@@ -101,7 +96,7 @@ func (p *proxy) DeleteProxy(ctx context.Context, id uint) error {
 		return err
 	}
 	if *target.Status == enum.ProxyStatusActive {
-		return errors.New("禁止删除运行中的服务，请先停止服务")
+		return errors.New(xlog.ServiceDBDeleteError)
 	}
 	query := dao.Q.Proxy
 	res, err := query.WithContext(ctx).Where(query.ID.Eq(id)).Delete()

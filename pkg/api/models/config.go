@@ -3,7 +3,7 @@ package models
 import (
 	"gorm.io/gorm"
 
-	"github.com/DVKunion/SeaMoon/pkg/system/consts"
+	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
 var DefaultConfig = []Config{
@@ -25,7 +25,7 @@ var DefaultConfig = []Config{
 	},
 	{
 		Key:   "version",
-		Value: consts.Version,
+		Value: xlog.Version,
 	},
 }
 

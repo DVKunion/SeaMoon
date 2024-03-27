@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/DVKunion/SeaMoon/pkg/system/errors"
+	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
 /*
@@ -101,7 +102,7 @@ func (addr *Addr) Decode(b []byte) error {
 		addr.Host = string(b[pos : pos+addrlen])
 		pos += addrlen
 	default:
-		return errors.New(errors.NetworkAddrTypeError)
+		return errors.New(xlog.NetworkAddrTypeError)
 	}
 
 	addr.Port = binary.BigEndian.Uint16(b[pos:])

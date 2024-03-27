@@ -15,7 +15,6 @@ import (
 
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
 	"github.com/DVKunion/SeaMoon/pkg/api/models"
-	"github.com/DVKunion/SeaMoon/pkg/system/consts"
 	"github.com/DVKunion/SeaMoon/pkg/system/errors"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
@@ -212,7 +211,7 @@ func deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, error) {
 	request.Code = &scf.Code{
 		ImageConfig: &scf.ImageConfig{
 			ImageType: common.StringPtr("personal"),
-			ImageUri:  common.StringPtr(strings.Join([]string{RegistryEndPoint[tun.Config.Region], consts.Version}, ":")),
+			ImageUri:  common.StringPtr(strings.Join([]string{registryEndPoint[tun.Config.Region], xlog.Version}, ":")),
 			Command:   common.StringPtr("/app/seamoon"),
 			Args:      common.StringPtr("server -p " + strconv.Itoa(int(*tun.Port)) + " -t " + string(*tun.Type)),
 			ImagePort: common.Int64Ptr(int64(*tun.Port)),
@@ -262,7 +261,7 @@ func deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, error) {
 			return "", err
 		}
 		if *fc.Response.TotalCount != 1 {
-			return "", errors.New(errors.SDKFCInfoError)
+			return "", errors.New(xlog.SDKFCInfoError)
 		}
 		xlog.Info(xlog.SDKWaitingFCStatus, "status", *fc.Response.Functions[0].Status, "cnt", cnt)
 		switch *fc.Response.Functions[0].Status {
@@ -415,19 +414,19 @@ func sync(ca *models.CloudAuth, regions []string) ([]fcInfo, error) {
 			req.Namespace = fc.Namespace
 			fcd, err := client.GetFunction(req)
 			if err != nil {
-				xlog.Error(errors.SDKFCDetailError, "name", *fc.FunctionName, "err", err)
+				xlog.Error(xlog.SDKFCDetailError, "name", *fc.FunctionName, "err", err)
 				continue
 			} else {
 				target.detail = fcd.Response
 				// 解析触发器
 				trigger := fcd.Response.Triggers
 				if len(trigger) < 1 {
-					xlog.Error(errors.SDKTriggerError, "name", *fc.FunctionName, "err", err)
+					xlog.Error(xlog.SDKTriggerError, "name", *fc.FunctionName, "err", err)
 				} else {
 					var tri triggerDesc
 					err := json.Unmarshal([]byte(*trigger[0].TriggerDesc), &tri)
 					if err != nil {
-						xlog.Error(errors.SDKTriggerUnmarshalError, "name", *fc.FunctionName, "err", err)
+						xlog.Error(xlog.SDKTriggerUnmarshalError, "name", *fc.FunctionName, "err", err)
 					}
 					target.addr = strings.Replace(tri.Service.SubDomain, "https://", "", -1)
 					target.auth = tri.Api.AuthType

@@ -12,8 +12,6 @@ import (
 	"github.com/gorilla/websocket"
 
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
-	"github.com/DVKunion/SeaMoon/pkg/system/consts"
-	"github.com/DVKunion/SeaMoon/pkg/system/errors"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 	"github.com/DVKunion/SeaMoon/pkg/transfer"
 	"github.com/DVKunion/SeaMoon/pkg/tunnel"
@@ -114,7 +112,7 @@ func (s *WSService) Serve(ln net.Listener, sOpts ...Option) error {
 		mux.HandleFunc("/vless", s.v2ray("vless"))
 		mux.HandleFunc("/v-shadowsocks", s.v2ray("shadowsocks"))
 	} else {
-		xlog.Error(errors.ServiceV2rayInitError, "err", err)
+		xlog.Error(xlog.ServiceV2rayInitError, "err", err)
 	}
 
 	s.startAt = time.Now()
@@ -136,7 +134,7 @@ func (s *WSService) auto(w http.ResponseWriter, r *http.Request) {
 	t := tunnel.WsWrapConn(conn)
 	go func() {
 		if err := transfer.AutoTransport(t); err != nil {
-			xlog.Error(errors.ServiceTransportError, "type", "auto", "err", err)
+			xlog.Error(xlog.ServiceTransportError, "type", "auto", "err", err)
 		}
 	}()
 }
@@ -150,7 +148,7 @@ func (s *WSService) http(w http.ResponseWriter, r *http.Request) {
 	t := tunnel.WsWrapConn(conn)
 	go func() {
 		if err := transfer.HttpTransport(t); err != nil {
-			xlog.Error(errors.ServiceTransportError, "type", "http", "err", err)
+			xlog.Error(xlog.ServiceTransportError, "type", "http", "err", err)
 		}
 	}()
 }
@@ -167,11 +165,11 @@ func (s *WSService) socks5(w http.ResponseWriter, r *http.Request) {
 		// 检测是否存在 onion 标识，代表着是否要开启 tor 转发
 		if onion != "" {
 			if err := transfer.TorTransport(t); err != nil {
-				xlog.Error(errors.ServiceTransportError, "type", "socks5+tor", "err", err)
+				xlog.Error(xlog.ServiceTransportError, "type", "socks5+tor", "err", err)
 			}
 		} else {
 			if err := transfer.Socks5Transport(t, false); err != nil {
-				xlog.Error(errors.ServiceTransportError, "type", "socks5", "err", err)
+				xlog.Error(xlog.ServiceTransportError, "type", "socks5", "err", err)
 			}
 		}
 	}()
@@ -186,7 +184,7 @@ func (s *WSService) v2ray(proto string) func(http.ResponseWriter, *http.Request)
 		t := tunnel.WsWrapConn(conn)
 		go func() {
 			if err := transfer.V2rayTransport(t, proto); err != nil {
-				xlog.Error(errors.ServiceTransportError, "type", "v2ray", "proto", proto, "err", err)
+				xlog.Error(xlog.ServiceTransportError, "type", "v2ray", "proto", proto, "err", err)
 			}
 		}()
 	}
@@ -195,9 +193,9 @@ func (s *WSService) v2ray(proto string) func(http.ResponseWriter, *http.Request)
 func (s *WSService) health(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
-	_, err := w.Write([]byte("OK\n" + s.startAt.Format("2006-01-02 15:04:05") + "\n" + consts.Version + "-" + consts.Commit))
+	_, err := w.Write([]byte("OK\n" + s.startAt.Format("2006-01-02 15:04:05") + "\n" + xlog.Version + "-" + xlog.Commit))
 	if err != nil {
-		xlog.Error(errors.ServiceStatusError, "err", err)
+		xlog.Error(xlog.ServiceStatusError, "err", err)
 		return
 	}
 }

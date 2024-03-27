@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 
 	"github.com/DVKunion/SeaMoon/pkg/system/errors"
+	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
 // Address types
@@ -79,11 +80,11 @@ func ReadMethods(r io.Reader) ([]uint8, error) {
 	}
 
 	if b[0] != SOCKS5Version {
-		return nil, errors.New(errors.NetworkVersionError)
+		return nil, errors.New(xlog.NetworkVersionError)
 	}
 
 	if b[1] == 0 {
-		return nil, errors.New(errors.NetworkMethodError)
+		return nil, errors.New(xlog.NetworkMethodError)
 	}
 
 	length := 2 + int(b[1])
@@ -149,7 +150,7 @@ func ReadUserPassRequest(r io.Reader) (*UserPassRequest, error) {
 	}
 
 	if b[0] != SOCKS5UserPassVer {
-		return nil, errors.New(errors.NetworkVersionError)
+		return nil, errors.New(xlog.NetworkVersionError)
 	}
 
 	req := &UserPassRequest{
@@ -235,7 +236,7 @@ func ReadUserPassResponse(r io.Reader) (*UserPassResponse, error) {
 	}
 
 	if b[0] != SOCKS5UserPassVer {
-		return nil, errors.New(errors.NetworkVersionError)
+		return nil, errors.New(xlog.NetworkVersionError)
 	}
 
 	res := &UserPassResponse{
@@ -291,7 +292,7 @@ func ReadSOCKS5Request(r io.Reader) (*SOCKS5Request, error) {
 	}
 
 	if b[0] != SOCKS5Version {
-		return nil, errors.New(errors.NetworkVersionError)
+		return nil, errors.New(xlog.NetworkVersionError)
 	}
 
 	request := &SOCKS5Request{
@@ -308,7 +309,7 @@ func ReadSOCKS5Request(r io.Reader) (*SOCKS5Request, error) {
 	case AddrDomain:
 		length = 7 + int(b[4])
 	default:
-		return nil, errors.New(errors.NetworkAddrTypeError)
+		return nil, errors.New(xlog.NetworkAddrTypeError)
 	}
 
 	if n < length {
@@ -389,7 +390,7 @@ func ReadReply(r io.Reader) (*Reply, error) {
 	}
 
 	if b[0] != SOCKS5Version {
-		return nil, errors.New(errors.NetworkVersionError)
+		return nil, errors.New(xlog.NetworkVersionError)
 	}
 
 	reply := &Reply{
@@ -406,7 +407,7 @@ func ReadReply(r io.Reader) (*Reply, error) {
 	case AddrDomain:
 		length = 7 + int(b[4])
 	default:
-		return nil, errors.New(errors.NetworkAddrTypeError)
+		return nil, errors.New(xlog.NetworkAddrTypeError)
 	}
 
 	if n < length {
@@ -542,7 +543,7 @@ func ReadUDPDatagram(r io.Reader) (*UDPDatagram, error) {
 	case AddrDomain:
 		hlen = 7 + int(b[4])
 	default:
-		return nil, errors.New(errors.NetworkAddrTypeError)
+		return nil, errors.New(xlog.NetworkAddrTypeError)
 	}
 
 	dlen := int(header.Rsv)

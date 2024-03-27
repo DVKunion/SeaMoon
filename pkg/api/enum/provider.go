@@ -16,8 +16,9 @@ const (
 	ProvStatusCrete ProviderStatus = iota + 1
 	ProvStatusSuccess
 	ProvStatusFailed
+	ProvStatusSync
 	ProvStatusForbidden
-	ProvStatusAuthError
 	ProvStatusSyncError
 	ProvStatusArrearsError
+	ProvStatusDelete
 )

@@ -9,6 +9,7 @@ import (
 	"github.com/DVKunion/SeaMoon/pkg/api/controller/servant"
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
 	"github.com/DVKunion/SeaMoon/pkg/system/errors"
+	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 	"github.com/DVKunion/SeaMoon/pkg/tools"
 )
 
@@ -17,7 +18,7 @@ func JWTAuthMiddleware(c *gin.Context) {
 	tokenString := c.GetHeader("Authorization")
 
 	if tokenString == "" {
-		servant.ErrorMsg(c, http.StatusUnauthorized, errors.ApiError(errors.ApiParamsRequire, nil))
+		servant.ErrorMsg(c, http.StatusUnauthorized, errors.ApiError(xlog.ApiParamsRequire, nil))
 		c.Abort()
 		return
 	}
@@ -27,7 +28,7 @@ func JWTAuthMiddleware(c *gin.Context) {
 
 	if err != nil {
 		// 认证失败
-		servant.ErrorMsg(c, http.StatusForbidden, errors.ApiError(errors.ApiAuthError, err))
+		servant.ErrorMsg(c, http.StatusForbidden, errors.ApiError(xlog.ApiAuthError, err))
 		c.Abort()
 		return
 	}
@@ -41,7 +42,7 @@ func JWTAuthMiddleware(c *gin.Context) {
 	}
 
 	// 校验不通过
-	servant.ErrorMsg(c, http.StatusForbidden, errors.ApiError(errors.ApiAuthLimit, err))
+	servant.ErrorMsg(c, http.StatusForbidden, errors.ApiError(xlog.ApiAuthLimit, err))
 	c.Abort()
 	return
 }

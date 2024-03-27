@@ -111,3 +111,7 @@ func PtrInt32(v interface{}) int32 {
 	}
 	return 0
 }
+
+func AnyPtr(v interface{}) interface{} {
+	return &v
+}

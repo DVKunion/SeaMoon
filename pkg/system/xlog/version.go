@@ -1,4 +1,4 @@
-package consts
+package xlog
 
 var (
 	Version string = "dev"

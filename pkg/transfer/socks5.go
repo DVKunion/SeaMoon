@@ -15,7 +15,7 @@ func Socks5Check(conn net.Conn) (net.Conn, error) {
 	b, err := br.Peek(1)
 
 	if err != nil || b[0] != network.SOCKS5Version {
-		return nil, errors.Wrap(err, errors.ServiceProtocolNotSupportError)
+		return nil, errors.Wrap(err, xlog.ServiceProtocolNotSupportError)
 	}
 	return br, nil
 }
@@ -32,17 +32,17 @@ func Socks5Transport(conn net.Conn, check bool) error {
 
 	// select method
 	if _, err = network.ReadMethods(conn); err != nil {
-		return errors.Wrap(err, errors.ServiceSocks5ReadMethodError)
+		return errors.Wrap(err, xlog.ServiceSocks5ReadMethodError)
 	}
 
 	if err = network.WriteMethod(network.MethodNoAuth, conn); err != nil {
-		return errors.Wrap(err, errors.ServiceSocks5WriteMethodError)
+		return errors.Wrap(err, xlog.ServiceSocks5WriteMethodError)
 	}
 
 	// read command
 	request, err := network.ReadSOCKS5Request(conn)
 	if err != nil {
-		return errors.Wrap(err, errors.ServiceSocks5ReadCmdError)
+		return errors.Wrap(err, xlog.ServiceSocks5ReadCmdError)
 	}
 	switch request.Cmd {
 	case network.SOCKS5CmdConnect:
@@ -67,7 +67,7 @@ func handleConnect(conn net.Conn, req *network.SOCKS5Request) {
 	destConn, err := dialer.Dial("tcp", req.Addr.String())
 
 	if err != nil {
-		xlog.Error(errors.ServiceSocks5DailError, "err", err)
+		xlog.Error(xlog.ServiceSocks5DailError, "err", err)
 		return
 	}
 
@@ -75,14 +75,14 @@ func handleConnect(conn net.Conn, req *network.SOCKS5Request) {
 	defer destConn.Close()
 
 	if err := network.NewReply(network.SOCKS5RespSucceeded, nil).Write(conn); err != nil {
-		xlog.Error(errors.ServiceSocks5ReplyError, "err", err)
+		xlog.Error(xlog.ServiceSocks5ReplyError, "err", err)
 		return
 	}
 
 	xlog.Info(xlog.ServiceSocks5Establish, "src", conn.RemoteAddr(), "dest", req.Addr)
 
 	if _, _, err := network.Transport(conn, destConn); err != nil {
-		xlog.Error(errors.NetworkTransportError, "err", err)
+		xlog.Error(xlog.NetworkTransportError, "err", err)
 	}
 
 	xlog.Info(xlog.ServiceSocks5DisConnect, "src", conn.RemoteAddr(), "dest", req.Addr)

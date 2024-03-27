@@ -14,8 +14,12 @@ import (
 	"github.com/DVKunion/SeaMoon/pkg/tools"
 )
 
-func TCPListen(ctx context.Context, py *models.Proxy, tun *models.Tunnel) (net.Listener, error) {
+func TCPListen(ctx context.Context, py *models.Proxy) (net.Listener, error) {
 	server, err := net.Listen("tcp", py.Addr())
+	if err != nil {
+		return nil, err
+	}
+	tun, err := db_service.SVC.GetTunnelById(ctx, py.TunnelID)
 	if err != nil {
 		return nil, err
 	}
@@ -33,41 +37,34 @@ func listen(ctx context.Context, server net.Listener, id uint, t *enum.ProxyType
 				return
 			} else {
 				// 除此之外，都为异常。为了保证服务正常不出现 panic 和空指针，跳过该 conn
-				xlog.Error(errors.ListenerAcceptError, "err", err)
+				xlog.Error(xlog.ListenerAcceptError, "err", err)
 				continue
 			}
 		}
-		if err = db_service.SVC.UpdateProxyConn(ctx, id, 1); err != nil {
-			// todo: do log
-		}
+		db_service.SVC.UpdateProxyConn(ctx, id, 1)
+
 		if srv, ok := service.Factory.Load(*tun.Type); ok {
 			destConn, err := srv.(service.Service).Conn(ctx, *t,
 				service.WithAddr(tun.GetAddr()), service.WithTorFlag(tun.Config.Tor))
 			if err != nil {
-				xlog.Error(errors.ListenerDailError, "err", err)
-				if err = db_service.SVC.UpdateProxyConn(ctx, id, -1); err != nil {
-					// todo: do log
-				}
+				xlog.Error(xlog.ListenerDailError, "err", err)
+				db_service.SVC.UpdateProxyConn(ctx, id, -1)
 				continue
 			}
 			go func() {
 				if _, err = db_service.SVC.UpdateProxy(ctx, id, &models.Proxy{
 					Lag: tools.Int64Ptr(destConn.Delay()),
 				}); err != nil {
-					xlog.Error(errors.ListenerLagError, "id", id, "err", err)
+					xlog.Error(xlog.ListenerLagError, "id", id, "err", err)
 				}
 			}()
 			go func() {
 				in, out, err := network.Transport(conn, destConn)
 				if err != nil {
-					xlog.Error(errors.NetworkTransportError, "err", err)
+					xlog.Error(xlog.NetworkTransportError, "err", err)
 				}
-				if err = db_service.SVC.UpdateProxyConn(ctx, id, -1); err != nil {
-					// todo: do log
-				}
-				if err = db_service.SVC.UpdateProxyNetFlow(ctx, id, in, out); err != nil {
-					// todo: do log
-				}
+				db_service.SVC.UpdateProxyConn(ctx, id, -1)
+				db_service.SVC.UpdateProxyNetworkInfo(ctx, id, in, out)
 			}()
 		}
 	}
