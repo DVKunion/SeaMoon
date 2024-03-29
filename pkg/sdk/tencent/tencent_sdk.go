@@ -155,7 +155,8 @@ func getAmount(ca *models.CloudAuth) (float64, error) {
 	return float64(balance) / 100, nil
 }
 
-func deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, error) {
+func deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, string, error) {
+	uid := ""
 	credential := common.NewCredential(
 		ca.AccessKey,
 		ca.AccessSecret,
@@ -168,7 +169,7 @@ func deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, error) {
 	client, err := scf.NewClient(credential, tun.Config.Region, cpf)
 
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	// SCF 需要一个 namespace
@@ -181,7 +182,7 @@ func deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, error) {
 	if err != nil {
 		// 如果错误是 ns 存在，则忽略。
 		if err, ok := err.(*fcError.TencentCloudSDKError); !ok || err.Code != scf.RESOURCEINUSE_NAMESPACE {
-			return "", err
+			return "", "", err
 		}
 	}
 
@@ -189,7 +190,7 @@ func deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, error) {
 	request := scf.NewCreateFunctionRequest()
 
 	// 查询的时候只能用模糊匹配，sb, 得用个不会模糊的前缀区分
-	fcName := "a" + strconv.Itoa(int(tun.CreatedAt.Unix())) + "-" + *tun.Name
+	fcName := *tun.Name
 
 	request.Namespace = common.StringPtr(serviceName)
 	request.FunctionName = common.StringPtr(fcName)
@@ -218,15 +219,28 @@ func deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, error) {
 		},
 	}
 
-	if tun.Config.Tor {
-		request.Environment = &scf.Environment{
-			Variables: []*scf.Variable{
-				{
-					Key:   common.StringPtr("SEAMOON_TOR"),
-					Value: common.StringPtr("true"),
-				},
+	request.Environment = &scf.Environment{
+		Variables: []*scf.Variable{
+			{
+				Key:   common.StringPtr("SM_UID"),
+				Value: common.StringPtr(tun.Config.V2rayUid),
 			},
-		}
+			{
+				Key:   common.StringPtr("SM_SS_CRYPT"),
+				Value: common.StringPtr(tun.Config.SSRCrypt),
+			},
+			{
+				Key:   common.StringPtr("SM_SS_PASS"),
+				Value: common.StringPtr(tun.Config.SSRPass),
+			},
+		},
+	}
+
+	if tun.Config.Tor {
+		request.Environment.Variables = append(request.Environment.Variables, &scf.Variable{
+			Key:   common.StringPtr("SEAMOON_TOR"),
+			Value: common.StringPtr("true"),
+		})
 	}
 
 	request.PublicNetConfig = &scf.PublicNetConfigIn{
@@ -244,7 +258,7 @@ func deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, error) {
 	_, err = client.CreateFunction(request)
 	if err != nil {
 		if err, ok := err.(*fcError.TencentCloudSDKError); !ok || err.Code != scf.RESOURCEINUSE_FUNCTION {
-			return "", err
+			return "", "", err
 		}
 	}
 
@@ -258,21 +272,22 @@ func deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, error) {
 
 		fc, err := client.ListFunctions(eRequest)
 		if err != nil {
-			return "", err
+			return "", "", err
 		}
 		if *fc.Response.TotalCount != 1 {
-			return "", errors.New(xlog.SDKFCInfoError)
+			return "", "", errors.New(xlog.SDKFCInfoError)
 		}
 		xlog.Info(xlog.SDKWaitingFCStatus, "status", *fc.Response.Functions[0].Status, "cnt", cnt)
 		switch *fc.Response.Functions[0].Status {
 		case "Active":
 			cnt = 31
+			uid = *fc.Response.Functions[0].FunctionId
 		case "Creating":
 			time.Sleep(2 * time.Second)
 			cnt++
 			continue
 		default:
-			return "", errors.New(*fc.Response.Functions[0].StatusDesc)
+			return "", "", errors.New(*fc.Response.Functions[0].StatusDesc)
 		}
 	}
 
@@ -312,16 +327,16 @@ func deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, error) {
 
 	response, err := client.CreateTrigger(r)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	extractor := &triggerResp{}
 	desc := *response.Response.TriggerInfo.TriggerDesc
 	if err := json.Unmarshal([]byte(desc), extractor); err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return extractor.Service.SubDomain, nil
+	return extractor.Service.SubDomain, uid, nil
 }
 
 func destroy(ca *models.CloudAuth, tun *models.Tunnel) error {
@@ -340,11 +355,12 @@ func destroy(ca *models.CloudAuth, tun *models.Tunnel) error {
 		return err
 	}
 
-	fcName := "a" + strconv.Itoa(int(tun.CreatedAt.Unix())) + "-" + *tun.Name
+	fcName := *tun.Name
 
 	// 先删除触发器
 	r := scf.NewDeleteTriggerRequest()
 	r.TriggerName = common.StringPtr("apigw")
+	r.Type = common.StringPtr("apigw")
 	r.FunctionName = common.StringPtr(fcName)
 	r.Namespace = common.StringPtr(serviceName)
 	if _, err = client.DeleteTrigger(r); err != nil {

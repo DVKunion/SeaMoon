@@ -2,6 +2,7 @@ package signal
 
 import (
 	"context"
+	"sync"
 
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
 	"github.com/DVKunion/SeaMoon/pkg/api/models"
@@ -9,6 +10,25 @@ import (
 	"github.com/DVKunion/SeaMoon/pkg/listener"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
+
+func (sb *Bus) SendProxySignal(p uint, tp enum.ProxyStatus) {
+	sb.proxyChannel <- &proxySignal{
+		id:   p,
+		next: tp,
+		wg:   nil,
+	}
+}
+
+func (sb *Bus) SendProxySignalSync(p uint, tp enum.ProxyStatus) {
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	sb.proxyChannel <- &proxySignal{
+		id:   p,
+		next: tp,
+		wg:   wg,
+	}
+	wg.Wait()
+}
 
 func (sb *Bus) proxyHandler(ctx context.Context, pys *proxySignal) {
 	// proxy sync change task

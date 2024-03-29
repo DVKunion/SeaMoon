@@ -72,31 +72,7 @@ func (sb *Bus) Recover(ctx context.Context, recover string) {
 			xlog.Error(xlog.SignalRecoverProxyError, "err", err)
 		}
 		for _, p := range proxies {
-			sb.SendProxySignal(p.ID, enum.ProxyStatusRecover, nil)
+			sb.SendProxySignal(p.ID, enum.ProxyStatusRecover)
 		}
-	}
-}
-
-func (sb *Bus) SendProxySignal(p uint, tp enum.ProxyStatus, wg *sync.WaitGroup) {
-	sb.proxyChannel <- &proxySignal{
-		id:   p,
-		next: tp,
-		wg:   wg,
-	}
-}
-
-func (sb *Bus) SendProviderSignal(p uint, tp enum.ProviderStatus, wg *sync.WaitGroup) {
-	sb.providerChannel <- &providerSignal{
-		id:   p,
-		next: tp,
-		wg:   wg,
-	}
-}
-
-func (sb *Bus) SendTunnelSignal(p uint, tp enum.TunnelStatus, wg *sync.WaitGroup) {
-	sb.tunnelChannel <- &tunnelSignal{
-		id:   p,
-		next: tp,
-		wg:   wg,
 	}
 }

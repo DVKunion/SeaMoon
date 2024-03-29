@@ -8,6 +8,7 @@ import (
 	"github.com/DVKunion/SeaMoon/pkg/api/models"
 	"github.com/DVKunion/SeaMoon/pkg/sdk"
 	"github.com/DVKunion/SeaMoon/pkg/system/errors"
+	"github.com/DVKunion/SeaMoon/pkg/system/tools"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
@@ -53,6 +54,12 @@ func (t *tunnel) CreateTunnel(ctx context.Context, obj *models.Tunnel) (*models.
 		}
 	}
 
+	// 手动填充账户与密码
+	obj.Config.V2rayUid = tools.GenerateUUID()
+	obj.Config.SSRPass = tools.GenerateRandomString(12)
+	// todo: 开放认证
+	obj.Config.SSRCrypt = "aes-256-gcm"
+
 	if err = dao.Q.Tunnel.WithContext(ctx).Create(obj); err != nil {
 		return nil, err
 	}
@@ -63,7 +70,7 @@ func (t *tunnel) CreateTunnel(ctx context.Context, obj *models.Tunnel) (*models.
 func (t *tunnel) UpdateTunnel(ctx context.Context, obj *models.Tunnel) (*models.Tunnel, error) {
 	query := dao.Q.Tunnel
 
-	if _, err := query.WithContext(ctx).Where(query.ID.Eq(obj.ID)).Updates(obj); err != nil {
+	if _, err := query.WithContext(ctx).Omit(query.Status).Where(query.ID.Eq(obj.ID)).Updates(obj); err != nil {
 		return nil, err
 	}
 
@@ -73,7 +80,7 @@ func (t *tunnel) UpdateTunnel(ctx context.Context, obj *models.Tunnel) (*models.
 func (t *tunnel) UpdateTunnelStatus(ctx context.Context, id uint, status enum.TunnelStatus, msg string) {
 	query := dao.Q.Tunnel
 
-	if _, err := query.WithContext(ctx).Where(query.ID.Eq(id)).Updates(&models.Tunnel{
+	if _, err := query.WithContext(ctx).Where(query.ID.Eq(id)).Updates(models.Tunnel{
 		Status:        &status,
 		StatusMessage: &msg,
 	}); err != nil {
@@ -81,11 +88,23 @@ func (t *tunnel) UpdateTunnelStatus(ctx context.Context, id uint, status enum.Tu
 	}
 }
 
-func (t *tunnel) UpdateTunnelAddr(ctx context.Context, id uint, addr string) {
+func (t *tunnel) UpdateTunnelStatusByUid(ctx context.Context, uid string, status enum.TunnelStatus, msg string) {
 	query := dao.Q.Tunnel
 
-	if _, err := query.WithContext(ctx).Where(query.ID.Eq(id)).Updates(&models.Tunnel{
-		Addr: &addr,
+	if _, err := query.WithContext(ctx).Where(query.UniqID.Eq(uid)).Updates(models.Tunnel{
+		Status:        &status,
+		StatusMessage: &msg,
+	}); err != nil {
+		xlog.Error(xlog.ServiceDBUpdateStatusError, "type", "tunnel_status_uid", "err", err)
+	}
+}
+
+func (t *tunnel) UpdateTunnelDetail(ctx context.Context, id uint, addr string, uid string) {
+	query := dao.Q.Tunnel
+
+	if _, err := query.WithContext(ctx).Where(query.ID.Eq(id)).Updates(models.Tunnel{
+		UniqID: &uid,
+		Addr:   &addr,
 	}); err != nil {
 		xlog.Error(xlog.ServiceDBUpdateFiledError, "type", "tunnel_addr", "err", err)
 	}
@@ -93,7 +112,7 @@ func (t *tunnel) UpdateTunnelAddr(ctx context.Context, id uint, addr string) {
 
 func (t *tunnel) DeleteTunnel(ctx context.Context, id uint) error {
 	query := dao.Q.Tunnel
-	res, err := query.WithContext(ctx).Where(query.ID.Eq(id)).Delete()
+	res, err := query.WithContext(ctx).Unscoped().Where(query.ID.Eq(id)).Delete()
 	if err != nil || res.Error != nil {
 		return err
 	}
@@ -112,18 +131,14 @@ func (t *tunnel) ExistTunnel(ctx context.Context, name, uid *string) bool {
 	return false
 }
 
-func (t *tunnel) DeployTunnel(ctx context.Context, tun *models.Tunnel) (string, error) {
+func (t *tunnel) DeployTunnel(ctx context.Context, tun *models.Tunnel) (string, string, error) {
 
 	prv, err := SVC.GetProviderById(ctx, tun.ProviderId)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	addr, err := sdk.GetSDK(*prv.Type).Deploy(prv.CloudAuth, tun)
-	if err != nil {
-		return "", err
-	}
-	return addr, nil
+	return sdk.GetSDK(*prv.Type).Deploy(prv.CloudAuth, tun)
 }
 
 func (t *tunnel) StopTunnel(ctx context.Context, tun *models.Tunnel) error {

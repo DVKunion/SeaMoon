@@ -24,7 +24,6 @@
 *.sql
 
 cmd/client/static/dist/*
-web/
 *.log
 *.toml
 .config

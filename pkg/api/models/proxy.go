@@ -65,7 +65,7 @@ func (p Proxy) Addr() string {
 }
 
 func (p Proxy) ProtoAddr() string {
-	if *p.Type == enum.ProxyTypeAUTO || *p.Type == enum.ProxyTypeSOCKS5Vmess || *p.Type == enum.ProxyTypeSOCKS5Vless || *p.Type == enum.ProxyTypeSOCKS5Ssr {
+	if *p.Type == enum.ProxyTypeAUTO || *p.Type == enum.ProxyTypeVmess || *p.Type == enum.ProxyTypeVless || *p.Type == enum.ProxyTypeShadowSocks {
 		// 随便选好了
 		return fmt.Sprintf("%s://%s", enum.ProxyTypeSOCKS5, strings.Join([]string{*p.ListenAddr, *p.ListenPort}, ":"))
 	}

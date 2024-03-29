@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	net "github.com/DVKunion/SeaMoon/pkg/network"
-	"github.com/DVKunion/SeaMoon/pkg/service"
 	"github.com/DVKunion/SeaMoon/pkg/system/errors"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
+	"github.com/DVKunion/SeaMoon/pkg/tunnel/service"
 )
 
 type Server struct {

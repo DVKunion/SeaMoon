@@ -2,11 +2,31 @@ package signal
 
 import (
 	"context"
+	"sync"
 
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
 	"github.com/DVKunion/SeaMoon/pkg/api/service"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
+
+func (sb *Bus) SendProviderSignal(p uint, tp enum.ProviderStatus) {
+	sb.providerChannel <- &providerSignal{
+		id:   p,
+		next: tp,
+		wg:   nil,
+	}
+}
+
+func (sb *Bus) SendProviderSignalSync(p uint, tp enum.ProviderStatus) {
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	sb.providerChannel <- &providerSignal{
+		id:   p,
+		next: tp,
+		wg:   wg,
+	}
+	wg.Wait()
+}
 
 func (sb *Bus) providerHandler(ctx context.Context, prs *providerSignal) {
 	// proxy sync change task

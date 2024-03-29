@@ -20,9 +20,9 @@ const (
 	ProxyTypeAUTO        ProxyType = "auto"
 	ProxyTypeHTTP        ProxyType = "http"
 	ProxyTypeSOCKS5      ProxyType = "socks5"
-	ProxyTypeSOCKS5Ssr   ProxyType = "socks5+ssr"
-	ProxyTypeSOCKS5Vmess ProxyType = "socks5+vmess"
-	ProxyTypeSOCKS5Vless ProxyType = "socks5+vless"
+	ProxyTypeShadowSocks ProxyType = "ss"
+	ProxyTypeVmess       ProxyType = "vmess"
+	ProxyTypeVless       ProxyType = "vless"
 )
 
 func (t ProxyType) String() string {

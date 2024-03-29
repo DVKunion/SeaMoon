@@ -5,7 +5,7 @@ import (
 
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
 	"github.com/DVKunion/SeaMoon/pkg/api/models"
-	"github.com/DVKunion/SeaMoon/pkg/tools"
+	"github.com/DVKunion/SeaMoon/pkg/system/tools"
 )
 
 var (
@@ -34,12 +34,12 @@ func (t *SDK) Auth(ca *models.CloudAuth, region string) (*models.ProviderInfo, e
 	}, nil
 }
 
-func (t *SDK) Deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, error) {
-	addr, err := deploy(ca, tun)
+func (t *SDK) Deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, string, error) {
+	addr, uid, err := deploy(ca, tun)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
-	return strings.Replace(addr, "https://", "", -1), nil
+	return strings.Replace(addr, "https://", "", -1), uid, nil
 }
 
 func (t *SDK) Destroy(ca *models.CloudAuth, tun *models.Tunnel) error {
@@ -66,15 +66,24 @@ func (t *SDK) SyncFC(ca *models.CloudAuth, regions []string) (models.TunnelCreat
 			CPU:      0,
 			Memory:   tools.PtrInt32(fc.detail.MemorySize),
 			Instance: 1, // 这个玩意tmd怎么也找不到，同步过来的就算他1好了。
-
-			TLS: true, // 默认同步过来都打开
-			Tor: func() bool {
-				if fc.detail.Environment != nil {
-					// 如果是 开启 Tor 的隧道，需要有环境变量
-					return len(fc.detail.Environment.Variables) > 0
+			Tor:      false,
+			TLS:      true, // 默认同步过来都打开
+		}
+		if fc.detail.Environment != nil {
+			for _, env := range fc.detail.Environment.Variables {
+				if *env.Key == "SEAMOON_TOR" {
+					tun.Config.Tor = true
 				}
-				return false
-			}(),
+				if *env.Key == "SM_SS_CRYPT" {
+					tun.Config.SSRCrypt = *env.Value
+				}
+				if *env.Key == "SM_SS_PASS" {
+					tun.Config.SSRPass = *env.Value
+				}
+				if *env.Key == "SM_UID" {
+					tun.Config.V2rayUid = *env.Value
+				}
+			}
 		}
 		*tun.Type = enum.TransTunnelType(*fc.detail.Description)
 		*tun.Port = int32(*fc.detail.ImageConfig.ImagePort)
