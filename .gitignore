@@ -24,6 +24,7 @@
 *.sql
 
 cmd/client/static/dist/*
+.umi/
 *.log
 *.toml
 .config
