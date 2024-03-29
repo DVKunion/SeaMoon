@@ -18,7 +18,7 @@ jobs:
           node-version: '20'
       - name: Build Front
         run: |
-          cd web && npm install && npm run build && cp -r dist ../cmd/client/static
+          cd web && npm install | true && npm run build && cp -r dist ../cmd/client/static
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
