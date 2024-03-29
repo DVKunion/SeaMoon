@@ -2,11 +2,10 @@ import React, {useRef, useState} from 'react';
 import type {ProDescriptionsActionType} from '@ant-design/pro-components';
 import {ProDescriptions} from '@ant-design/pro-components';
 import {FormValueType} from "./CreateForm";
-import {Button, Divider, Drawer, Popconfirm, Space, Tag, Tooltip} from "antd";
+import {Button, Divider, Drawer, Popconfirm, Space, Tag, Tooltip, Badge} from "antd";
 import {CloudProviderStatusEnum, CloudProvideTypeValueEnum, RegionEnum} from "@/enum/cloud";
 import {AuthColumns, CloudRegionSelector} from "@/pages/provider/components/AuthForm";
 import {SyncOutlined} from "@ant-design/icons";
-import {Badge} from "_antd@4.24.15@antd";
 
 export type DetailProps = {
   onCancel: () => void;

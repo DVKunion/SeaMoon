@@ -1,13 +1,12 @@
 import React, {useRef, useState} from "react";
 import {PageContainer, ProTable, ActionType, ProColumns} from "@ant-design/pro-components";
-import {Button, Popconfirm} from "antd";
+import {Button, Popconfirm, Badge, Tooltip} from "antd";
 import {PlusOutlined} from "@ant-design/icons";
 import {getCloudProvider} from "@/services/cloud/api";
 import {handleCreateCloud, handleDeleteCloud, handleSyncCloud, handleUpdateCloud} from './handle';
 import {CloudProvideTypeEnum, CloudProviderStatusEnum} from "@/enum/cloud";
 import CreateForm from './components/CreateForm';
 import DetailDrawer from "./components/DetailDrawer";
-import {Badge, Tooltip} from "_antd@4.24.15@antd";
 
 const Provider: React.FC = () => {
 
