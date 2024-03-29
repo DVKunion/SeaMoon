@@ -93,6 +93,7 @@ const (
 
 // SDK 相关错误
 const (
+	SDKFCCreateError         = "sdk create function but not found error"
 	SDKFCInfoError           = "sdk get function info error"
 	SDKFCDetailError         = "sdk get function detail error"
 	SDKTriggerError          = "sdk get function trigger error"

@@ -10,7 +10,7 @@ import (
 	"github.com/DVKunion/SeaMoon/pkg/api/database/dao"
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
 	"github.com/DVKunion/SeaMoon/pkg/api/models"
-	"github.com/DVKunion/SeaMoon/pkg/tools"
+	"github.com/DVKunion/SeaMoon/pkg/system/tools"
 )
 
 var paramsMissingError = errors.New("missing important params")

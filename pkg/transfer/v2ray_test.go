@@ -14,7 +14,7 @@ func TestV2rayConfig(t *testing.T) {
       "port": 10000,
       "tag": "xixixi",
       "listen":"127.0.0.1",
-      "protocol": "shadowsocks",
+      "protocol": "shadowsocks2022",
       "settings": {
 			"method": "aes-256-gcm",
 			"password": "123456",

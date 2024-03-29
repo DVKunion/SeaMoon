@@ -45,7 +45,7 @@ func (p *proxy) CreateProxy(ctx context.Context, obj *models.Proxy) (*models.Pro
 func (p *proxy) UpdateProxy(ctx context.Context, id uint, obj *models.Proxy) (*models.Proxy, error) {
 	query := dao.Q.Proxy
 
-	if _, err := query.WithContext(ctx).Where(query.ID.Eq(id)).Updates(obj); err != nil {
+	if _, err := query.WithContext(ctx).Omit(query.Status).Where(query.ID.Eq(id)).Updates(obj); err != nil {
 		return nil, err
 	}
 
@@ -91,7 +91,7 @@ func (p *proxy) UpdateProxyNetworkLag(ctx context.Context, id uint, lag int64) {
 func (p *proxy) UpdateProxyStatus(ctx context.Context, id uint, status enum.ProxyStatus, msg string) {
 	query := dao.Q.Proxy
 
-	if _, err := query.WithContext(ctx).Where(query.ID.Eq(id)).Updates(&models.Proxy{
+	if _, err := query.WithContext(ctx).Where(query.ID.Eq(id)).Updates(models.Proxy{
 		Status:        &status,
 		StatusMessage: &msg,
 	}); err != nil {
@@ -101,7 +101,7 @@ func (p *proxy) UpdateProxyStatus(ctx context.Context, id uint, status enum.Prox
 
 func (p *proxy) DeleteProxy(ctx context.Context, id uint) error {
 	query := dao.Q.Proxy
-	res, err := query.WithContext(ctx).Where(query.ID.Eq(id)).Delete()
+	res, err := query.WithContext(ctx).Unscoped().Where(query.ID.Eq(id)).Delete()
 	if err != nil || res.Error != nil {
 		return err
 	}

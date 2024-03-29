@@ -9,8 +9,8 @@ import (
 	"github.com/DVKunion/SeaMoon/pkg/api/controller/servant"
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
 	"github.com/DVKunion/SeaMoon/pkg/system/errors"
+	"github.com/DVKunion/SeaMoon/pkg/system/tools"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
-	"github.com/DVKunion/SeaMoon/pkg/tools"
 )
 
 func JWTAuthMiddleware(c *gin.Context) {

@@ -22,6 +22,7 @@ import (
 
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
 	"github.com/DVKunion/SeaMoon/pkg/api/models"
+	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
 var (
@@ -84,32 +85,84 @@ func getAmountAndCost(ca *models.CloudAuth, region string) (float64, float64, er
 	return float64(sa.Data.Balance-sa.Data.DeductionBalance) / 1000000, float64(sa.Data.DeductionBalance) / 1000000, nil
 }
 
-func deploy(config, svcName, imgName, hostName string, port int32, tc *models.TunnelConfig, tp *enum.TunnelType) error {
+func deploy(config, svcName, imgName, hostName string, port int32, tc *models.TunnelConfig, tp *enum.TunnelType) (string, error) {
 	ctx := context.Background()
-
+	uid := ""
 	ns, clientSet, err := parseKubeConfig(config)
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	if _, err = clientSet.AppsV1().Deployments(ns).
+	if res, err := clientSet.AppsV1().Deployments(ns).
 		Create(ctx, renderDeployment(svcName, imgName, port, tc, tp),
 			metav1.CreateOptions{}); err != nil {
-		return err
+		return "", err
+	} else {
+		uid = string(res.ObjectMeta.UID)
 	}
 
 	if _, err = clientSet.CoreV1().Services(ns).
 		Create(ctx, renderService(svcName, port), metav1.CreateOptions{}); err != nil {
-		return err
+		return "", err
 	}
 
 	// ingress
 	if _, err = clientSet.NetworkingV1().Ingresses(ns).
 		Create(ctx, renderIngress(svcName, hostName, tc, tp), metav1.CreateOptions{}); err != nil {
-		return err
+		return "", err
 	}
-	return nil
+
+	cnt := 0
+	status := enum.TunnelInitializing
+	message := ""
+
+	for cnt < 30 {
+		// 查看一下状态：
+		svcs, err := clientSet.AppsV1().Deployments(ns).List(ctx, metav1.ListOptions{
+			LabelSelector: "cloud.sealos.io/app-deploy-manager=" + svcName,
+		})
+		if err != nil {
+			return "", err
+		}
+
+		if len(svcs.Items) == 0 {
+			return "", errors.New(xlog.SDKFCCreateError)
+		}
+
+		for _, svc := range svcs.Items {
+			if svc.ObjectMeta.Name == svcName {
+				for _, condition := range svc.Status.Conditions {
+					xlog.Info(xlog.SDKWaitingFCStatus, "type", condition.Type, "status", condition.Status, "cnt", cnt)
+					if condition.Type == "Available" && condition.Status == "True" {
+						status = enum.TunnelActive
+						message = ""
+						cnt = 31
+						break
+					}
+					if condition.Type == "Progressing" && condition.Status == "True" {
+						message = condition.Message
+					}
+					if condition.Type == "Progressing" && condition.Status == "False" {
+						message = condition.Message
+					}
+					if condition.Type == "Available" && condition.Status == "False" && message == "" {
+						status = enum.TunnelError
+						message = condition.Message
+					}
+				}
+			}
+		}
+
+		cnt += 1
+		time.Sleep(2 * time.Second)
+	}
+
+	if status != enum.TunnelActive {
+		return "", errors.New(message)
+	}
+
+	return uid, nil
 }
 
 func destroy(config, svcName string) error {
@@ -199,6 +252,18 @@ func renderDeployment(svcName, imgName string, port int32, config *models.Tunnel
 										Value: "true",
 									})
 								}
+								env = append(env, corev1.EnvVar{
+									Name:  "SM_UID",
+									Value: config.V2rayUid,
+								})
+								env = append(env, corev1.EnvVar{
+									Name:  "SM_SS_CRYPT",
+									Value: config.SSRCrypt,
+								})
+								env = append(env, corev1.EnvVar{
+									Name:  "SM_SS_PASS",
+									Value: config.SSRPass,
+								})
 								return env
 							}(),
 							Resources: corev1.ResourceRequirements{

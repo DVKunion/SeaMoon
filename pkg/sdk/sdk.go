@@ -13,7 +13,7 @@ type CloudSDK interface {
 	// 返回认证后查询的账户信息
 	Auth(ca *models.CloudAuth, region string) (*models.ProviderInfo, error)
 	// Deploy 部署隧道函数
-	Deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, error)
+	Deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, string, error)
 	// Destroy 删除隧道函数
 	Destroy(ca *models.CloudAuth, tun *models.Tunnel) error
 	// SyncFC 同步函数

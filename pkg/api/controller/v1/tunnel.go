@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 	"reflect"
-	"sync"
 
 	"github.com/gin-gonic/gin"
 
@@ -60,6 +59,7 @@ func CreateTunnel(c *gin.Context) {
 	if res, err := service.SVC.CreateTunnel(c, obj.ToModel(true)); err != nil {
 		servant.ErrorMsg(c, http.StatusInternalServerError, errors.ApiError(xlog.ApiServiceError, err))
 	} else {
+		signal.Signal().SendTunnelSignalSync(res.ID, enum.TunnelActive)
 		servant.SuccessMsg(c, 1, res.ToApi(extra()))
 	}
 }
@@ -79,6 +79,10 @@ func UpdateTunnel(c *gin.Context) {
 
 	obj.ID = uint(id)
 
+	if obj.Status != nil {
+		signal.Signal().SendTunnelSignal(obj.ID, *obj.Status)
+	}
+
 	if res, err := service.SVC.UpdateTunnel(c, obj.ToModel(false)); err != nil {
 		servant.ErrorMsg(c, http.StatusInternalServerError, errors.ApiError(xlog.ApiServiceError, err))
 	} else {
@@ -93,10 +97,7 @@ func DeleteTunnel(c *gin.Context) {
 		return
 	}
 
-	wg := &sync.WaitGroup{}
-	wg.Add(1)
-	signal.Signal().SendTunnelSignal(uint(id), enum.TunnelDelete, wg)
-	wg.Wait()
+	signal.Signal().SendTunnelSignalSync(uint(id), enum.TunnelDelete)
 
 	servant.SuccessMsg(c, 1, nil)
 }

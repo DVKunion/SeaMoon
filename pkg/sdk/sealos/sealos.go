@@ -5,10 +5,9 @@ import (
 	"strings"
 
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
-	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
-	"github.com/DVKunion/SeaMoon/pkg/tools"
-
 	"github.com/DVKunion/SeaMoon/pkg/api/models"
+	"github.com/DVKunion/SeaMoon/pkg/system/tools"
+	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
 type SDK struct {
@@ -25,7 +24,7 @@ func (s *SDK) Auth(ca *models.CloudAuth, region string) (*models.ProviderInfo, e
 	}, nil
 }
 
-func (s *SDK) Deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, error) {
+func (s *SDK) Deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, string, error) {
 
 	// 拼接规则 seamoon-NAME-TYPE
 	svc := "seamoon-" + *tun.Name + "-" + string(*tun.Type)
@@ -35,8 +34,8 @@ func (s *SDK) Deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, error) {
 	host := tools.GenerateRandomLetterString(12)
 
 	addr := fmt.Sprintf("%s.%s", host, regionMap[tun.Config.Region])
-
-	return addr, deploy(ca.KubeConfig, svc, img, host, *tun.Port, tun.Config, tun.Type)
+	uid, err := deploy(ca.KubeConfig, svc, img, host, *tun.Port, tun.Config, tun.Type)
+	return addr, uid, err
 }
 
 func (s *SDK) Destroy(ca *models.CloudAuth, tun *models.Tunnel) error {
@@ -85,6 +84,22 @@ func (s *SDK) SyncFC(ca *models.CloudAuth, regions []string) (models.TunnelCreat
 				Memory:     int32(svc.Spec.Template.Spec.Containers[0].Resources.Limits.Memory().MilliValue()) / 1024 / 1024 / 1000,
 				Instance:   *svc.Spec.Replicas,
 				FcAuthType: enum.AuthEmpty, // sealos暂不支持认证
+				Tor:        false,
+				TLS:        true,
+			}
+			for _, env := range svc.Spec.Template.Spec.Containers[0].Env {
+				if env.Name == "SEAMOON_TOR" {
+					tun.Config.Tor = true
+				}
+				if env.Name == "SM_SS_CRYPT" {
+					tun.Config.SSRCrypt = env.Value
+				}
+				if env.Name == "SM_SS_PASS" {
+					tun.Config.SSRPass = env.Value
+				}
+				if env.Name == "SM_UID" {
+					tun.Config.V2rayUid = env.Value
+				}
 			}
 			*tun.Type = func() enum.TunnelType {
 				if strings.HasSuffix(svc.Name, "websocket") {

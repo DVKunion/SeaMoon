@@ -54,7 +54,7 @@ func (p *provider) UpdateProvider(ctx context.Context, obj *models.Provider) (*m
 
 	query := dao.Q.Provider
 
-	if _, err := query.WithContext(ctx).Where(query.ID.Eq(obj.ID)).Updates(obj); err != nil {
+	if _, err := query.WithContext(ctx).Omit(query.Status).Where(query.ID.Eq(obj.ID)).Updates(obj); err != nil {
 		return nil, err
 	}
 
@@ -75,7 +75,7 @@ func (p *provider) UpdateProviderStatus(ctx context.Context, id uint, status enu
 
 func (p *provider) DeleteProvider(ctx context.Context, id uint) error {
 	query := dao.Q.Provider
-	res, err := query.WithContext(ctx).Where(query.ID.Eq(id)).Delete()
+	res, err := query.WithContext(ctx).Unscoped().Where(query.ID.Eq(id)).Delete()
 	if err != nil || res.Error != nil {
 		return err
 	}
@@ -101,12 +101,19 @@ func (p *provider) SyncProvider(ctx context.Context, prov *models.Provider) erro
 	for _, tun := range tuns {
 		// 检测是否存在
 		if SVC.ExistTunnel(ctx, nil, tun.UniqID) {
+			// 存在的话，仅更新状态好了
+			SVC.UpdateTunnelStatusByUid(ctx, *tun.UniqID, *tun.Status, *tun.StatusMessage)
 			continue
 		}
 		tun.ProviderId = prov.ID
 		if _, err = SVC.CreateTunnel(ctx, tun.ToModel(true)); err != nil {
 			return err
 		}
+	}
+
+	// 这里的更新是为了更新 info 信息
+	if _, err = p.UpdateProvider(ctx, prov); err != nil {
+		return err
 	}
 
 	return nil

@@ -2,7 +2,7 @@ package aliyun
 
 import (
 	"github.com/DVKunion/SeaMoon/pkg/api/models"
-	"github.com/DVKunion/SeaMoon/pkg/tools"
+	"github.com/DVKunion/SeaMoon/pkg/system/tools"
 )
 
 var (
@@ -39,7 +39,7 @@ func (a *SDK) Auth(ca *models.CloudAuth, region string) (*models.ProviderInfo, e
 	}, nil
 }
 
-func (a *SDK) Deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, error) {
+func (a *SDK) Deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, string, error) {
 	return deploy(ca, tun)
 }
 

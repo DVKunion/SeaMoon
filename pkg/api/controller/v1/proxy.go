@@ -2,7 +2,6 @@ package v1
 
 import (
 	"net/http"
-	"sync"
 
 	"github.com/gin-gonic/gin"
 
@@ -12,8 +11,8 @@ import (
 	"github.com/DVKunion/SeaMoon/pkg/api/service"
 	"github.com/DVKunion/SeaMoon/pkg/signal"
 	"github.com/DVKunion/SeaMoon/pkg/system/errors"
+	"github.com/DVKunion/SeaMoon/pkg/system/tools"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
-	"github.com/DVKunion/SeaMoon/pkg/tools"
 )
 
 func ListProxies(c *gin.Context) {
@@ -62,7 +61,7 @@ func CreateProxy(c *gin.Context) {
 			*obj.Status = enum.ProxyStatusError
 			*obj.StatusMessage = err.Error()
 		} else {
-			signal.Signal().SendTunnelSignal(tun.ID, enum.TunnelActive, nil)
+			signal.Signal().SendTunnelSignal(tun.ID, enum.TunnelActive)
 			obj.TunnelID = tun.ID
 		}
 	}
@@ -73,7 +72,7 @@ func CreateProxy(c *gin.Context) {
 		return
 	} else {
 		// 发送启动通知
-		signal.Signal().SendProxySignal(res.ID, enum.ProxyStatusActive, nil)
+		signal.Signal().SendProxySignal(res.ID, enum.ProxyStatusActive)
 		servant.SuccessMsg(c, 1, res.ToApi())
 	}
 }
@@ -92,7 +91,7 @@ func UpdateProxy(c *gin.Context) {
 
 	m := obj.ToModel(false)
 	if m.Status != nil {
-		signal.Signal().SendProxySignal(obj.ID, *obj.Status, nil)
+		signal.Signal().SendProxySignal(obj.ID, *obj.Status)
 		// 这里愚蠢de做一个特殊处理: 当代理关闭时，自动将连接数清零
 		if *m.Status == enum.ProxyStatusInactive {
 			m.Conn = tools.IntPtr(0)
@@ -112,10 +111,7 @@ func DeleteProxy(c *gin.Context) {
 		return
 	}
 
-	wg := &sync.WaitGroup{}
-	wg.Add(1)
-	signal.Signal().SendProxySignal(uint(id), enum.ProxyStatusDelete, wg)
-	wg.Wait()
+	signal.Signal().SendProxySignalSync(uint(id), enum.ProxyStatusDelete)
 	servant.SuccessMsg(c, 1, nil)
 }
 
@@ -130,7 +126,7 @@ func SpeedRateProxy(c *gin.Context) {
 	if proxy, err := service.SVC.GetProxyById(c, uint(id)); err != nil || *proxy.Status != enum.ProxyStatusActive {
 		servant.ErrorMsg(c, http.StatusInternalServerError, errors.ApiError(xlog.ApiServiceError, err))
 	} else {
-		signal.Signal().SendProxySignal(proxy.ID, enum.ProxyStatusSpeeding, nil)
+		signal.Signal().SendProxySignal(proxy.ID, enum.ProxyStatusSpeeding)
 		servant.SuccessMsg(c, 1, proxy.ToApi())
 	}
 }

@@ -36,6 +36,9 @@ type TunnelConfig struct {
 	Memory     int32         `json:"memory"`       // 内存资源
 	Instance   int32         `json:"instance"`     // 最大实例处理数
 	FcAuthType enum.AuthType `json:"fc_auth_type"` // 函数认证方式
+	SSRCrypt   string        `json:"ssr_crypt"`    // ssr 加密方式
+	SSRPass    string        `json:"ssr_pass"`     // ssr 密码
+	V2rayUid   string        `json:"v2ray_uid"`    // v2ray_uid
 
 	TLS bool `json:"tls"` // 是否开启 TLS 传输, 开启后自动使用 wss  协议
 	Tor bool `json:"tor"` // 是否开启 Tor 转发

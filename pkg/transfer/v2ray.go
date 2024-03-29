@@ -24,7 +24,7 @@ const handleTag = "seamoon-"
 
 var v2ray *core.Instance
 
-func InitV2ray(port uint32, id, pass, crypt string, tp enum.TunnelType, tor bool, tls bool) error {
+func InitV2rayServer(port uint32, id, pass, crypt string, tp enum.TunnelType, tor bool, tls bool) error {
 	config, err := renderConfig(port, id, pass, crypt, tp, tor, tls)
 	if err != nil {
 		return err
@@ -36,7 +36,7 @@ func InitV2ray(port uint32, id, pass, crypt string, tp enum.TunnelType, tor bool
 	return nil
 }
 
-// V2rayTransport v2ray 相关协议支持: vmess / vless / vlite
+// V2rayTransport v2ray 相关协议支持: vmess / vless
 // 这是一个偷懒的版本，并没有详细的研究对应协议的具体通信解析方案, 直接集成了 v2ray-core, 并且实现的相当的简陋。
 // 还是期望能够和 socks5 一样保持一致是最好的
 // proto 来自己做 dispatch

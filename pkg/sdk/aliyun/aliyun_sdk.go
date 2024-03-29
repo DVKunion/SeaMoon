@@ -74,13 +74,14 @@ func getBilling(ca *models.CloudAuth) (float64, error) {
 	return strconv.ParseFloat(strings.Replace(r.Body.Data["AvailableAmount"].(string), ",", "", -1), 64)
 }
 
-func deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, error) {
+func deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, string, error) {
+	uid := ""
 	// 原生的库是真tm的难用，
 	client, err := fc.NewClient(
 		fmt.Sprintf("%s.%s.fc.aliyuncs.com", ca.AccessId, tun.Config.Region),
 		"2016-08-15", ca.AccessKey, ca.AccessSecret)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	// 先尝试是否已经存在了 svc
 	_, err = client.GetService(fc.NewGetServiceInput(serviceName))
@@ -92,23 +93,28 @@ func deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, error) {
 					WithServiceName(serviceName).
 					WithDescription(serviceDesc))
 				if err != nil {
-					return "", err
+					return "", "", err
 				}
 			}
 		} else {
-			return "", err
+			return "", "", err
 		}
 	}
 
 	funcName := *tun.Name
 	// 有了服务了，现在来创建函数
-	if _, err = client.CreateFunction(fc.NewCreateFunctionInput(serviceName).
+	if res, err := client.CreateFunction(fc.NewCreateFunctionInput(serviceName).
 		WithFunctionName(funcName).
 		WithDescription(string(*tun.Type)).
 		WithRuntime("custom-container").
 		WithCPU(tun.Config.CPU).
 		WithMemorySize(tun.Config.Memory).
 		WithHandler("main").
+		WithEnvironmentVariables(map[string]string{
+			"SM_SS_PASS":  tun.Config.SSRPass,
+			"SM_SS_CRYPT": tun.Config.SSRCrypt,
+			"SM_UID":      tun.Config.V2rayUid,
+		}).
 		WithDisk(512).
 		WithInstanceConcurrency(tun.Config.Instance).
 		WithCAPort(*tun.Port).
@@ -118,7 +124,9 @@ func deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, error) {
 			WithImage(fmt.Sprintf("%s:%s", registryEndPoint[tun.Config.Region], xlog.Version)).
 			WithCommand("[\"./seamoon\"]").
 			WithArgs("[\"server\"]"))); err != nil {
-		return "", err
+		return "", "", err
+	} else {
+		uid = *res.FunctionID
 	}
 	// 有了函数了，接下来创建 trigger
 	if _, err = client.CreateTrigger(fc.NewCreateTriggerInput(serviceName, funcName).
@@ -129,15 +137,15 @@ func deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, error) {
 			AuthType:           "anonymous",
 			DisableURLInternet: false,
 		})); err != nil {
-		return "", err
+		return "", "", err
 	}
 	// 创建成功了, 查一下
 	respTS, err := client.GetTrigger(fc.NewGetTriggerInput(serviceName, funcName, string(*tun.Type)))
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return strings.Replace(respTS.UrlInternet, "https://", "", -1), nil
+	return strings.Replace(respTS.UrlInternet, "https://", "", -1), uid, nil
 }
 
 func destroy(ca *models.CloudAuth, tun *models.Tunnel) error {
@@ -197,12 +205,24 @@ func sync(ca *models.CloudAuth, regions []string) (models.TunnelCreateApiList, e
 				Memory:   *c.MemorySize,
 				Instance: *c.InstanceConcurrency,
 
-				// todo: 这里太糙了
 				TLS: true, // 默认同步过来都打开
-				Tor: func() bool {
-					// 如果是 开启 Tor 的隧道，需要有环境变量
-					return len(c.EnvironmentVariables) > 0
-				}(),
+				Tor: false,
+			}
+			if len(c.EnvironmentVariables) > 0 {
+				for key, value := range c.EnvironmentVariables {
+					if key == "SEAMOON_TOR" {
+						tun.Config.Tor = true
+					}
+					if key == "SM_SS_CRYPT" {
+						tun.Config.SSRCrypt = value
+					}
+					if key == "SM_SS_PASS" {
+						tun.Config.SSRPass = value
+					}
+					if key == "SM_UID" {
+						tun.Config.V2rayUid = value
+					}
+				}
 			}
 			*tun.Type = enum.TransTunnelType(*c.Description)
 			tun.Port = c.CAPort

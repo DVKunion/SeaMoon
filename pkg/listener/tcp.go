@@ -8,9 +8,9 @@ import (
 	"github.com/DVKunion/SeaMoon/pkg/api/models"
 	db_service "github.com/DVKunion/SeaMoon/pkg/api/service"
 	"github.com/DVKunion/SeaMoon/pkg/network"
-	"github.com/DVKunion/SeaMoon/pkg/service"
 	"github.com/DVKunion/SeaMoon/pkg/system/errors"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
+	"github.com/DVKunion/SeaMoon/pkg/tunnel/service"
 )
 
 func TCPListen(ctx context.Context, py *models.Proxy) (net.Listener, error) {

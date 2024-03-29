@@ -2,12 +2,32 @@ package signal
 
 import (
 	"context"
+	"sync"
 
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
 	"github.com/DVKunion/SeaMoon/pkg/api/models"
 	"github.com/DVKunion/SeaMoon/pkg/api/service"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
+
+func (sb *Bus) SendTunnelSignal(p uint, tp enum.TunnelStatus) {
+	sb.tunnelChannel <- &tunnelSignal{
+		id:   p,
+		next: tp,
+		wg:   nil,
+	}
+}
+
+func (sb *Bus) SendTunnelSignalSync(p uint, tp enum.TunnelStatus) {
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	sb.tunnelChannel <- &tunnelSignal{
+		id:   p,
+		next: tp,
+		wg:   wg,
+	}
+	wg.Wait()
+}
 
 func (sb *Bus) tunnelHandler(ctx context.Context, ts *tunnelSignal) {
 	// proxy sync change task
@@ -30,30 +50,31 @@ func (sb *Bus) tunnelHandler(ctx context.Context, ts *tunnelSignal) {
 	}
 	service.SVC.UpdateTunnelStatus(ctx, tun.ID, ts.next, "")
 	switch ts.next {
-	case enum.TunnelActive:
-		if addr, err := service.SVC.DeployTunnel(ctx, tun); err != nil {
+	case enum.TunnelInitializing, enum.TunnelActive:
+		if addr, uid, err := service.SVC.DeployTunnel(ctx, tun); err != nil {
 			xlog.Error(xlog.SignalDeployTunError, "obj", "tunnel", "err", err)
 			service.SVC.UpdateTunnelStatus(ctx, tun.ID, enum.TunnelError, err.Error())
 			return
 		} else {
-			service.SVC.UpdateTunnelAddr(ctx, tun.ID, addr)
+			service.SVC.UpdateTunnelDetail(ctx, tun.ID, addr, uid)
 		}
 		xlog.Info(xlog.SignalDeployTunnel, "id", tun.ID, "type", tun.Type)
+		service.SVC.UpdateTunnelStatus(ctx, tun.ID, enum.TunnelActive, "")
 	case enum.TunnelInactive:
-		_ = sb.stopTunnel(ctx, tun)
+		sb.stopTunnel(ctx, tun)
 	case enum.TunnelDelete:
 		sb.deleteTunnel(ctx, tun)
 	}
 }
 
-func (sb *Bus) stopTunnel(ctx context.Context, tun *models.Tunnel) error {
+func (sb *Bus) stopTunnel(ctx context.Context, tun *models.Tunnel) {
 	if err := service.SVC.StopTunnel(ctx, tun); err != nil {
 		xlog.Error(xlog.SignalStopTunError, "obj", "tunnel", "err", err)
 		service.SVC.UpdateTunnelStatus(ctx, tun.ID, enum.TunnelError, err.Error())
-		return err
+		return
 	}
 	xlog.Info(xlog.SignalStopTunnel, "id", tun.ID, "type", tun.Type)
-	return nil
+	return
 }
 
 func (sb *Bus) deleteTunnel(ctx context.Context, tun *models.Tunnel) {
@@ -61,11 +82,9 @@ func (sb *Bus) deleteTunnel(ctx context.Context, tun *models.Tunnel) {
 	for _, py := range tun.Proxies {
 		sb.deleteProxy(ctx, &py)
 	}
-	if err := sb.stopTunnel(ctx, tun); err != nil {
-		xlog.Error(xlog.SignalDeleteTunError, "obj", "tunnel", "err", err)
-		service.SVC.UpdateTunnelStatus(ctx, tun.ID, enum.TunnelError, err.Error())
-		return
-	}
+
+	sb.stopTunnel(ctx, tun)
+
 	// 最后删除服务即可
 	if err := service.SVC.DeleteTunnel(ctx, tun.ID); err != nil {
 		xlog.Error(xlog.SignalDeleteTunError, "obj", "tunnel", "err", err)
