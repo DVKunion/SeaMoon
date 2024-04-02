@@ -7,33 +7,13 @@ import {
   LoginForm,
   ProFormText,
 } from '@ant-design/pro-components';
-import {Alert, message} from 'antd';
-import React, {useState} from 'react';
+import {message} from 'antd';
+import React from 'react';
 import {history, useModel} from 'umi';
 import styles from './index.less';
 import ShieldList from "@/components/ShieldList";
 
-const LoginMessage: React.FC<{
-  content: string;
-}> = ({content}) => (
-  <Alert
-    style={{
-      marginBottom: 24,
-    }}
-    message={content}
-    type="error"
-    showIcon
-  />
-);
-
 const Login: React.FC = () => {
-  const [userLoginState, setUserLoginState] = useState<Auth.Response>({
-    code: 0,
-    data: "",
-    msg: "",
-    success: false,
-    total: 0
-  });
   const {initialState, setInitialState} = useModel('@@initialState');
 
   const fetchUserInfo = async () => {
@@ -64,8 +44,6 @@ const Login: React.FC = () => {
       } else {
         message.error(msg.code + ":" + msg.msg)
       }
-      // 如果失败去设置用户错误信息
-      setUserLoginState(msg);
     } catch (error) {
       message.error('登录失败，请重试！');
     }
@@ -84,12 +62,6 @@ const Login: React.FC = () => {
             await handleSubmit(values as Auth.User);
           }}
         >
-          {!userLoginState.success && userLoginState.msg !== "" ? (
-            <LoginMessage
-              content={userLoginState.msg === undefined ? "登陆失败" : userLoginState.msg}
-            />
-          ) : ""}
-
           <>
             <ProFormText
               name="Username"

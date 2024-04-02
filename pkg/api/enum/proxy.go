@@ -20,7 +20,7 @@ const (
 	ProxyTypeAUTO        ProxyType = "auto"
 	ProxyTypeHTTP        ProxyType = "http"
 	ProxyTypeSOCKS5      ProxyType = "socks5"
-	ProxyTypeShadowSocks ProxyType = "ss"
+	ProxyTypeShadowSocks ProxyType = "shadowsocks"
 	ProxyTypeVmess       ProxyType = "vmess"
 	ProxyTypeVless       ProxyType = "vless"
 )

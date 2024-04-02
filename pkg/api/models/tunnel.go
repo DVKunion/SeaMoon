@@ -1,8 +1,11 @@
 package models
 
 import (
+	"encoding/base64"
+	"fmt"
 	"time"
 
+	"gopkg.in/yaml.v3"
 	"gorm.io/gorm"
 
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
@@ -106,6 +109,129 @@ func (tl TunnelList) ToApi(extra ...func(api interface{})) []*TunnelApi {
 		res = append(res, api.(*TunnelApi))
 	}
 	return res
+}
+
+func (tl TunnelList) ToConfig(p string) []byte {
+	switch p {
+	case "clash":
+		cc := ClashConfig{
+			MixedPort:          7890,
+			AllowLan:           false,
+			LogLevel:           "info",
+			ExternalController: "127.0.0.1:9090",
+			Secret:             "",
+			//DNS: ClashDNS{
+			//	Enable:       true,
+			//	Ipv6:         false,
+			//	Listen:       "127.0.0.1:5353",
+			//	EnhancedMode: "fake-ip",
+			//	FakeIPFilter: []string{"*.lan"},
+			//	Nameserver:
+			//},
+			Proxies: make([]ClashProxies, 0),
+			ProxyGroups: []ClashProxyGroups{
+				{
+					Name:    "Proxies",
+					Type:    "select",
+					Proxies: make([]string, 0),
+				},
+				{
+					Name:    "Direct",
+					Type:    "select",
+					Proxies: []string{"DIRECT"},
+				},
+			},
+			Rules: BindingRules,
+		}
+		for _, t := range tl {
+			cc.Proxies = append(cc.Proxies, ClashProxies{
+				Name:   *t.Name + "-" + t.Config.Region + "-vmess",
+				Type:   "vmess",
+				Server: *t.Addr,
+				Port: func() int {
+					if t.Config.TLS {
+						return 443
+					}
+					return 80
+				}(),
+				UUID:           t.Config.V2rayUid,
+				NetWork:        "ws",
+				TLS:            t.Config.TLS,
+				SkipCertVerify: !t.Config.TLS,
+				Cipher:         "auto",
+				AlterId:        0,
+				WsOpts: struct {
+					Path string `yaml:"path,omitempty"`
+				}(struct{ Path string }{Path: "/vmess"}),
+			})
+			//cc.Proxies = append(cc.Proxies, ClashProxies{
+			//	Name:   *t.Name + "-" + t.Config.Region + "-vless",
+			//	Type:   "vless",
+			//	Server: *t.Addr,
+			//	Port: func() int {
+			//		if t.Config.TLS {
+			//			return 443
+			//		}
+			//		return 80
+			//	}(),
+			//	UUID:           t.Config.V2rayUid,
+			//	UDP:            false,
+			//	NetWork:        "ws",
+			//	TLS:            t.Config.TLS,
+			//	SkipCertVerify: !t.Config.TLS,
+			//	Cipher:         "auto",
+			//	AlterId:        0,
+			//	WsOpts: struct {
+			//		Path string `yaml:"path,omitempty"`
+			//	}(struct{ Path string }{Path: "/vless"}),
+			//})
+			cc.ProxyGroups[0].Proxies = append(cc.ProxyGroups[0].Proxies, *t.Name+"-"+t.Config.Region+"-vmess")
+			//cc.ProxyGroups[0].Proxies = append(cc.ProxyGroups[0].Proxies, *t.Name+"-"+t.Config.Region+"-vless")
+		}
+		data, err := yaml.Marshal(&cc)
+		if err != nil {
+
+		}
+		return data
+	case "shadowrocket":
+		res := ""
+		for _, t := range tl {
+			res += fmt.Sprintf("vmess://%s?remarks=%s&path=/vmess&obfs=%s&tls=%d&alterId=0\n",
+				base64.URLEncoding.EncodeToString([]byte(fmt.Sprintf("auto:%s@%s:%v", t.Config.V2rayUid, *t.Addr, func() int {
+					if t.Config.TLS {
+						return 443
+					}
+					return 80
+				}()))),
+				fmt.Sprintf("%s-%s-%s", *t.Name, t.Config.Region, "vmess"),
+				t.Type.String(),
+				func() int {
+					if t.Config.TLS {
+						return 1
+					}
+					return 0
+				}(),
+			)
+			res += fmt.Sprintf("vless://%s?remarks=%s&path=/vless&obfs=%s&tls=%d&alterId=0\n",
+				base64.URLEncoding.EncodeToString([]byte(fmt.Sprintf("auto:%s@%s:%v", t.Config.V2rayUid, *t.Addr, func() int {
+					if t.Config.TLS {
+						return 443
+					}
+					return 80
+				}()))),
+				fmt.Sprintf("%s-%s-%s", *t.Name, t.Config.Region, "vless"),
+				t.Type.String(),
+				func() int {
+					if t.Config.TLS {
+						return 1
+					}
+					return 0
+				}(),
+			)
+		}
+		return []byte(base64.URLEncoding.EncodeToString([]byte(res)))
+	}
+	return nil
 }
 
 func (ta TunnelCreateApi) ToModel(full bool) *Tunnel {

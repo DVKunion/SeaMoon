@@ -9,6 +9,12 @@ import (
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
+func RawMsg(c *gin.Context, name string, text []byte) {
+	c.Header("Content-Disposition", "attachment; filename="+name)
+	c.Data(200, "application/octet-stream; charset=utf-8", text)
+	return
+}
+
 // SuccessMsg 通用正常响应
 func SuccessMsg(c *gin.Context, total int64, data interface{}) {
 	c.JSON(http.StatusOK, gin.H{

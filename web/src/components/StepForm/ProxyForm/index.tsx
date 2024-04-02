@@ -1,9 +1,10 @@
 import React from "react";
-import {ProForm, ProFormText, ProFormSelect, ProFormSwitch} from "@ant-design/pro-components";
+import {ProForm, ProFormText, ProFormSelect, ProFormSwitch, ProFormDependency} from "@ant-design/pro-components";
 import {toNumber} from "lodash";
 import {ProxyTypeValueEnum} from "@/enum/service";
 
 export const ProxyForm: React.FC = (props) => {
+
   return <> <ProForm.Group
     title={"服务参数"}
   >
@@ -19,11 +20,27 @@ export const ProxyForm: React.FC = (props) => {
         }
       ]}
     />
+    <ProFormSelect
+      name="type"
+      colProps={{span: 8, offset: 4}}
+      label="监听协议"
+      placeholder={""}
+      valueEnum={ProxyTypeValueEnum}
+      rules={[
+        {
+          required: true,
+          message: "请选择监听的服务类型!",
+        },
+      ]}
+    />
     <ProFormText
       name="listen_address"
       label="监听地址"
       placeholder={""}
-      colProps={{span: 8,offset:4}}
+      colProps={{span: 8}}
+      initialValue={
+        "0.0.0.0"
+      }
       rules={[
         {
           required: true,
@@ -40,7 +57,8 @@ export const ProxyForm: React.FC = (props) => {
       name="listen_port"
       label="监听端口"
       placeholder={""}
-      colProps={{span: 8}}
+      colProps={{offset: 4, span: 8}}
+      initialValue={"1080"}
       rules={[
         {
           required: true,
@@ -49,7 +67,7 @@ export const ProxyForm: React.FC = (props) => {
         {
           validator: (rule, value) => {
             const v = toNumber(value);
-            if (v >= 65535 ||v <= 0 || isNaN(v) ) {
+            if (v >= 65535 || v <= 0 || isNaN(v)) {
               return Promise.reject(new Error('请输入合法端口号(1-65535)'));
             }
             return Promise.resolve();
@@ -57,19 +75,13 @@ export const ProxyForm: React.FC = (props) => {
         },
       ]}
     />
-    <ProFormSelect
-      name="type"
-      colProps={{span: 8,offset:4}}
-      label="监听协议"
-      placeholder={""}
-      valueEnum={ProxyTypeValueEnum}
-      rules={[
-        {
-          required: true,
-          message: "请选择监听的服务类型!",
-        },
-      ]}
-    />
+    <ProFormDependency name={['type']}>
+      {({type}) => {
+        switch (type) {
+        }
+        return <></>
+      }}
+    </ProFormDependency>
   </ProForm.Group>
     <ProForm.Group
       title={"高级选项"}

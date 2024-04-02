@@ -23,7 +23,7 @@ const DetailDrawer: React.FC<DetailProps> = (props) => {
 
   return <Drawer
     title="服务详情"
-    width={"39%"}
+    width={window.innerWidth < 768 ? "80%" : "39%"}
     onClose={props.onCancel}
     open={props.detailVisible}
     extra={

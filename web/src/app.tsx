@@ -11,7 +11,7 @@ const loginPath = '/user/login';
 
 ConfigProvider.config({
   theme: {
-    primaryColor: '#76b39d',
+    primaryColor: '#7cd6cf',
   }
 });
 

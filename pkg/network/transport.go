@@ -57,7 +57,7 @@ func Transport(src, dest net.Conn) (int64, int64, error) {
 			// 忽略 websocket 正常断开
 			if opErr, ok := e.(*net.OpError); ok {
 				if closeErr, ok := opErr.Err.(*websocket.CloseError); ok {
-					if closeErr.Code == websocket.CloseNormalClosure {
+					if closeErr.Code == websocket.CloseNormalClosure || closeErr.Code == websocket.CloseAbnormalClosure {
 						e = nil
 					}
 				}

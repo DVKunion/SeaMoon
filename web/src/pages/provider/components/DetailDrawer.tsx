@@ -22,7 +22,7 @@ const DetailDrawer: React.FC<DetailProps> = (props) => {
 
   return <Drawer
     title="云账户详情"
-    width={"39%"}
+    width={window.innerWidth < 768 ? "80%" : "39%"}
     onClose={props.onCancel}
     destroyOnClose
     open={props.detailVisible}

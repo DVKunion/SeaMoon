@@ -16,6 +16,9 @@ import (
 func JWTAuthMiddleware(c *gin.Context) {
 	// 这里简化了JWT验证逻辑，实际使用时应更复杂
 	tokenString := c.GetHeader("Authorization")
+	if tokenString == "" {
+		tokenString = c.Query("token")
+	}
 
 	if tokenString == "" {
 		servant.ErrorMsg(c, http.StatusUnauthorized, errors.ApiError(xlog.ApiParamsRequire, nil))

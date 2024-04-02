@@ -102,8 +102,10 @@ const (
 
 // LISTENER 相关错误
 const (
-	ListenerAcceptError = "listener unexpect error"
-	ListenerDailError   = "listener dail to remote error"
+	ListenerAcceptError         = "listener unexpect error"
+	ListenerDailError           = "listener dail to remote error"
+	ListenerV2rayInitError      = "listener init v2ray config error"
+	ListenerV2rayTransportError = "listener transport v2ray error"
 )
 
 // SIGNAL 相关错误

@@ -8,6 +8,13 @@ import (
 	"github.com/DVKunion/SeaMoon/pkg/network"
 )
 
+type HttpTransfer struct {
+}
+
+func UnWrapper() {
+
+}
+
 func HttpTransport(conn net.Conn) error {
 	// 接收客户端的连接，并从第一条消息中获取目标地址
 	request, err := http.ReadRequest(bufio.NewReader(conn))

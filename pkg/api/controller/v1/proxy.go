@@ -9,7 +9,7 @@ import (
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
 	"github.com/DVKunion/SeaMoon/pkg/api/models"
 	"github.com/DVKunion/SeaMoon/pkg/api/service"
-	"github.com/DVKunion/SeaMoon/pkg/signal"
+	"github.com/DVKunion/SeaMoon/pkg/api/signal"
 	"github.com/DVKunion/SeaMoon/pkg/system/errors"
 	"github.com/DVKunion/SeaMoon/pkg/system/tools"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"

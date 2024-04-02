@@ -9,6 +9,11 @@ export const handleUpdateSysConfig = async (data: Config.SystemConfig) => {
     } else {
       data.auto_start = "false"
     }
+    if (data.auto_sync) {
+      data.auto_sync = "true"
+    } else {
+      data.auto_sync = "false"
+    }
     const {success, code, msg} = await updateSysConfig(data);
     hide();
     if (success) {

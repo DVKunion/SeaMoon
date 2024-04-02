@@ -6,6 +6,7 @@ import {CloudRegionOneSelector} from "@/pages/provider/components/AuthForm";
 
 export type TunnelFormProps = {
   type: number
+  regions?: string[]
 }
 
 export const TunnelForm: React.FC<TunnelFormProps> = (props) => {
@@ -32,7 +33,7 @@ export const TunnelForm: React.FC<TunnelFormProps> = (props) => {
       ]
       }
     />
-    <CloudRegionOneSelector type={props.type} />
+    <CloudRegionOneSelector type={props.type} regions={props.regions}/>
   </ProForm.Group>
     <ProForm.Group
       title={"函数规格"}
@@ -144,7 +145,12 @@ export const TunnelForm: React.FC<TunnelFormProps> = (props) => {
         label={"隧道协议类型"}
         colProps={{span: 8, offset: 4}}
         placeholder={""}
-        valueEnum={TunnelTypeValueEnum}
+        valueEnum={() => {
+          const filterEnum = {
+            "websocket": TunnelTypeValueEnum["websocket"]
+          };
+          return props.type === 2 ? filterEnum : TunnelTypeValueEnum
+        }}
         rules={[
           {
             required: true,

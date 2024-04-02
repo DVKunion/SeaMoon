@@ -23,6 +23,7 @@ require (
 	github.com/v2fly/v2ray-core/v5 v5.15.1
 	google.golang.org/grpc v1.62.1
 	google.golang.org/protobuf v1.33.0
+	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/gen v0.3.25
 	gorm.io/gorm v1.25.5
 	gorm.io/plugin/dbresolver v1.5.0
@@ -144,7 +145,6 @@ require (
 	gopkg.in/ini.v1 v1.56.0 // indirect
 	gopkg.in/resty.v1 v1.12.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/datatypes v1.1.1-0.20230130040222-c43177d3cf8c // indirect
 	gorm.io/driver/mysql v1.5.2 // indirect
 	gorm.io/hints v1.1.0 // indirect

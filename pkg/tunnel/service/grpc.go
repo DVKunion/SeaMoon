@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"net"
+	"strconv"
 	"strings"
 	"time"
 
@@ -129,6 +130,27 @@ func (g GRPCService) Serve(ln net.Listener, srvOpt ...Option) error {
 	}
 
 	server := grpc.NewServer(gRPCOpts...)
+
+	addr := strings.Split(ln.Addr().String(), ":")
+	var port = 443 // 默认端口
+	if len(addr) > 1 {
+		if p, err := strconv.Atoi(addr[1]); err == nil {
+			port = p
+		}
+	}
+
+	// init config
+	config := transfer.NewV2rayConfig(
+		transfer.WithServerMod(),
+		transfer.WithNetAddr("0.0.0.0", uint32(port)),
+		transfer.WithTunnelType("", enum.TunnelTypeWST),
+		transfer.WithAuthInfo(srvOpts.uid, srvOpts.crypt, srvOpts.pass),
+		transfer.WithExtra(srvOpts.tor, srvOpts.tlsConf != nil),
+	)
+
+	if err := transfer.Init(config); err != nil {
+		xlog.Error(xlog.ServiceV2rayInitError, "err", err)
+	}
 
 	proto.RegisterTunnelServer(server, &g)
 	gost.RegisterGostTunelServer(server, &g)

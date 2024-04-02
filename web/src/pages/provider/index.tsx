@@ -44,6 +44,7 @@ const Provider: React.FC = () => {
       title: '已部署',
       key: "count",
       dataIndex: 'count',
+      responsive: ['md'],
       sorter: true,
     },
     {
@@ -51,6 +52,7 @@ const Provider: React.FC = () => {
       key: "amount",
       dataIndex: 'amount',
       valueType: 'money',
+      responsive: ['md'],
       render: (_, record) => {
         return "¥ " + record.info.amount
       }
@@ -77,6 +79,7 @@ const Provider: React.FC = () => {
       key: 'showTime',
       dataIndex: 'created_at',
       valueType: 'dateTime',
+      responsive: ['md'],
       sorter: true,
       hideInSearch: true,
       disable: true,

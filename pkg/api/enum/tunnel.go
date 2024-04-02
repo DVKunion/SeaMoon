@@ -35,6 +35,9 @@ func TransTunnelType(t string) TunnelType {
 		return TunnelTypeNULL
 	}
 }
+func (t TunnelType) String() string {
+	return string(t)
+}
 
 func (t TunnelType) ToPtr() *string {
 	return (*string)(&t)

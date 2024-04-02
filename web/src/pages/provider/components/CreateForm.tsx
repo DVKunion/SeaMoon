@@ -92,6 +92,11 @@ const CreateForm: React.FC<CreateFormProps> = (props) => {
             width="xl"
             label="最大部署限制"
             min={0}
+            rules={[
+              {
+                required: true,
+              },
+            ]}
             tooltip={"设置该账户最大允许部署的函数数量, 0 表示无限制, 默认为 0"}
             placeholder={""}
           />

@@ -14,7 +14,7 @@ import (
 	"github.com/DVKunion/SeaMoon/cmd/client/route"
 	"github.com/DVKunion/SeaMoon/cmd/client/static"
 	"github.com/DVKunion/SeaMoon/pkg/api/service"
-	"github.com/DVKunion/SeaMoon/pkg/signal"
+	"github.com/DVKunion/SeaMoon/pkg/api/signal"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 

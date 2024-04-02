@@ -11,7 +11,7 @@ import (
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
 	"github.com/DVKunion/SeaMoon/pkg/api/models"
 	"github.com/DVKunion/SeaMoon/pkg/api/service"
-	"github.com/DVKunion/SeaMoon/pkg/signal"
+	"github.com/DVKunion/SeaMoon/pkg/api/signal"
 	"github.com/DVKunion/SeaMoon/pkg/system/errors"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
@@ -100,6 +100,31 @@ func DeleteTunnel(c *gin.Context) {
 	signal.Signal().SendTunnelSignalSync(uint(id), enum.TunnelDelete)
 
 	servant.SuccessMsg(c, 1, nil)
+}
+
+func SubscribeTunnel(c *gin.Context) {
+	subType := c.Param("type")
+	tuns, err := service.SVC.ListTunnels(c, 0, 9999)
+	if err != nil {
+		servant.ErrorMsg(c, http.StatusInternalServerError, errors.ApiError(xlog.ApiServiceError, err))
+		return
+	}
+
+	switch subType {
+	case "ss":
+		servant.RawMsg(c, "seamoon-ss.", []byte(""))
+		return
+	case "clash":
+		servant.RawMsg(c, "seamoon-clash.yaml", tuns.ToConfig("clash"))
+		return
+	case "shadowrocket":
+		servant.RawMsg(c, "seamoon-shadowrocket.txt", tuns.ToConfig("shadowrocket"))
+		return
+	case "v2ray":
+		servant.RawMsg(c, "seamoon-v2ray.json", []byte(""))
+		return
+	}
+	servant.ErrorMsg(c, http.StatusBadRequest, errors.ApiError(xlog.ApiParamsError, nil))
 }
 
 func extra() func(api interface{}) {
