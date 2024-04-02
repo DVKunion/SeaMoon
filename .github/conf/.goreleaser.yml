@@ -16,7 +16,7 @@ builds:
       - 6
       - 7
     ldflags:
-      - -s -w -X github.com/DVKunion/SeaMoon/system/xlog.Version={{.Version}} -X github.com/DVKunion/SeaMoon/system/xlog.Commit={{.ShortCommit}}
+      - -s -w -X github.com/DVKunion/SeaMoon/pkg/system/xlog.Version={{.Version}} -X github.com/DVKunion/SeaMoon/pkg/system/xlog.Commit={{.ShortCommit}}
 checksum:
   name_template: 'checksums.txt'
 snapshot:
