@@ -92,7 +92,7 @@ const Proxy: React.FC = () => {
       rowKey={"ID"}
       showActions="hover"
       rowSelection={{}}
-      grid={{gutter: 16, xs: 1, sm: 2, md:  2, lg: 2, xl: 3}}
+      grid={{gutter: 16, xs: 1, sm: 2, md: 2, lg: 2, xl: 3, xxl: 3}}
       onItem={(record: any) => {
         return {
           onClick: () => {
@@ -134,7 +134,7 @@ const Proxy: React.FC = () => {
         content: {
           render: (_, record) => {
             const oRecord = oData.get(record.id);
-            return <ProCard gutter={8} style={{margin: "-6% 0 -4% -3%"}} >
+            return <ProCard gutter={8} style={{margin: "-6% 0 -4% -3%"}}>
               <ProCard colSpan={12} split={"horizontal"} style={{marginLeft: "-3%"}}>
                 <Statistic title="当前连接:" value={record.conn}
                            trend={calcThread(record.conn, oRecord === undefined ? 0 : oRecord.conn)}/>
@@ -150,7 +150,8 @@ const Proxy: React.FC = () => {
               <ProCard colSpan={12} split={"horizontal"}>
                 <Statistic title="当前延迟:" value={record.lag + " ms"}
                            trend={calcThread(record.lag, oRecord === undefined ? 0 : oRecord.lag)}/>
-                <Statistic title="下行速率:" value={record.speed_down === 0 ? "未测速" : record.speed_down.toFixed(2) + " Mbps"}
+                <Statistic title="下行速率:"
+                           value={record.speed_down === 0 ? "未测速" : record.speed_down.toFixed(2) + " Mbps"}
                            trend={record.speed_down === 0 ? undefined : calcThread(record.speed_down, oRecord === undefined ? 0 : oRecord.speed_down)}/>
                 <Statistic title="总计流出:" valueRender={() => {
                   return SpeedTransfer({

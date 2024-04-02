@@ -1,28 +1,30 @@
 before:
   hooks:
     - go mod tidy
-    -
 builds:
   - binary: seamoon
     env:
       - CGO_ENABLED=0
     main: ./cmd/main.go
-    goos:
-      - linux
-      - windows
-      - darwin
+    ignore:
+      #  modernc.org/sqlite@v1.23.1 not implement if these platform
+      - goos: darwin
+        goarch: 386
+      - goos: windows
+        goarch: 386
     goarm:
       - 6
       - 7
     ldflags:
-      - -s -w -X github.com/DVKunion/SeaMoon/system/xlog.Version={{.Version}} -X github.com/DVKunion/SeaMoon/system/xlog.Commit={{.Sha}}
+      - -s -w -X github.com/DVKunion/SeaMoon/system/xlog.Version={{.Version}} -X github.com/DVKunion/SeaMoon/system/xlog.Commit={{.ShortCommit}}
 checksum:
   name_template: 'checksums.txt'
 snapshot:
   name_template: "{{ .Tag  }}-next"
 upx:
   - enabled: true
-    goos: [linux, darwin]
+    goos: [ linux, darwin ]
+    goarch: [ amd64, arm64 ]
     compress: best
 changelog:
   sort: asc

@@ -1,9 +1,8 @@
 # Simple workflow for deploying static content to GitHub Pages
-name: Deploy
-
+name: seamoon-package
 on:
-  push:
-    branches: [ "main", "feat/docs" ]
+  workflow_call:
+
 jobs:
   # Single deploy job since we're just deploying
   deploy:
@@ -11,16 +10,13 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [ 18.x ]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 18.x
       - name: Build
         # 安装 Node 之后就可以执行构建脚本
         run: |

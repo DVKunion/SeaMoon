@@ -1,0 +1,26 @@
+name: seamoon
+on: [ push, pull_request ]
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+  docs:
+    if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feat/docs' }}
+    uses: ./.github/workflows/pages.yml
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    uses: ./.github/workflows/release.yml
+    secrets:
+      GO_RELEASER_GITHUB_TOKEN: ${{ secrets.GO_RELEASER_GITHUB_TOKEN }}
+  sync:
+    needs: [ build ]
+    if: startsWith(github.ref, 'refs/tags/')
+    uses: ./.github/workflows/sync.yml
+    secrets:
+      ALIYUN_USERNAME: ${{ secrets.ALIYUN_USERNAME }}
+      ALIYUN_PASSWORD: ${{ secrets.ALIYUN_PASSWORD }}
+      TENCENT_USERNAME: ${{ secrets.TENCENT_USERNAME }}
+      TENCENT_PASSWORD: ${{ secrets.TENCENT_PASSWORD }}
+

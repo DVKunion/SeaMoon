@@ -1,0 +1,76 @@
+name: seamoon-package
+on:
+  workflow_call:
+    secrets:
+      ALIYUN_USERNAME:
+        required: true
+      ALIYUN_PASSWORD:
+        required: true
+      TENCENT_USERNAME:
+        required: true
+      TENCENT_PASSWORD:
+        required: true
+
+jobs:
+  sync-aliyun:
+    name: sync-aliyun
+    runs-on: ubuntu-20.04
+    if: startsWith(github.ref, 'refs/tags/')
+    strategy:
+      fail-fast: false
+      matrix:
+        registry: [ registry.cn-hangzhou.aliyuncs.com,
+          registry.cn-shanghai.aliyuncs.com,
+          registry.cn-qingdao.aliyuncs.com,
+          registry.cn-beijing.aliyuncs.com,
+          registry.cn-zhangjiakou.aliyuncs.com,
+          registry.cn-huhehaote.aliyuncs.com,
+          registry.cn-shenzhen.aliyuncs.com,
+          registry.cn-chengdu.aliyuncs.com,
+          registry.cn-hongkong.aliyuncs.com,
+          registry.ap-northeast-1.aliyuncs.com,
+          registry.ap-southeast-1.aliyuncs.com,
+          registry.ap-southeast-2.aliyuncs.com,
+          registry.ap-southeast-3.aliyuncs.com,
+          registry.ap-southeast-5.aliyuncs.com,
+          registry.ap-south-1.aliyuncs.com,
+          registry.eu-central-1.aliyuncs.com,
+          registry.eu-west-1.aliyuncs.com,
+          registry.us-west-1.aliyuncs.com,
+          registry.us-east-1.aliyuncs.com
+        ]
+        repo: [seamoon]
+    steps:
+      - uses: actions/checkout@v4
+      - name: skopeo-copy
+        run: |
+          skopeo sync --src docker --dest docker --dest-creds ${{ secrets.ALIYUN_USERNAME }}:${{ secrets.ALIYUN_PASSWORD }} docker.io/dvkunion/seamoon:${{github.ref_name}} ${{ matrix.registry }}/${{ matrix.repo }}
+          skopeo sync --src docker --dest docker --dest-creds ${{ secrets.ALIYUN_USERNAME }}:${{ secrets.ALIYUN_PASSWORD }} docker.io/dvkunion/seamoon:latest ${{ matrix.registry }}/${{ matrix.repo }}
+
+  package-tencent:
+    name: package-tecent
+    runs-on: ubuntu-20.04
+    if: startsWith(github.ref, 'refs/tags/')
+    strategy:
+      fail-fast: false
+      matrix:
+        registry: [ hkccr.ccs.tencentyun.com,
+          inccr.ccs.tencentyun.com,
+          sgccr.ccs.tencentyun.com,
+          thccr.ccs.tencentyun.com,
+          krccr.ccs.tencentyun.com,
+          jpccr.ccs.tencentyun.com,
+          deccr.ccs.tencentyun.com,
+          useccr.ccs.tencentyun.com,
+          uswccr.ccs.tencentyun.com
+        ]
+        repo: [seamoon]
+        include:
+          - registry: ccr.ccs.tencentyun.com
+            repo: [dvkunion]
+    steps:
+      - uses: actions/checkout@v4
+      - name: skopeo-copy
+        run: |
+          skopeo sync --src docker --dest docker --dest-creds ${{ secrets.TENCENT_USERNAME }}:${{ secrets.TENCENT_PASSWORD }} docker.io/dvkunion/seamoon:${{github.ref_name}} ${{ matrix.registry }}/${{ matrix.repo }}
+          skopeo sync --src docker --dest docker --dest-creds ${{ secrets.TENCENT_USERNAME }}:${{ secrets.TENCENT_PASSWORD }} docker.io/dvkunion/seamoon:latest ${{ matrix.registry }}/${{ matrix.repo }}
