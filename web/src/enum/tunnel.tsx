@@ -58,7 +58,7 @@ export const TunnelStatusTag = [
 ]
 
 export const TunnelAuthFCTypeEnum = {
-  1: '无认证',
-  5: '签名认证',
-  6: 'jwt'
+  "1": '无认证',
+  "5": '签名认证',
+  "6": 'jwt'
 }

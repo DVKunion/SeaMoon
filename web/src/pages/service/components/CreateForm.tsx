@@ -37,6 +37,7 @@ const CreateForm: React.FC<CreateFormProps> = (props) => {
   const [current, setCurrent] = useState<number>(0);
   const [deploy, setDeploy] = useState<number>(1);
   const [type, setType] = useState<number>(0);
+  const [regions, setRegions] = useState<string[]>([]);
   const [tor, setTor] = useState<boolean>(false);
 
   return (
@@ -125,8 +126,9 @@ const CreateForm: React.FC<CreateFormProps> = (props) => {
         <ProForm.Group
         >
           {deploy === 1 ?
-            <TunnelSelect values={props.values} tor={tor}/> : <ProviderSelect onChange={(values) => {
-              setType(values);
+            <TunnelSelect values={props.values} tor={tor}/> : <ProviderSelect onChange={(t, r) => {
+              setType(t);
+              setRegions(r);
             }}/>}
         </ProForm.Group>
       </StepsForm.StepForm>
@@ -148,7 +150,7 @@ const CreateForm: React.FC<CreateFormProps> = (props) => {
         }}
       >
         {deploy === 1 ? "关联函数无法进行高级配置, 请在对应函数实例页面进行修改。" :
-          <TunnelForm type={type}/>
+          <TunnelForm type={type} regions={regions}/>
         }
       </StepsForm.StepForm>
     </StepsForm>

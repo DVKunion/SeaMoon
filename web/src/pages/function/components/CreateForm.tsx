@@ -27,6 +27,7 @@ const CreateForm: React.FC<CreateFormProps> = (props) => {
 
   const [current, setCurrent] = useState<number>(0);
   const [type, setType] = useState<number>(0);
+  const [regions, setRegions] = useState<string[]>([]);
 
   return (
     <StepsForm
@@ -63,8 +64,9 @@ const CreateForm: React.FC<CreateFormProps> = (props) => {
       <StepsForm.StepForm
         title={"实例选择"}
       >
-        <ProviderSelect onChange={(values) => {
-          setType(values);
+        <ProviderSelect onChange={(t, r) => {
+          setType(t);
+          setRegions(r)
         }}/>
       </StepsForm.StepForm>
       <StepsForm.StepForm
@@ -76,7 +78,7 @@ const CreateForm: React.FC<CreateFormProps> = (props) => {
         initialValues={{
           cpu: type === 5 ? '0.1' : '0.05',
           memory: type === 5 ? '64' : '128',
-          tunnel_auth_type: 1,
+          tunnel_auth_type: "1",
           instance: 1,
           port: 9000,
           tunnel_type: "websocket",
@@ -84,7 +86,7 @@ const CreateForm: React.FC<CreateFormProps> = (props) => {
           tor: false,
         }}
       >
-        <TunnelForm type={type}/>
+        <TunnelForm type={type} regions={regions}/>
       </StepsForm.StepForm>
     </StepsForm>
   );

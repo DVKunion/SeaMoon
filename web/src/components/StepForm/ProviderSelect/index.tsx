@@ -5,7 +5,7 @@ import {Space, Tag } from "antd";
 import {CloudProvideTypeIcon, RegionEnum} from "@/enum/cloud";
 
 export type ProviderProps = {
-  onChange: (values: number) => void;
+  onChange: (values: number, regions: string[]) => void;
 };
 
 export const ProviderSelect: React.FC<ProviderProps> = (props: ProviderProps) => {
@@ -42,7 +42,7 @@ export const ProviderSelect: React.FC<ProviderProps> = (props: ProviderProps) =>
         {
           onSelect: (value, option) => {
             setCloud(option["data-item"].obj);
-            props.onChange(option["data-item"].obj.type)
+            props.onChange(option["data-item"].obj.type, option["data-item"].obj.regions)
           }
         }
       }

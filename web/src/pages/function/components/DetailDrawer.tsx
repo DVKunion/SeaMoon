@@ -1,10 +1,10 @@
 import React, {useRef, useState} from 'react';
 import type {ProDescriptionsActionType} from '@ant-design/pro-components';
 import {ProDescriptions} from '@ant-design/pro-components';
-import {Button, Divider, Drawer, message, Popconfirm, Space, Tooltip} from "antd";
+import {Button, Divider, Drawer, Popconfirm, Space, Tooltip} from "antd";
 import {TunnelAuthFCTypeEnum, TunnelStatusTag, TunnelTypeValueEnum} from "@/enum/tunnel";
 import {CloudProvideTypeValueEnum, RegionEnum} from "@/enum/cloud";
-import {CheckCircleTwoTone, CloseCircleTwoTone, CopyOutlined, PoweroffOutlined, SyncOutlined} from "@ant-design/icons";
+import {CheckCircleTwoTone, CloseCircleTwoTone, PoweroffOutlined, SyncOutlined} from "@ant-design/icons";
 // @ts-ignore
 import {CopyToClipboard} from 'react-copy-to-clipboard';
 import {FormValueType} from "./CreateForm";
@@ -23,16 +23,11 @@ const DetailDrawer: React.FC<DetailProps> = (props) => {
 
   return <Drawer
     title="函数详情"
-    width={"39%"}
+    width={window.innerWidth < 768 ? "80%" : "39%"}
     onClose={props.onCancel}
     open={props.detailVisible}
     extra={
       <Space>
-        <CopyToClipboard
-          text={props.values.address}
-          onCopy={() => message.success("已复制函数地址")}>
-          <Button shape={"round"} ghost icon={<CopyOutlined/>}></Button>
-        </CopyToClipboard>
         {props.values.status === 3 ? <Button
           onMouseEnter={() => {
             setSpin(true);
@@ -242,28 +237,27 @@ const DetailDrawer: React.FC<DetailProps> = (props) => {
       dataSource={props.values}
     />
     <Divider/>
-    <ProDescriptions
-      title={"关联信息 (todo) "}
-      column={1}
-      actionRef={actionRef}
-      editable={{
-        onSave: async (keypath, newInfo, oriInfo) => {
-          props.values[keypath.toString()] = newInfo[keypath.toString()];
-          return true;
-        },
-      }}
-      columns={[
-        {
-          title: '关联云账户信息',
-          key: 'text',
-          editable: false,
-          render: (dom, entity) => {
-            return <a> 云账户详情 </a>
-          },
-        }
-      ]}
-      dataSource={props.values}
-    />
+    {/*<ProDescriptions*/}
+    {/*  title={"订阅信息"}*/}
+    {/*  column={1}*/}
+    {/*  actionRef={actionRef}*/}
+    {/*  editable={{*/}
+    {/*    onSave: async (keypath, newInfo, oriInfo) => {*/}
+    {/*      props.values[keypath.toString()] = newInfo[keypath.toString()];*/}
+    {/*      return true;*/}
+    {/*    },*/}
+    {/*  }}*/}
+    {/*  columns={[*/}
+    {/*    {*/}
+    {/*      key: 'text',*/}
+    {/*      editable: false,*/}
+    {/*      render: (dom, entity) => {*/}
+    {/*        return <a> 点击下载 clash 订阅配置 </a>*/}
+    {/*      },*/}
+    {/*    }*/}
+    {/*  ]}*/}
+    {/*  dataSource={props.values}*/}
+    {/*/>*/}
   </Drawer>
 }
 

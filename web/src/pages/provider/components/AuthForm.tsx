@@ -4,6 +4,7 @@ import {ALiYunRegionEnum, TencentRegionEnum, SealosRegionEnum} from "@/enum/clou
 
 export type CloudProviderType = {
   type: number
+  regions?: string[]
 }
 
 export const CloudProviderAuthForm: React.FC<CloudProviderType> = (props) => {
@@ -16,7 +17,13 @@ export const CloudProviderAuthForm: React.FC<CloudProviderType> = (props) => {
           label="账户允许部署地区"
           placeholder={""}
           tooltip={"选择云账户允许部署的地区"}
-          valueEnum={ALiYunRegionEnum}
+          valueEnum={() => {
+            const filterEnum = {};
+            props.regions?.forEach(key => {
+              filterEnum[key] = ALiYunRegionEnum[key];
+            });
+            return props.regions === undefined ? ALiYunRegionEnum : filterEnum
+          }}
           fieldProps={{
             mode: "multiple",
           }}
@@ -73,7 +80,13 @@ export const CloudProviderAuthForm: React.FC<CloudProviderType> = (props) => {
           showSearch={true}
           placeholder={""}
           tooltip={"选择云账户允许部署的地区"}
-          valueEnum={TencentRegionEnum}
+          valueEnum={() => {
+            const filterEnum = {};
+            props.regions?.forEach(key => {
+              filterEnum[key] = TencentRegionEnum[key];
+            });
+            return props.regions === undefined ? TencentRegionEnum : filterEnum
+          }}
           fieldProps={{
             mode: "multiple",
           }}
@@ -119,7 +132,13 @@ export const CloudProviderAuthForm: React.FC<CloudProviderType> = (props) => {
           label="账户允许部署地区"
           placeholder={""}
           tooltip={"选择云账户允许部署的地区, sealos账户不跨平台"}
-          valueEnum={SealosRegionEnum}
+          valueEnum={() => {
+            const filterEnum = {};
+            props.regions?.forEach(key => {
+              filterEnum[key] = SealosRegionEnum[key];
+            });
+            return props.regions === undefined ? SealosRegionEnum : filterEnum
+          }}
           rules={[
             {
               required: true,
@@ -153,7 +172,13 @@ export const CloudRegionSelector: React.FC<CloudProviderType> = (props) => {
         width="xl"
         placeholder={""}
         tooltip={"选择云账户允许部署的地区"}
-        valueEnum={ALiYunRegionEnum}
+        valueEnum={() => {
+          const filterEnum = {};
+          props.regions?.forEach(key => {
+            filterEnum[key] = ALiYunRegionEnum[key];
+          });
+          return props.regions === undefined ? ALiYunRegionEnum : filterEnum
+        }}
         fieldProps={{
           mode: "multiple",
         }}
@@ -173,7 +198,13 @@ export const CloudRegionSelector: React.FC<CloudProviderType> = (props) => {
         fieldProps={{
           mode: "multiple",
         }}
-        valueEnum={TencentRegionEnum}
+        valueEnum={() => {
+          const filterEnum = {};
+          props.regions?.forEach(key => {
+            filterEnum[key] = TencentRegionEnum[key];
+          });
+          return props.regions === undefined ? TencentRegionEnum : filterEnum
+        }}
         rules={[
           {
             required: true,
@@ -189,7 +220,13 @@ export const CloudRegionSelector: React.FC<CloudProviderType> = (props) => {
         width="xl"
         placeholder={""}
         tooltip={"选择云账户允许部署的地区"}
-        valueEnum={SealosRegionEnum}
+        valueEnum={() => {
+          const filterEnum = {};
+          props.regions?.forEach(key => {
+            filterEnum[key] = SealosRegionEnum[key];
+          });
+          return props.regions === undefined ? SealosRegionEnum : filterEnum
+        }}
         rules={[
           {
             required: true,
@@ -222,7 +259,13 @@ export const CloudRegionOneSelector: React.FC<CloudProviderType> = (props) => {
         label={"函数所在地区"}
         colProps={{span: 8, offset: 4}}
         tooltip={"选择函数部署的地区, 不要选择账户以外的区域"}
-        valueEnum={ALiYunRegionEnum}
+        valueEnum={() => {
+          const filterEnum = {};
+          props.regions?.forEach(key => {
+            filterEnum[key] = ALiYunRegionEnum[key];
+          });
+          return props.regions === undefined ? ALiYunRegionEnum : filterEnum
+        }}
         rules={[
           {
             required: true,
@@ -236,7 +279,13 @@ export const CloudRegionOneSelector: React.FC<CloudProviderType> = (props) => {
         label={"函数所在地区"}
         colProps={{span: 8, offset: 4}}
         tooltip={"选择函数部署的地区, 不要选择账户以外的区域"}
-        valueEnum={TencentRegionEnum}
+        valueEnum={() => {
+          const filterEnum = {};
+          props.regions?.forEach(key => {
+            filterEnum[key] = TencentRegionEnum[key];
+          });
+          return props.regions === undefined ? TencentRegionEnum : filterEnum
+        }}
         rules={[
           {
             required: true,
@@ -252,7 +301,13 @@ export const CloudRegionOneSelector: React.FC<CloudProviderType> = (props) => {
         label={"函数所在地区"}
         colProps={{span: 8, offset: 4}}
         tooltip={"选择函数部署的地区, 不要选择账户以外的区域"}
-        valueEnum={SealosRegionEnum}
+        valueEnum={() => {
+          const filterEnum = {};
+          props.regions?.forEach(key => {
+            filterEnum[key] = SealosRegionEnum[key];
+          });
+          return props.regions === undefined ? SealosRegionEnum : filterEnum
+        }}
         rules={[
           {
             required: true,

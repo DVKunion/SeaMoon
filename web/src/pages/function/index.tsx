@@ -10,6 +10,7 @@ import {CloudProvideTypeValueEnum, RegionEnum} from "@/enum/cloud";
 import {TunnelStatusEnum, TunnelTypeValueEnum} from "@/enum/tunnel";
 import styles from "./index.less";
 import {handleCreateTunnel, handleDeleteTunnel, handleUpdateTunnel} from "@/pages/function/handle";
+import {ClashDropDown, ShadowRocketDropDown, SSrDropDown} from "@/components/Subcirber";
 
 const {Statistic} = StatisticCard;
 
@@ -42,7 +43,7 @@ const Tunnel: React.FC = () => {
       rowKey={"ID"}
       showActions="hover"
       rowSelection={{}}
-      grid={{gutter: 16, column: 3}}
+      grid={{gutter: 16, xs: 1, sm: 2, md:  2, lg: 2, xl: 3}}
       onItem={(record: Serverless.Tunnel) => {
         return {
           onClick: () => {
@@ -53,6 +54,9 @@ const Tunnel: React.FC = () => {
       }}
       toolBarRender={() => {
         return [
+          // <SSrDropDown/>,
+          <ClashDropDown/>,
+          <ShadowRocketDropDown/>,
           <Button key="button" icon={<PlusOutlined/>} type="primary"
                   style={{marginLeft: "10px"}}
                   onClick={() => {
@@ -80,25 +84,26 @@ const Tunnel: React.FC = () => {
         },
         content: {
           render: (dom, record) => {
-            return <ProCard gutter={8} bordered={false}  split={"horizontal"} >
+            return <ProCard gutter={8} bordered={false} split={"horizontal"}>
               <ProCard bordered={false} split={"horizontal"}>
-              <Statistic title="当前状态:" valueRender={() => <Badge style={{fontSize: "12px"}}
-                                                                 status={TunnelStatusEnum[record.status]?.status}
-                                                                 text={TunnelStatusEnum[record.status]?.text}/>}/>
-              <Statistic title="账户类型:" valueRender={() => {
-                return <div>{CloudProvideTypeValueEnum[record.provider_type]} - {RegionEnum[record.tunnel_config.region]}</div>
-              }}/>
-              <Statistic title="隧道地址:"
-                         value={record.address === undefined || record.address === null ? "-" : record.address}
-                         valueRender={() => {
-                           return record.address.length > 40 ? <Tooltip title={record.address}>{record.address.substring(0, 39) + "..."}</Tooltip> : record.address
-                         }}
-              />
+                <Statistic title="当前状态:" valueRender={() => <Badge style={{fontSize: "12px"}}
+                                                                   status={TunnelStatusEnum[record.status]?.status}
+                                                                   text={TunnelStatusEnum[record.status]?.text}/>}/>
+                <Statistic title="账户类型:" valueRender={() => {
+                  return <div>{CloudProvideTypeValueEnum[record.provider_type]} - {RegionEnum[record.tunnel_config.region]}</div>
+                }}/>
+                <Statistic title="隧道地址:"
+                           value={record.address === undefined || record.address === null ? "-" : record.address}
+                           valueRender={() => {
+                             return record.address.length > 40 ? <Tooltip
+                               title={record.address}>{record.address.substring(0, 39) + "..."}</Tooltip> : record.address
+                           }}
+                />
 
-              <Statistic title="函数规格:"
-                         valueRender={() => <Space><IconFont
-                           type={"icon-cpu1"}/>{record.tunnel_config.cpu} M <IconFont
-                           type={"icon-memory1"}/>{record.tunnel_config.memory} Mi </Space>}/>
+                <Statistic title="函数规格:"
+                           valueRender={() => <Space><IconFont
+                             type={"icon-cpu1"}/>{record.tunnel_config.cpu} M <IconFont
+                             type={"icon-memory1"}/>{record.tunnel_config.memory} Mi </Space>}/>
               </ProCard>
             </ProCard>
           }

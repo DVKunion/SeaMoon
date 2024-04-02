@@ -92,7 +92,7 @@ func (s *WSService) Serve(ln net.Listener, sOpts ...Option) error {
 	}
 
 	addr := strings.Split(ln.Addr().String(), ":")
-	port := 443 // 默认端口
+	var port = 443 // 默认端口
 	if len(addr) > 1 {
 		if p, err := strconv.Atoi(addr[1]); err == nil {
 			port = p
@@ -107,7 +107,15 @@ func (s *WSService) Serve(ln net.Listener, sOpts ...Option) error {
 	// websocket socks5 proxy handler
 	mux.HandleFunc("/socks5", s.socks5)
 
-	if err := transfer.InitV2rayServer(uint32(port), srvOpts.uid, srvOpts.pass, srvOpts.crypt, enum.TunnelTypeWST, srvOpts.tor, srvOpts.tlsConf != nil); err == nil {
+	config := transfer.NewV2rayConfig(
+		transfer.WithServerMod(),
+		transfer.WithNetAddr("0.0.0.0", uint32(port)),
+		transfer.WithTunnelType("", enum.TunnelTypeWST),
+		transfer.WithAuthInfo(srvOpts.uid, srvOpts.crypt, srvOpts.pass),
+		transfer.WithExtra(srvOpts.tor, srvOpts.tlsConf != nil),
+	)
+
+	if err := transfer.Init(config); err == nil {
 		mux.HandleFunc("/vmess", s.v2ray("vmess"))
 		mux.HandleFunc("/vless", s.v2ray("vless"))
 		mux.HandleFunc("/v-shadowsocks", s.v2ray("shadowsocks"))

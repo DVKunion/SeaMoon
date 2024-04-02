@@ -40,21 +40,29 @@ export const ProxyDynamicTagList: React.FC<DynamicProps> = (props) => {
 
 export const ProxyTypeTagColor = {
   "default": "#666666",
-  "auto": "#61C8C6",
-  "socks5": "#E2003B",
+  "auto": "#9192ab",
+  "socks5": "#7cd6cf",
   "http": "#1296DB",
+  "ssr": "#f89588",
+  "vmess": "#9987ce",
+  "vless": "#f8cb7f"
 }
 
 export const ProxyTypeIcon = {
-  "": <IconFont type={"icon-proxy-default"}/>,
   "auto": <IconFont type={"icon-proxy-auto"}/>,
-  "socks5": <IconFont type={"icon-proxy-socks5"}/>,
   "http": <IconFont type={"icon-proxy-http"}/>,
+  "socks5": <IconFont type={"icon-proxy-socks5"}/>,
+  "ssr": <IconFont type={"icon-proxy-ssr"}/>,
+  "vmess": <IconFont type={"icon-proxy-vmess"}/>,
+  "vless": <IconFont type={"icon-proxy-vless"}/>,
 }
 
 
 export const ProxyTypeValueEnum = {
   "auto": <Space><IconFont type={"icon-proxy-auto"}/>auto</Space>,
-  "socks5": <Space><IconFont type={"icon-proxy-socks5"}/>socks5</Space>,
   "http": <Space><IconFont type={"icon-proxy-http"}/>http</Space>,
+  "socks5": <Space><IconFont type={"icon-proxy-socks5"}/>socks5</Space>,
+  "ssr": <Space><IconFont type={"icon-proxy-ssr"}/>ssr</Space>,
+  "vmess": <Space><IconFont type={"icon-proxy-vmess"}/>vmess</Space>,
+  "vless": <Space><IconFont type={"icon-proxy-vless"}/>vless</Space>,
 }
