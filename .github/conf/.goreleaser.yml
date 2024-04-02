@@ -20,6 +20,10 @@ checksum:
   name_template: 'checksums.txt'
 snapshot:
   name_template: "{{ .Tag  }}-next"
+upx:
+  - enabled: true
+    goos: [linux, darwin]
+    compress: best
 changelog:
   sort: asc
   filters:
