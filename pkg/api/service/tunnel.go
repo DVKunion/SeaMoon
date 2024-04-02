@@ -55,10 +55,16 @@ func (t *tunnel) CreateTunnel(ctx context.Context, obj *models.Tunnel) (*models.
 	}
 
 	// 手动填充账户与密码
-	obj.Config.V2rayUid = tools.GenerateUUID()
-	obj.Config.SSRPass = tools.GenerateRandomString(12)
+	if obj.Config.V2rayUid == "" {
+		obj.Config.V2rayUid = tools.GenerateUUID()
+	}
+	if obj.Config.SSRPass == "" {
+		obj.Config.SSRPass = tools.GenerateRandomString(12)
+	}
 	// todo: 开放认证
-	obj.Config.SSRCrypt = "aes-256-gcm"
+	if obj.Config.SSRCrypt == "" {
+		obj.Config.SSRCrypt = "aes-256-gcm"
+	}
 
 	if err = dao.Q.Tunnel.WithContext(ctx).Create(obj); err != nil {
 		return nil, err
