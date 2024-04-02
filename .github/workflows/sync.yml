@@ -46,7 +46,6 @@ jobs:
         run: |
           skopeo sync --src docker --dest docker --dest-creds ${{ secrets.ALIYUN_USERNAME }}:${{ secrets.ALIYUN_PASSWORD }} docker.io/dvkunion/seamoon:${{github.ref_name}} ${{ matrix.registry }}/${{ matrix.repo }}
           skopeo sync --src docker --dest docker --dest-creds ${{ secrets.ALIYUN_USERNAME }}:${{ secrets.ALIYUN_PASSWORD }} docker.io/dvkunion/seamoon:latest ${{ matrix.registry }}/${{ matrix.repo }}
-
   package-tencent:
     name: package-tecent
     runs-on: ubuntu-20.04
@@ -65,12 +64,19 @@ jobs:
           uswccr.ccs.tencentyun.com
         ]
         repo: [seamoon]
-        include:
-          - registry: ccr.ccs.tencentyun.com
-            repo: [dvkunion]
     steps:
       - uses: actions/checkout@v4
       - name: skopeo-copy
         run: |
           skopeo sync --src docker --dest docker --dest-creds ${{ secrets.TENCENT_USERNAME }}:${{ secrets.TENCENT_PASSWORD }} docker.io/dvkunion/seamoon:${{github.ref_name}} ${{ matrix.registry }}/${{ matrix.repo }}
           skopeo sync --src docker --dest docker --dest-creds ${{ secrets.TENCENT_USERNAME }}:${{ secrets.TENCENT_PASSWORD }} docker.io/dvkunion/seamoon:latest ${{ matrix.registry }}/${{ matrix.repo }}
+  package-tencent-inbound:
+    name: package-tecent-inbound
+    runs-on: ubuntu-20.04
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/checkout@v4
+      - name: skopeo-copy
+        run: |
+          skopeo sync --src docker --dest docker --dest-creds ${{ secrets.TENCENT_USERNAME }}:${{ secrets.TENCENT_PASSWORD }} docker.io/dvkunion/seamoon:${{github.ref_name}} ccr.ccs.tencentyun.com/dvkunion
+          skopeo sync --src docker --dest docker --dest-creds ${{ secrets.TENCENT_USERNAME }}:${{ secrets.TENCENT_PASSWORD }} docker.io/dvkunion/seamoon:latest ccr.ccs.tencentyun.com/dvkunion

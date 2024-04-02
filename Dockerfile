@@ -6,7 +6,7 @@ WORKDIR /src
 ENV CGO_ENABLED 0
 ENV VERSION=${VERSION}
 ENV SHA=${SHA}
-RUN go build -v -ldflags "-X github.com/DVKunion/SeaMoon/system/xlog.Version=${VERSION} -X github.com/DVKunion/SeaMoon/system/xlog.Commit=${SHA}" -o /tmp/seamoon cmd/main.go
+RUN go build -v -ldflags "-X github.com/DVKunion/SeaMoon/pkg/system/xlog.Version=${VERSION} -X github.com/DVKunion/SeaMoon/pkg/system/xlog.Commit=${SHA}" -o /tmp/seamoon cmd/main.go
 RUN chmod +x /tmp/seamoon
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories && \
     apk add upx && upx -9 /tmp/seamoon
