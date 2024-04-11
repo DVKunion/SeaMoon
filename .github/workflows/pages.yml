@@ -2,6 +2,9 @@
 name: seamoon-package
 on:
   workflow_call:
+    secrets:
+      GO_RELEASER_GITHUB_TOKEN:
+        required: true
 
 jobs:
   # Single deploy job since we're just deploying
