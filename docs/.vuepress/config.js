@@ -55,7 +55,7 @@ module.exports = {
                 {
                     iconClass: 'icon-mao',
                     title: '放一只猫',
-                    link: 'http://www.serverless-devs.com'
+                    link: 'https://github.com/DVKunion/SeaMoon'
                 },
                 {
                     iconClass: 'icon-github',

@@ -1,11 +1,11 @@
 ---
-title: 服务端部署
+title: 高级进阶
 date: 2023-07-18 00:27:13
-permalink: /guide/deploy
+permalink: /guide/advance
 article: false
 ---
 
-## 服务端部署
+# 高级进阶
 
 SeaMoon 提供了多种多样的部署方式。
 

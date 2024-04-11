@@ -12,6 +12,7 @@ import {ProxyForm} from "@/components/StepForm/ProxyForm";
 import {TunnelSelect} from "@/components/StepForm/TunnelSelect";
 
 export type FormValueType = {
+  region: string,
   cpu: number,
   port: string,
   memory: number,

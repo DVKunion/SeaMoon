@@ -122,8 +122,15 @@ func deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, string, error) {
 		WithTimeout(300).
 		WithCustomContainerConfig(fc.NewCustomContainerConfig().
 			WithImage(fmt.Sprintf("%s:%s", registryEndPoint[tun.Config.Region], xlog.Version)).
-			WithCommand("[\"./seamoon\"]").
-			WithArgs("[\"server\"]"))); err != nil {
+			WithArgs(func() string {
+				switch *tun.Type {
+				case enum.TunnelTypeWST:
+					return "[\"server\", \"-p\", \"9000\", \"-t\", \"websocket\"]"
+				case enum.TunnelTypeGRT:
+					return "[\"server\", \"-p\", \"8089\", \"-t\", \"grpc\"]"
+				}
+				return ""
+			}()))); err != nil {
 		return "", "", err
 	} else {
 		uid = *res.FunctionID

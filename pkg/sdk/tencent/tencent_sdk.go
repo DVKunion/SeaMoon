@@ -213,7 +213,6 @@ func deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, string, error) {
 		ImageConfig: &scf.ImageConfig{
 			ImageType: common.StringPtr("personal"),
 			ImageUri:  common.StringPtr(strings.Join([]string{registryEndPoint[tun.Config.Region], xlog.Version}, ":")),
-			Command:   common.StringPtr("/app/seamoon"),
 			Args:      common.StringPtr("server -p " + strconv.Itoa(int(*tun.Port)) + " -t " + string(*tun.Type)),
 			ImagePort: common.Int64Ptr(int64(*tun.Port)),
 		},
