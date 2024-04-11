@@ -296,7 +296,6 @@ func renderDeployment(svcName, imgName string, port int32, config *models.Tunnel
 									}(),
 								},
 							},
-							Command: []string{"/app/seamoon"},
 							Args: func() []string {
 								switch *tp {
 								case enum.TunnelTypeWST:

@@ -31,11 +31,12 @@ export async function createServiceProxy(data: FormValueType) {
     params["tunnel_id"] = 0
     params["tunnel_create_api"] = {
       "provider_id": data.provider_id,
-      "port": data.port.toString(),
+      "port": data.port,
       "name": data.tunnel_name,
       "type": data.tunnel_type,
       "status": 1,
       "tunnel_config": {
+        "region": data.region,
         "cpu": toNumber(data.cpu),
         "memory": toNumber(data.memory),
         "instance": toNumber(data.instance),

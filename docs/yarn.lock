@@ -8234,9 +8234,9 @@ vuepress-plugin-smooth-scroll@^0.0.3:
   dependencies:
     smoothscroll-polyfill "^0.4.3"
 
-vuepress-theme-vdoing@^1.12.9:
+vuepress-theme-vdoing@^1.12.8:
   version "1.12.9"
-  resolved "https://registry.yarnpkg.com/vuepress-theme-vdoing/-/vuepress-theme-vdoing-1.12.9.tgz#e1f4b6d170fd7082fc7a1e334149d0bd5bb4ff40"
+  resolved "https://registry.npmmirror.com/vuepress-theme-vdoing/-/vuepress-theme-vdoing-1.12.9.tgz#e1f4b6d170fd7082fc7a1e334149d0bd5bb4ff40"
   integrity sha512-TpZ6wRaqRVyNfHNlNMIpWsQqcX2QUZWpMVSNYeepR3LRpq6qbz0dUN9fHlOoCyYFHGsWBSgYyxCSvFwoPk01/Q==
   dependencies:
     "@better-scroll/core" "^2.0.0-beta.6"
