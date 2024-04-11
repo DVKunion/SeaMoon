@@ -2,84 +2,74 @@ package client
 
 import (
 	"context"
-	"html/template"
 	"io"
-	"log/slog"
+	"io/fs"
 	"net/http"
+	_ "net/http/pprof"
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
-	_ "net/http/pprof"
-
+	"github.com/DVKunion/SeaMoon/cmd/client/route"
 	"github.com/DVKunion/SeaMoon/cmd/client/static"
-	"github.com/DVKunion/SeaMoon/pkg/consts"
+	"github.com/DVKunion/SeaMoon/pkg/api/service"
+	"github.com/DVKunion/SeaMoon/pkg/api/signal"
+	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
-func Serve(ctx context.Context, verbose bool, debug bool) {
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-	sg := NewSigGroup()
-	go API(sg, verbose, debug)
-	go Control(ctx, sg)
-
-	Config().Load(sg)
-	<-sg.WatchChannel
-
-	sg.StopProxy()
-	cancel()
-
-	sg.wg.Wait()
+func Serve(ctx context.Context, debug bool) {
+	// Signal 异步服务
+	runSignal(ctx)
+	// Restful API 服务
+	runApi(ctx, debug)
 }
 
-func API(sg *SigGroup, verbose bool, debug bool) {
-	slog.Info(consts.CONTROLLER_START, "addr", Config().Control.ConfigAddr)
+func runSignal(ctx context.Context) {
+	// 控制总线，用于管控服务相关
+	go signal.Signal().Daemon(ctx)
+	// 如果配置了自动恢复设置，尝试发送恢复信号
+	rec, err := service.SVC.GetConfigByName(ctx, "auto_start")
+	if err != nil {
+		xlog.Error(xlog.SignalGetObjError, "err", err)
+		return
+	}
+	signal.Signal().Recover(ctx, rec.Value)
+}
 
-	if consts.Version != "dev" || !debug {
+func runApi(ctx context.Context, debug bool) {
+	logPath, err := service.SVC.GetConfigByName(ctx, "control_log")
+	addr, err := service.SVC.GetConfigByName(ctx, "control_addr")
+	port, err := service.SVC.GetConfigByName(ctx, "control_port")
+
+	xlog.Info(xlog.ApiServiceStart, "addr", addr.Value, "port", port.Value)
+
+	if xlog.Version != "dev" || !debug {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	webLogger, err := os.OpenFile(Config().Control.LogPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+	webLogger, err := os.OpenFile(logPath.Value, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
-		gin.DefaultWriter = io.MultiWriter(os.Stdout)
-	} else if verbose {
-		gin.DefaultWriter = io.MultiWriter(webLogger, os.Stdout)
+		gin.DefaultWriter = io.MultiWriter(xlog.Logger())
 	} else {
-		gin.DefaultWriter = io.MultiWriter(webLogger)
+		gin.DefaultWriter = io.MultiWriter(xlog.Logger(), webLogger)
 	}
 
 	server := gin.Default()
 
-	tmpl := template.Must(template.New("").ParseFS(static.HtmlFiles, "templates/*.html"))
-	server.SetHTMLTemplate(tmpl)
+	route.Register(server, debug)
 
-	server.StaticFS("/static", http.FS(static.AssetFiles))
-	server.StaticFileFS("/favicon.ico", "public/img/favicon.ico", http.FS(static.AssetFiles))
+	subFS, err := fs.Sub(static.WebViews, "dist")
 
-	// controller page
-	server.GET("/", func(ctx *gin.Context) {
-		ctx.HTML(200, "index.html", Config())
-	})
-
-	// pprof
-	if debug {
-		server.GET("/debug/pprof/*any", gin.WrapH(http.DefaultServeMux))
+	if err != nil {
+		panic("web static file error: " + err.Error())
 	}
 
-	// controller set
-	server.POST("/", func(ctx *gin.Context) {
-		if err := ctx.ShouldBindJSON(Config()); err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"msg":    "服务异常",
-				"result": err.Error(),
-			})
-			return
-		}
-		sg.Detection()
-		ctx.JSON(http.StatusOK, Config())
+	server.NoRoute(func(c *gin.Context) {
+		c.FileFromFS(c.Request.URL.Path, http.FS(subFS))
 	})
 
-	if err := server.Run(Config().Control.ConfigAddr); err != http.ErrServerClosed {
-		slog.Error("client running error", "err", err)
+	if err := server.Run(strings.Join([]string{addr.Value, port.Value}, ":")); err != http.ErrServerClosed {
+		xlog.Error(xlog.ApiServeError, "err", err)
 	}
 }

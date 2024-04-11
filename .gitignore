@@ -21,9 +21,10 @@
 *.pem
 *.crt
 *.key
+*.sql
 
-dist/
-web/
+cmd/client/static/dist/*
+.umi/
 *.log
 *.toml
 .config
@@ -32,3 +33,4 @@ node_modules
 bootstrap
 .s/
 .seamoom
+.seamoon.db

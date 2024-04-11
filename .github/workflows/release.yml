@@ -1,30 +1,36 @@
-name: goreleaser
-
+name: seamoon-goreleaser
 on:
-  push:
-    tags:
-      - "*"
-
+  workflow_call:
+    secrets:
+      GO_RELEASER_GITHUB_TOKEN:
+        required: true
 jobs:
   build:
     name: GoReleaser build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Build Front
+        run: |
+          cd web && npm install | true && npm run build && cp -r dist ../cmd/client/static
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v5
         with:
           go-version: 1.21
         id: go
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v2
+        uses: goreleaser/goreleaser-action@v5
         with:
           distribution: goreleaser
           version: latest
-          args: -f .github/conf/.goreleaser.yml
+          args: -f .github/conf/.goreleaser.yml --timeout 1h
           workdir: .
         env:
           GITHUB_TOKEN: ${{ secrets.GO_RELEASER_GITHUB_TOKEN }}

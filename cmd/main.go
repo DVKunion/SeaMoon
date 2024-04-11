@@ -8,12 +8,12 @@ import (
 
 	"github.com/DVKunion/SeaMoon/cmd/client"
 	"github.com/DVKunion/SeaMoon/cmd/server"
-	"github.com/DVKunion/SeaMoon/pkg/consts"
+	"github.com/DVKunion/SeaMoon/pkg/api/database/drivers"
+	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
 var (
-	debug   bool
-	verbose bool
+	debug bool
 
 	// server params
 	addr  string
@@ -34,17 +34,23 @@ var (
 		Run:   Proxy,
 	}
 
+	generateCommand = &cobra.Command{
+		Use:   "generate",
+		Short: "SeaMoon generate devs code",
+		RunE:  drivers.Drive().Generate,
+	}
+
 	versionCommand = &cobra.Command{
 		Use:   "version",
 		Short: "SeaMoon version info",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(consts.Version)
+			fmt.Println(xlog.Version)
 		},
 	}
 )
 
 func Proxy(cmd *cobra.Command, args []string) {
-	client.Serve(cmd.Context(), verbose, debug)
+	client.Serve(cmd.Context(), debug)
 }
 
 func Server(cmd *cobra.Command, args []string) error {
@@ -62,7 +68,6 @@ func Server(cmd *cobra.Command, args []string) error {
 }
 
 func init() {
-	proxyCommand.Flags().BoolVarP(&verbose, "verbose", "v", false, "proxy detail log")
 	proxyCommand.Flags().BoolVarP(&debug, "debug", "d", false, "proxy detail log")
 
 	serverCommand.Flags().StringVarP(&addr, "addr", "a", "0.0.0.0", "server listen addr")
@@ -72,6 +77,7 @@ func init() {
 	rootCommand.AddCommand(versionCommand)
 	rootCommand.AddCommand(proxyCommand)
 	rootCommand.AddCommand(serverCommand)
+	rootCommand.AddCommand(generateCommand)
 }
 
 func main() {

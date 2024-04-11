@@ -8,9 +8,14 @@ import (
 	"github.com/DVKunion/SeaMoon/pkg/network"
 )
 
-func HttpTransport(conn net.Conn) error {
-	defer conn.Close()
+type HttpTransfer struct {
+}
 
+func UnWrapper() {
+
+}
+
+func HttpTransport(conn net.Conn) error {
 	// 接收客户端的连接，并从第一条消息中获取目标地址
 	request, err := http.ReadRequest(bufio.NewReader(conn))
 	if err != nil {
@@ -59,7 +64,7 @@ func HttpTransport(conn net.Conn) error {
 	}
 
 	// 同时处理客户端到服务器和服务器到客户端的数据传输
-	if err := network.Transport(destConn, conn); err != nil {
+	if _, _, err := network.Transport(destConn, conn); err != nil {
 		return err
 	}
 
