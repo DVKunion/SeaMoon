@@ -12,9 +12,9 @@ import (
 	"github.com/gorilla/websocket"
 
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
+	"github.com/DVKunion/SeaMoon/pkg/network/transfer"
+	"github.com/DVKunion/SeaMoon/pkg/network/tunnel"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
-	"github.com/DVKunion/SeaMoon/pkg/transfer"
-	"github.com/DVKunion/SeaMoon/pkg/tunnel"
 )
 
 const (

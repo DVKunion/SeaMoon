@@ -19,6 +19,18 @@ import (
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
+type resp struct {
+	StatusCode int                    `json:"statusCode"`
+	Headers    map[string]interface{} `json:"headers"`
+	Body       struct {
+		Code      string                 `json:"Code"`
+		Message   string                 `json:"Message"`
+		RequestId string                 `json:"RequestId"`
+		Success   bool                   `json:"Success"`
+		Data      map[string]interface{} `json:"Data"`
+	} `json:"body"`
+}
+
 func getBilling(ca *models.CloudAuth) (float64, error) {
 	config := &openapi.Config{
 		// 必填，您的 AccessKey ID
@@ -63,7 +75,7 @@ func getBilling(ca *models.CloudAuth) (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-	var r Resp
+	var r resp
 	err = json.Unmarshal(bs, &r)
 	if err != nil {
 		return 0, err

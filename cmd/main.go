@@ -29,9 +29,9 @@ var (
 	}
 
 	proxyCommand = &cobra.Command{
-		Use:   "proxy",
-		Short: "SeaMoon proxy mod",
-		Run:   Proxy,
+		Use:   "client",
+		Short: "SeaMoon client mod",
+		Run:   Client,
 	}
 
 	generateCommand = &cobra.Command{
@@ -49,7 +49,8 @@ var (
 	}
 )
 
-func Proxy(cmd *cobra.Command, args []string) {
+func Client(cmd *cobra.Command, args []string) {
+	drivers.Init()
 	client.Serve(cmd.Context(), debug)
 }
 

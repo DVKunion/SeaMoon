@@ -15,18 +15,6 @@ var (
 type SDK struct {
 }
 
-type Resp struct {
-	StatusCode int                    `json:"statusCode"`
-	Headers    map[string]interface{} `json:"headers"`
-	Body       struct {
-		Code      string                 `json:"Code"`
-		Message   string                 `json:"Message"`
-		RequestId string                 `json:"RequestId"`
-		Success   bool                   `json:"Success"`
-		Data      map[string]interface{} `json:"Data"`
-	} `json:"body"`
-}
-
 func (a *SDK) Auth(ca *models.CloudAuth, region string) (*models.ProviderInfo, error) {
 	amount, err := getBilling(ca)
 	if err != nil {

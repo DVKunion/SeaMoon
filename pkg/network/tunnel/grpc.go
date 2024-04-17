@@ -9,7 +9,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	proto2 "github.com/DVKunion/SeaMoon/pkg/tunnel/service/proto"
+	proto2 "github.com/DVKunion/SeaMoon/pkg/network/tunnel/service/proto"
 )
 
 type grpcConn struct {

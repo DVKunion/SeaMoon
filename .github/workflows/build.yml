@@ -63,4 +63,5 @@ jobs:
             docker.io/dvkunion/seamoon:${{github.ref_name}}
           build-args: |
             VERSION=${{github.ref_name}}
+            SHA=${{github.sha}}
           context: ./

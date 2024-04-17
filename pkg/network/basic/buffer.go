@@ -1,4 +1,4 @@
-package network
+package basic
 
 // fork from go-gost/core
 

@@ -7,7 +7,7 @@ import (
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
 	"github.com/DVKunion/SeaMoon/pkg/api/models"
 	"github.com/DVKunion/SeaMoon/pkg/api/service"
-	"github.com/DVKunion/SeaMoon/pkg/listener"
+	"github.com/DVKunion/SeaMoon/pkg/network/listener"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
