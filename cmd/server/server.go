@@ -5,10 +5,10 @@ import (
 	"os"
 	"strings"
 
-	net "github.com/DVKunion/SeaMoon/pkg/network"
+	"github.com/DVKunion/SeaMoon/pkg/network/basic"
+	"github.com/DVKunion/SeaMoon/pkg/network/tunnel/service"
 	"github.com/DVKunion/SeaMoon/pkg/system/errors"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
-	"github.com/DVKunion/SeaMoon/pkg/tunnel/service"
 )
 
 type Server struct {
@@ -40,13 +40,13 @@ func New(opts ...Option) (*Server, error) {
 func (s *Server) Serve(ctx context.Context) error {
 	network := "tcp"
 
-	if net.IsIPv4(s.opts.host) {
+	if basic.IsIPv4(s.opts.host) {
 		network = "tcp4"
 	}
 
 	serverAddr := strings.Join(append([]string{s.opts.host, s.opts.port}), ":")
 
-	lc := net.ListenConfig{}
+	lc := basic.ListenConfig{}
 	if s.opts.mtcp {
 		lc.SetMultipathTCP(true)
 	}
