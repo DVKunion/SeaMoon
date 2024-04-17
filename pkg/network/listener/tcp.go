@@ -7,11 +7,11 @@ import (
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
 	"github.com/DVKunion/SeaMoon/pkg/api/models"
 	db_service "github.com/DVKunion/SeaMoon/pkg/api/service"
-	"github.com/DVKunion/SeaMoon/pkg/network"
+	"github.com/DVKunion/SeaMoon/pkg/network/basic"
+	"github.com/DVKunion/SeaMoon/pkg/network/transfer"
+	"github.com/DVKunion/SeaMoon/pkg/network/tunnel/service"
 	"github.com/DVKunion/SeaMoon/pkg/system/errors"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
-	"github.com/DVKunion/SeaMoon/pkg/transfer"
-	"github.com/DVKunion/SeaMoon/pkg/tunnel/service"
 )
 
 func TCPListen(ctx context.Context, py *models.Proxy) (net.Listener, error) {
@@ -57,7 +57,7 @@ func listen(ctx context.Context, server net.Listener, id uint, t *enum.ProxyType
 				continue
 			}
 			go func() {
-				in, out, err := network.Transport(conn, destConn)
+				in, out, err := basic.Transport(conn, destConn)
 				if err != nil {
 					xlog.Error(xlog.NetworkTransportError, "err", err)
 				}

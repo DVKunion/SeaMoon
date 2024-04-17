@@ -1,4 +1,4 @@
-package network
+package basic
 
 // This file is modified version from https://github.com/ginuerzh/gosocks5/blob/master/socks5.go
 

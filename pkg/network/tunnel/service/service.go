@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
-	"github.com/DVKunion/SeaMoon/pkg/tunnel"
+	"github.com/DVKunion/SeaMoon/pkg/network/tunnel"
 )
 
 type Service interface {

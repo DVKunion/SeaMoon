@@ -13,11 +13,11 @@ import (
 	"google.golang.org/grpc/keepalive"
 
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
+	"github.com/DVKunion/SeaMoon/pkg/network/transfer"
+	"github.com/DVKunion/SeaMoon/pkg/network/tunnel"
+	"github.com/DVKunion/SeaMoon/pkg/network/tunnel/service/proto"
+	"github.com/DVKunion/SeaMoon/pkg/network/tunnel/service/proto/gost"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
-	"github.com/DVKunion/SeaMoon/pkg/transfer"
-	"github.com/DVKunion/SeaMoon/pkg/tunnel"
-	"github.com/DVKunion/SeaMoon/pkg/tunnel/service/proto"
-	"github.com/DVKunion/SeaMoon/pkg/tunnel/service/proto/gost"
 )
 
 type GRPCService struct {

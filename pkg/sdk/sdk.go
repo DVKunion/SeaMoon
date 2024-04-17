@@ -19,7 +19,7 @@ type CloudSDK interface {
 	// SyncFC 同步函数
 	SyncFC(ca *models.CloudAuth, regions []string) (models.TunnelCreateApiList, error)
 
-	// UpdateVersion 一键更新: 用本地的版本号请求远端服务更新至
+	// UpdateVersion 一键更新: 用本地的版本号请求远端服务更新至客户端版本
 	// UpdateVersion(auth models.CloudAuth) error
 }
 

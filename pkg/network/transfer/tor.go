@@ -4,7 +4,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/DVKunion/SeaMoon/pkg/network"
+	"github.com/DVKunion/SeaMoon/pkg/network/basic"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
@@ -23,7 +23,7 @@ func TorTransport(conn net.Conn) error {
 
 	xlog.Info(xlog.ServiceTorConnectServer, "src", conn.RemoteAddr(), "dest", defaultTorAddr)
 
-	if _, _, err := network.Transport(conn, destConn); err != nil {
+	if _, _, err := basic.Transport(conn, destConn); err != nil {
 		xlog.Error(xlog.NetworkTransportError, "err", err)
 	}
 

@@ -4,15 +4,15 @@ import (
 	"bufio"
 	"net"
 
-	"github.com/DVKunion/SeaMoon/pkg/network"
+	"github.com/DVKunion/SeaMoon/pkg/network/basic"
 )
 
 // AutoTransport 自适应解析 http / socks
 func AutoTransport(conn net.Conn) error {
-	br := &network.BufferedConn{Conn: conn, Br: bufio.NewReader(conn)}
+	br := &basic.BufferedConn{Conn: conn, Br: bufio.NewReader(conn)}
 	b, err := br.Peek(1)
 
-	if err != nil || b[0] != network.SOCKS5Version {
+	if err != nil || b[0] != basic.SOCKS5Version {
 		return HttpTransport(br)
 	}
 
@@ -20,10 +20,10 @@ func AutoTransport(conn net.Conn) error {
 }
 
 func AutoTransportV2ray(conn net.Conn) error {
-	br := &network.BufferedConn{Conn: conn, Br: bufio.NewReader(conn)}
+	br := &basic.BufferedConn{Conn: conn, Br: bufio.NewReader(conn)}
 	b, err := br.Peek(1)
 
-	if err != nil || b[0] != network.SOCKS5Version {
+	if err != nil || b[0] != basic.SOCKS5Version {
 		return V2rayTransport(br, "http")
 	}
 

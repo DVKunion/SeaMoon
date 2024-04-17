@@ -7,12 +7,7 @@ import (
 
 	"github.com/DVKunion/SeaMoon/pkg/api/controller/middleware"
 	api_v1 "github.com/DVKunion/SeaMoon/pkg/api/controller/v1"
-	"github.com/DVKunion/SeaMoon/pkg/api/database/drivers"
 )
-
-func init() {
-	drivers.Init()
-}
 
 func Register(router *gin.Engine, debug bool) {
 	var middles = make([]gin.HandlerFunc, 0)
