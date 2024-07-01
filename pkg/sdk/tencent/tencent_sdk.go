@@ -13,7 +13,6 @@ import (
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
 	scf "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/scf/v20180416"
 
-	"github.com/DVKunion/SeaMoon/pkg/api/enum"
 	"github.com/DVKunion/SeaMoon/pkg/api/models"
 	"github.com/DVKunion/SeaMoon/pkg/system/errors"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
@@ -26,22 +25,15 @@ const (
 )
 
 type triggerDesc struct {
-	Api     triggerDescApi     `json:"api"`
-	Service triggerDescService `json:"service"`
-	Release struct {
-		EnvironmentName string `json:"environmentName"`
-	} `json:"release"`
+	AuthType  string     `json:"AuthType"`
+	NetConfig *netConfig `json:"NetConfig"`
 }
 
-type triggerDescApi struct {
-	AuthRequired  string `json:"authRequired"`
-	AuthType      string `json:"authType"`
-	RequestConfig struct {
-		Method string `json:"method"`
-		Path   string `json:"path"`
-	} `json:"requestConfig"`
-	IsIntegratedResponse string `json:"isIntegratedResponse"`
-	IsBase64Encoded      string `json:"isBase64Encoded"`
+type netConfig struct {
+	EnableIntranet bool   `json:"EnableIntranet"`
+	EnableExtranet bool   `json:"EnableExtranet"`
+	IntranetUrl    string `json:"IntranetUrl"`
+	ExtranetUrl    string `json:"ExtranetUrl"`
 }
 
 type triggerDescService struct {
@@ -52,9 +44,6 @@ type triggerDescService struct {
 }
 
 type triggerResp struct {
-	Service struct {
-		SubDomain string `json:"subDomain"`
-	} `json:"service"`
 }
 
 type fcInfo struct {
@@ -291,36 +280,25 @@ func deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, string, error) {
 	}
 
 	// 尝试创建触发器
+	// 2024.07.01 腾讯云停止了 API GATEWAY 服务
+	// 改为了创建函数 URL
+	// https://cloud.tencent.com/document/product/583/96099
 	r := scf.NewCreateTriggerRequest()
-	r.TriggerName = common.StringPtr("apigw")
+	r.TriggerName = common.StringPtr("http")
 	r.FunctionName = common.StringPtr(fcName)
-	r.Type = common.StringPtr("apigw")
+	r.Type = common.StringPtr("http")
 
 	config, err := json.Marshal(&triggerDesc{
-		Api: triggerDescApi{
-			AuthRequired: func() string {
-				if tun.Config.FcAuthType == enum.AuthParis {
-					return "TRUE"
-				}
-				return "FALSE"
-			}(),
-			RequestConfig: struct {
-				Method string `json:"method"`
-				Path   string `json:"path"`
-			}{Method: "GET", Path: "/"},
-			IsIntegratedResponse: "FALSE",
-			IsBase64Encoded:      "FALSE",
+		AuthType: "NONE", // todo 增加 auth
+		NetConfig: &netConfig{
+			true,
+			true,
+			"",
+			"",
 		},
-		Service: triggerDescService{
-			ServiceName: "SCF_API_SERVICE",
-			ServiceType: "BASIC",
-		},
-		Release: struct {
-			EnvironmentName string `json:"environmentName"`
-		}{EnvironmentName: "release"},
 	})
-
-	// 触发器配置参数叫做 desc...
+	//
+	//触发器配置参数叫做 desc...
 	r.TriggerDesc = common.StringPtr(string(config))
 	r.Namespace = common.StringPtr(serviceName)
 
@@ -329,13 +307,13 @@ func deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, string, error) {
 		return "", "", err
 	}
 
-	extractor := &triggerResp{}
+	extractor := &triggerDesc{}
 	desc := *response.Response.TriggerInfo.TriggerDesc
 	if err := json.Unmarshal([]byte(desc), extractor); err != nil {
 		return "", "", err
 	}
 
-	return extractor.Service.SubDomain, uid, nil
+	return extractor.NetConfig.ExtranetUrl, uid, nil
 }
 
 func destroy(ca *models.CloudAuth, tun *models.Tunnel) error {
@@ -356,15 +334,16 @@ func destroy(ca *models.CloudAuth, tun *models.Tunnel) error {
 
 	fcName := *tun.Name
 
+	// 2024.07.01 无需触发器了
 	// 先删除触发器
-	r := scf.NewDeleteTriggerRequest()
-	r.TriggerName = common.StringPtr("apigw")
-	r.Type = common.StringPtr("apigw")
-	r.FunctionName = common.StringPtr(fcName)
-	r.Namespace = common.StringPtr(serviceName)
-	if _, err = client.DeleteTrigger(r); err != nil {
-		return err
-	}
+	//r := scf.NewDeleteTriggerRequest()
+	//r.TriggerName = common.StringPtr("http")
+	//r.Type = common.StringPtr("http")
+	//r.FunctionName = common.StringPtr(fcName)
+	//r.Namespace = common.StringPtr(serviceName)
+	//if _, err = client.DeleteTrigger(r); err != nil {
+	//	return err
+	//}
 	// 再删除函数
 	request := scf.NewDeleteFunctionRequest()
 	request.FunctionName = common.StringPtr(fcName)
@@ -440,11 +419,12 @@ func sync(ca *models.CloudAuth, regions []string) ([]fcInfo, error) {
 				} else {
 					var tri triggerDesc
 					err := json.Unmarshal([]byte(*trigger[0].TriggerDesc), &tri)
-					if err != nil {
+					if err != nil || tri.NetConfig == nil {
 						xlog.Error(xlog.SDKTriggerUnmarshalError, "name", *fc.FunctionName, "err", err)
 					}
-					target.addr = strings.Replace(tri.Service.SubDomain, "https://", "", -1)
-					target.auth = tri.Api.AuthType
+					target.addr = strings.Replace(tri.NetConfig.ExtranetUrl, "https://", "", -1)
+					// todo
+					target.auth = "NONE"
 				}
 			}
 
