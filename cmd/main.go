@@ -9,7 +9,7 @@ import (
 	"github.com/DVKunion/SeaMoon/cmd/client"
 	"github.com/DVKunion/SeaMoon/cmd/server"
 	"github.com/DVKunion/SeaMoon/pkg/api/database/drivers"
-	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
+	"github.com/DVKunion/SeaMoon/pkg/system/version"
 )
 
 var (
@@ -28,9 +28,14 @@ var (
 		RunE:  Server,
 	}
 
-	proxyCommand = &cobra.Command{
+	clientCommand = &cobra.Command{
 		Use:   "client",
 		Short: "SeaMoon client mod",
+	}
+
+	clientWebCommand = &cobra.Command{
+		Use:   "web",
+		Short: "SeaMoon client web mod",
 		Run:   Client,
 	}
 
@@ -44,7 +49,10 @@ var (
 		Use:   "version",
 		Short: "SeaMoon version info",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(xlog.Version)
+			fmt.Println("SeaMoon Powered By DVK")
+			fmt.Printf("Version: %s\n", version.Version)
+			fmt.Printf("Commit: %s\n", version.Commit)
+			fmt.Printf("V2rayCoreVersion: %s\n", version.V2rayCoreVersion)
 		},
 	}
 )
@@ -69,16 +77,18 @@ func Server(cmd *cobra.Command, args []string) error {
 }
 
 func init() {
-	proxyCommand.Flags().BoolVarP(&debug, "debug", "d", false, "proxy detail log")
+	clientWebCommand.Flags().BoolVarP(&debug, "debug", "d", false, "proxy detail log")
 
 	serverCommand.Flags().StringVarP(&addr, "addr", "a", "0.0.0.0", "server listen addr")
 	serverCommand.Flags().StringVarP(&port, "port", "p", "9000", "server listen port")
 	serverCommand.Flags().StringVarP(&proto, "proto", "t", "websocket", "server listen proto: (websocket/grpc)")
 
 	rootCommand.AddCommand(versionCommand)
-	rootCommand.AddCommand(proxyCommand)
+	rootCommand.AddCommand(clientCommand)
 	rootCommand.AddCommand(serverCommand)
 	rootCommand.AddCommand(generateCommand)
+
+	clientCommand.AddCommand(clientWebCommand)
 }
 
 func main() {

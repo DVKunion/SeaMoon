@@ -15,6 +15,7 @@ import (
 	"github.com/DVKunion/SeaMoon/cmd/client/static"
 	"github.com/DVKunion/SeaMoon/pkg/api/service"
 	"github.com/DVKunion/SeaMoon/pkg/api/signal"
+	"github.com/DVKunion/SeaMoon/pkg/system/version"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
@@ -44,7 +45,7 @@ func runApi(ctx context.Context, debug bool) {
 
 	xlog.Info(xlog.ApiServiceStart, "addr", addr.Value, "port", port.Value)
 
-	if xlog.Version != "dev" || !debug {
+	if version.Version != "dev" || !debug {
 		gin.SetMode(gin.ReleaseMode)
 	}
 

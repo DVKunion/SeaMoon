@@ -17,6 +17,7 @@ import (
 	"github.com/DVKunion/SeaMoon/pkg/network/tunnel"
 	"github.com/DVKunion/SeaMoon/pkg/network/tunnel/service/proto"
 	"github.com/DVKunion/SeaMoon/pkg/network/tunnel/service/proto/gost"
+	"github.com/DVKunion/SeaMoon/pkg/system/version"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
@@ -235,7 +236,7 @@ func (g GRPCService) Health(ctx context.Context, p *proto.Ping) (*proto.Pong, er
 	return &proto.Pong{
 		Status:  "OK",
 		Time:    g.startAt.Format("2006-01-02 15:04:05"),
-		Version: xlog.Version,
-		Commit:  xlog.Commit,
+		Version: version.Version,
+		Commit:  version.Commit,
 	}, nil
 }

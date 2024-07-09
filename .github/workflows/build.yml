@@ -26,7 +26,7 @@ jobs:
       - name: Build
         run: |
           go mod tidy
-          go build -o seamoon -v --ldflags "-s -w -X github.com/DVKunion/SeaMoon/pkg/system/xlog.Version=${{github.ref_name}} -X github.com/DVKunion/SeaMoon/pkg/system/xlog.Commit=${{github.sha}}" cmd/main.go
+          go build -o seamoon -v --ldflags "-s -w -X github.com/DVKunion/SeaMoon/pkg/system/version.Version=${{github.ref_name}} -X github.com/DVKunion/SeaMoon/pkg/system/version.Commit=${{github.sha}}" cmd/main.go
       - uses: actions/upload-artifact@v4
         with:
           path: seamoon
