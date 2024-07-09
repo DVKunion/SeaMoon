@@ -1,0 +1,1 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[19],{332:function(t,n,s){"use strict";s.r(n);var o=s(7),e=Object(o.a)({},(function(){var t=this._self._c;return t("ContentSlotsDistributor",{attrs:{"slot-key":this.$parent.slotKey}},[t("p",[this._v("seamoon 完美兼容 v2ray 系列客户端。")])])}),[],!1,null,null,null);n.default=e.exports}}]);
