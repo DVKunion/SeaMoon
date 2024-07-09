@@ -3,7 +3,7 @@ package models
 import (
 	"gorm.io/gorm"
 
-	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
+	"github.com/DVKunion/SeaMoon/pkg/system/version"
 )
 
 var DefaultConfig = []Config{
@@ -93,7 +93,7 @@ func (cl ConfigList) ToApi() *ConfigApi {
 		case "auto_sync":
 			res.AutoSync = s.Value
 		case "version":
-			res.Version = xlog.Version
+			res.Version = version.Version
 		}
 	}
 	return res

@@ -16,6 +16,7 @@ import (
 
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
 	"github.com/DVKunion/SeaMoon/pkg/api/models"
+	"github.com/DVKunion/SeaMoon/pkg/system/version"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
@@ -133,7 +134,7 @@ func deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, string, error) {
 		WithInstanceType("e1"). // 性能实例
 		WithTimeout(300).
 		WithCustomContainerConfig(fc.NewCustomContainerConfig().
-			WithImage(fmt.Sprintf("%s:%s", registryEndPoint[tun.Config.Region], xlog.Version)).
+			WithImage(fmt.Sprintf("%s:%s", registryEndPoint[tun.Config.Region], version.Version)).
 			WithArgs(func() string {
 				switch *tun.Type {
 				case enum.TunnelTypeWST:

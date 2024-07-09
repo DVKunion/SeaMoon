@@ -14,11 +14,12 @@ import (
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
 	"github.com/DVKunion/SeaMoon/pkg/network/transfer"
 	"github.com/DVKunion/SeaMoon/pkg/network/tunnel"
+	"github.com/DVKunion/SeaMoon/pkg/system/version"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
 const (
-	defaultTimeout        = 10 * time.Second
+	defaultTimeout        = 300 * time.Second
 	defaultReadBufferSize = 32 * 1024
 )
 
@@ -201,7 +202,10 @@ func (s *WSService) v2ray(proto string) func(http.ResponseWriter, *http.Request)
 func (s *WSService) health(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
-	_, err := w.Write([]byte("OK\n" + s.startAt.Format("2006-01-02 15:04:05") + "\n" + xlog.Version + "-" + xlog.Commit))
+	_, err := w.Write([]byte("OK\n" +
+		s.startAt.Format("2006-01-02 15:04:05") + "\n" +
+		version.Version + "-" + version.Commit + "\n" +
+		"v2ray-core:" + "-" + version.V2rayCoreVersion))
 	if err != nil {
 		xlog.Error(xlog.ServiceStatusError, "err", err)
 		return

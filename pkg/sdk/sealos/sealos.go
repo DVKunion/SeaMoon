@@ -7,7 +7,7 @@ import (
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
 	"github.com/DVKunion/SeaMoon/pkg/api/models"
 	"github.com/DVKunion/SeaMoon/pkg/system/tools"
-	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
+	"github.com/DVKunion/SeaMoon/pkg/system/version"
 )
 
 type SDK struct {
@@ -29,7 +29,7 @@ func (s *SDK) Deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, string, 
 	// 拼接规则 seamoon-NAME-TYPE
 	svc := "seamoon-" + *tun.Name + "-" + string(*tun.Type)
 	// sealos 默认用 dockerhub 镜像
-	img := "dvkunion/seamoon:" + xlog.Version
+	img := "dvkunion/seamoon:" + version.Version
 	// 域名自己生成了一个随机 12 位字符串
 	host := tools.GenerateRandomLetterString(12)
 

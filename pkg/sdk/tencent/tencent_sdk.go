@@ -15,6 +15,7 @@ import (
 
 	"github.com/DVKunion/SeaMoon/pkg/api/models"
 	"github.com/DVKunion/SeaMoon/pkg/system/errors"
+	"github.com/DVKunion/SeaMoon/pkg/system/version"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
@@ -201,7 +202,7 @@ func deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, string, error) {
 	request.Code = &scf.Code{
 		ImageConfig: &scf.ImageConfig{
 			ImageType: common.StringPtr("personal"),
-			ImageUri:  common.StringPtr(strings.Join([]string{registryEndPoint[tun.Config.Region], xlog.Version}, ":")),
+			ImageUri:  common.StringPtr(strings.Join([]string{registryEndPoint[tun.Config.Region], version.Version}, ":")),
 			Args:      common.StringPtr("server -p " + strconv.Itoa(int(*tun.Port)) + " -t " + string(*tun.Type)),
 			ImagePort: common.Int64Ptr(int64(*tun.Port)),
 		},
