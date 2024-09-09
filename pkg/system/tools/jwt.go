@@ -14,7 +14,7 @@ func JWTAuth(user string) (string, error) {
 	// 生成 token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user": user,
-		"type": enum.AuthAdmin,
+		"type": enum.AdminAuth,
 		"exp":  time.Now().Add(time.Hour * 72).Unix(),
 	})
 

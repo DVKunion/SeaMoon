@@ -14,17 +14,11 @@ assignees: DVKunion
 **问题描述**
 
 
-**如何复现**
-复现步骤如下:
-1. xxxxxx
-2. xxxxxx
-3. xxxxxx
-4. xxxxxxx
+**复现步骤**
 
 **预期的结果**
 
 **截图**
-注意隐私信息
 
 **其他信息**
 + Seamoon版本:

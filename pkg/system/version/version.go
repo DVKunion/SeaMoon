@@ -1,9 +1,11 @@
 package version
 
-import core "github.com/v2fly/v2ray-core/v5"
+import (
+	"github.com/DVKunion/SeaMoon/plugins/xray"
+)
 
 var (
-	Version          string = "dev"
-	Commit           string = ""
-	V2rayCoreVersion string = core.Version()
+	Version     string = "dev"
+	Commit      string = ""
+	XrayVersion string = xray.GetVer()
 )

@@ -1,7 +1,6 @@
 package drivers
 
 import (
-	"github.com/spf13/cobra"
 	"gorm.io/gorm"
 )
 
@@ -15,7 +14,7 @@ type Driver interface {
 	Init(migrateFunc []func())
 	GetConn() *gorm.DB
 	QueryPage(page, size int) *gorm.DB
-	Generate(cmd *cobra.Command, args []string) error
+	Generate() error
 }
 
 func Init() {

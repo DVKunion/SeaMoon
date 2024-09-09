@@ -47,12 +47,14 @@
     "not ie <= 10"
   ],
   "dependencies": {
+    "@ant-design/charts": "^2.1.2",
     "@ant-design/icons": "^4.7.0",
     "@ant-design/pro-components": "1.1.5",
     "@umijs/route-utils": "^2.0.0",
     "antd": "^4.20.0",
     "classnames": "^2.3.0",
     "lodash": "^4.17.0",
+    "lodash-es": "^4.17.21",
     "moment": "^2.29.0",
     "omit.js": "^2.0.2",
     "rc-menu": "^9.1.0",

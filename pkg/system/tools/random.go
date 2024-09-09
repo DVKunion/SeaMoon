@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"strings"
 
-	"github.com/v2fly/v2ray-core/v5/common/uuid"
+	"github.com/google/uuid"
 )
 
 const randomList = "ASDFGHJKLZXCVBNMQWERTYUIOPasdfghjklzxcvbnmqwertyuiop1234567890"

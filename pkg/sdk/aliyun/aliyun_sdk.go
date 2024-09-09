@@ -252,7 +252,7 @@ func sync(ca *models.CloudAuth, regions []string) (models.TunnelCreateApiList, e
 				for _, t := range respT.Triggers {
 					if *t.TriggerType == "http" {
 						*tun.Addr = strings.Replace(t.UrlInternet, "https://", "", -1)
-						tun.Config.FcAuthType = enum.TransAuthType(t.TriggerConfig.AuthType)
+						tun.Config.FcAuthType = enum.TransCloudFCAuthType(t.TriggerConfig.AuthType)
 					}
 				}
 				*tun.Status = enum.TunnelActive

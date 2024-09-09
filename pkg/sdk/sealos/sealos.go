@@ -83,7 +83,7 @@ func (s *SDK) SyncFC(ca *models.CloudAuth, regions []string) (models.TunnelCreat
 				CPU:        float32(svc.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu().MilliValue()) / 1000,
 				Memory:     int32(svc.Spec.Template.Spec.Containers[0].Resources.Limits.Memory().MilliValue()) / 1024 / 1024 / 1000,
 				Instance:   *svc.Spec.Replicas,
-				FcAuthType: enum.AuthEmpty, // sealos暂不支持认证
+				FcAuthType: enum.CloudFCAuthEmpty, // sealos暂不支持认证
 				Tor:        false,
 				TLS:        true,
 			}

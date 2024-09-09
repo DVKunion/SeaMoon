@@ -43,6 +43,9 @@ func newTunnel(db *gorm.DB, opts ...gen.DOOption) tunnel {
 	_tunnel.Memory = field.NewInt32(tableName, "memory")
 	_tunnel.Instance = field.NewInt32(tableName, "instance")
 	_tunnel.FcAuthType = field.NewInt8(tableName, "fc_auth_type")
+	_tunnel.SSRCrypt = field.NewString(tableName, "ssr_crypt")
+	_tunnel.SSRPass = field.NewString(tableName, "ssr_pass")
+	_tunnel.V2rayUid = field.NewString(tableName, "v2ray_uid")
 	_tunnel.TLS = field.NewBool(tableName, "tls")
 	_tunnel.Tor = field.NewBool(tableName, "tor")
 	_tunnel.Proxies = tunnelHasManyProxies{
@@ -77,6 +80,9 @@ type tunnel struct {
 	Memory        field.Int32
 	Instance      field.Int32
 	FcAuthType    field.Int8
+	SSRCrypt      field.String
+	SSRPass       field.String
+	V2rayUid      field.String
 	TLS           field.Bool
 	Tor           field.Bool
 	Proxies       tunnelHasManyProxies
@@ -113,6 +119,9 @@ func (t *tunnel) updateTableName(table string) *tunnel {
 	t.Memory = field.NewInt32(table, "memory")
 	t.Instance = field.NewInt32(table, "instance")
 	t.FcAuthType = field.NewInt8(table, "fc_auth_type")
+	t.SSRCrypt = field.NewString(table, "ssr_crypt")
+	t.SSRPass = field.NewString(table, "ssr_pass")
+	t.V2rayUid = field.NewString(table, "v2ray_uid")
 	t.TLS = field.NewBool(table, "tls")
 	t.Tor = field.NewBool(table, "tor")
 
@@ -139,7 +148,7 @@ func (t *tunnel) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (t *tunnel) fillFieldMap() {
-	t.fieldMap = make(map[string]field.Expr, 20)
+	t.fieldMap = make(map[string]field.Expr, 23)
 	t.fieldMap["id"] = t.ID
 	t.fieldMap["created_at"] = t.CreatedAt
 	t.fieldMap["updated_at"] = t.UpdatedAt
@@ -157,6 +166,9 @@ func (t *tunnel) fillFieldMap() {
 	t.fieldMap["memory"] = t.Memory
 	t.fieldMap["instance"] = t.Instance
 	t.fieldMap["fc_auth_type"] = t.FcAuthType
+	t.fieldMap["ssr_crypt"] = t.SSRCrypt
+	t.fieldMap["ssr_pass"] = t.SSRPass
+	t.fieldMap["v2ray_uid"] = t.V2rayUid
 	t.fieldMap["tls"] = t.TLS
 	t.fieldMap["tor"] = t.Tor
 

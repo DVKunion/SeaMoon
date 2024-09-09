@@ -17,7 +17,7 @@ import (
 
 var (
 	Q        = new(Query)
-	Auth     *auth
+	Account  *account
 	Config   *config
 	Provider *provider
 	Proxy    *proxy
@@ -26,7 +26,7 @@ var (
 
 func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	*Q = *Use(db, opts...)
-	Auth = &Q.Auth
+	Account = &Q.Account
 	Config = &Q.Config
 	Provider = &Q.Provider
 	Proxy = &Q.Proxy
@@ -36,7 +36,7 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 	return &Query{
 		db:       db,
-		Auth:     newAuth(db, opts...),
+		Account:  newAccount(db, opts...),
 		Config:   newConfig(db, opts...),
 		Provider: newProvider(db, opts...),
 		Proxy:    newProxy(db, opts...),
@@ -47,7 +47,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 type Query struct {
 	db *gorm.DB
 
-	Auth     auth
+	Account  account
 	Config   config
 	Provider provider
 	Proxy    proxy
@@ -59,7 +59,7 @@ func (q *Query) Available() bool { return q.db != nil }
 func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
 		db:       db,
-		Auth:     q.Auth.clone(db),
+		Account:  q.Account.clone(db),
 		Config:   q.Config.clone(db),
 		Provider: q.Provider.clone(db),
 		Proxy:    q.Proxy.clone(db),
@@ -78,7 +78,7 @@ func (q *Query) WriteDB() *Query {
 func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 	return &Query{
 		db:       db,
-		Auth:     q.Auth.replaceDB(db),
+		Account:  q.Account.replaceDB(db),
 		Config:   q.Config.replaceDB(db),
 		Provider: q.Provider.replaceDB(db),
 		Proxy:    q.Proxy.replaceDB(db),
@@ -87,7 +87,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 }
 
 type queryCtx struct {
-	Auth     IAuthDo
+	Account  IAccountDo
 	Config   IConfigDo
 	Provider IProviderDo
 	Proxy    IProxyDo
@@ -96,7 +96,7 @@ type queryCtx struct {
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
-		Auth:     q.Auth.WithContext(ctx),
+		Account:  q.Account.WithContext(ctx),
 		Config:   q.Config.WithContext(ctx),
 		Provider: q.Provider.WithContext(ctx),
 		Proxy:    q.Proxy.WithContext(ctx),

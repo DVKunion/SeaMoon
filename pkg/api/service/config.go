@@ -5,6 +5,7 @@ import (
 
 	"github.com/DVKunion/SeaMoon/pkg/api/database/dao"
 	"github.com/DVKunion/SeaMoon/pkg/api/models"
+	"github.com/DVKunion/SeaMoon/pkg/system/version"
 )
 
 type config struct {
@@ -12,7 +13,14 @@ type config struct {
 
 func (c *config) ListConfigs(ctx context.Context, page, size int) (models.ConfigList, error) {
 	query := dao.Q.Config
-	return query.WithContext(ctx).Offset(page * size).Limit(size).Find()
+	data, err := query.WithContext(ctx).Offset(page * size).Limit(size).Find()
+	if err != nil {
+		return nil, err
+	}
+	data = append(data, &models.Config{Key: "version", Value: version.Version})
+	data = append(data, &models.Config{Key: "commit", Value: version.Commit})
+	data = append(data, &models.Config{Key: "xray", Value: version.XrayVersion})
+	return data, nil
 }
 
 func (c *config) GetConfigByName(ctx context.Context, name string) (*models.Config, error) {

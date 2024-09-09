@@ -89,7 +89,7 @@ func (t *SDK) SyncFC(ca *models.CloudAuth, regions []string) (models.TunnelCreat
 		*tun.Port = int32(*fc.detail.ImageConfig.ImagePort)
 		*tun.Status = enum.TunnelActive
 		*tun.Addr = fc.addr
-		tun.Config.FcAuthType = enum.TransAuthType(fc.auth)
+		tun.Config.FcAuthType = enum.TransCloudFCAuthType(fc.auth)
 		res = append(res, tun)
 	}
 	return res, nil

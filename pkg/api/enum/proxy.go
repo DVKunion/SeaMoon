@@ -23,6 +23,7 @@ const (
 	ProxyTypeShadowSocks ProxyType = "shadowsocks"
 	ProxyTypeVmess       ProxyType = "vmess"
 	ProxyTypeVless       ProxyType = "vless"
+	ProxyTypeTorjan      ProxyType = "torjan"
 )
 
 func (t ProxyType) String() string {

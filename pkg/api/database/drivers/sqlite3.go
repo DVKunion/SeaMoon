@@ -3,14 +3,16 @@ package drivers
 import (
 	"os"
 
+	"github.com/djherbis/times"
 	"github.com/glebarez/sqlite"
-	"github.com/spf13/cobra"
 	"gorm.io/gen"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
 	"github.com/DVKunion/SeaMoon/pkg/api/database/dao"
 	"github.com/DVKunion/SeaMoon/pkg/api/models"
+	"github.com/DVKunion/SeaMoon/pkg/system/keys"
+	"github.com/DVKunion/SeaMoon/pkg/system/tools"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
@@ -42,6 +44,14 @@ func (s *sqlite3) Init(migrateFunc []func()) {
 		}()
 	}
 
+	defer func() {
+		t, err := times.Stat(dbPath)
+		if err != nil || !t.HasBirthTime() {
+			panic(err)
+		}
+		keys.SetGlobalKey(tools.GenerateKey(t.BirthTime()))
+	}()
+
 	s.db, err = gorm.Open(sqlite.Open(dbPath), &gormConfig)
 	dao.SetDefault(s.db)
 	if err != nil {
@@ -64,7 +74,7 @@ func (s *sqlite3) QueryPage(page, size int) *gorm.DB {
 	return s.db.Offset(page * size).Limit(size)
 }
 
-func (s *sqlite3) Generate(cmd *cobra.Command, args []string) error {
+func (s *sqlite3) Generate() error {
 	// Initialize the generator with configuration
 	g := gen.NewGenerator(gen.Config{
 		OutPath:       "pkg/api/database/dao", // output directory, default value is ./query

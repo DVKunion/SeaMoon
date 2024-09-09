@@ -2,7 +2,7 @@ import React from "react";
 import {ProForm, ProFormSwitch, ProFormText, ProFormSelect} from "@ant-design/pro-components";
 import {toNumber} from "lodash";
 import {TunnelAuthFCTypeEnum, TunnelTypeValueEnum} from "@/enum/tunnel";
-import {CloudRegionOneSelector} from "@/pages/provider/components/AuthForm";
+import {CloudRegionOneSelector} from "@/pages/account/provider/AuthForm";
 
 export type TunnelFormProps = {
   type: number

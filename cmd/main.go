@@ -9,6 +9,7 @@ import (
 	"github.com/DVKunion/SeaMoon/cmd/client"
 	"github.com/DVKunion/SeaMoon/cmd/server"
 	"github.com/DVKunion/SeaMoon/pkg/api/database/drivers"
+	"github.com/DVKunion/SeaMoon/pkg/api/service"
 	"github.com/DVKunion/SeaMoon/pkg/system/version"
 )
 
@@ -25,7 +26,7 @@ var (
 	serverCommand = &cobra.Command{
 		Use:   "server",
 		Short: "SeaMoon server mod",
-		RunE:  Server,
+		RunE:  serve,
 	}
 
 	clientCommand = &cobra.Command{
@@ -36,13 +37,23 @@ var (
 	clientWebCommand = &cobra.Command{
 		Use:   "web",
 		Short: "SeaMoon client web mod",
-		Run:   Client,
+		Run:   webClient,
+	}
+
+	clientCliCommand = &cobra.Command{
+		Use:   "cli",
+		Short: "SeaMoon client cli mod",
+		Run:   cliClient,
 	}
 
 	generateCommand = &cobra.Command{
 		Use:   "generate",
 		Short: "SeaMoon generate devs code",
-		RunE:  drivers.Drive().Generate,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			service.Init()
+			drivers.Init()
+			return drivers.Drive().Generate()
+		},
 	}
 
 	versionCommand = &cobra.Command{
@@ -52,28 +63,26 @@ var (
 			fmt.Println("SeaMoon Powered By DVK")
 			fmt.Printf("Version: %s\n", version.Version)
 			fmt.Printf("Commit: %s\n", version.Commit)
-			fmt.Printf("V2rayCoreVersion: %s\n", version.V2rayCoreVersion)
+			fmt.Printf("XrayVersion: %s\n", version.XrayVersion)
 		},
 	}
 )
 
-func Client(cmd *cobra.Command, args []string) {
+func webClient(cmd *cobra.Command, args []string) {
+	// 先初始化 db 服务
+	service.Init()
+	// 初始化 db
 	drivers.Init()
 	client.Serve(cmd.Context(), debug)
 }
 
-func Server(cmd *cobra.Command, args []string) error {
-	s, err := server.New(
-		server.WithHost("0.0.0.0"),
-		server.WithPort(port),
-		server.WithProto(proto),
-	)
+// sometimes we just want a simple cli tools
+func cliClient(cmd *cobra.Command, args []string) {
+	// todo
+}
 
-	if err != nil {
-		return err
-	}
-
-	return s.Serve(cmd.Context())
+func serve(cmd *cobra.Command, args []string) error {
+	return server.Serve(cmd.Context(), "")
 }
 
 func init() {
@@ -81,6 +90,7 @@ func init() {
 
 	serverCommand.Flags().StringVarP(&addr, "addr", "a", "0.0.0.0", "server listen addr")
 	serverCommand.Flags().StringVarP(&port, "port", "p", "9000", "server listen port")
+
 	serverCommand.Flags().StringVarP(&proto, "proto", "t", "websocket", "server listen proto: (websocket/grpc)")
 
 	rootCommand.AddCommand(versionCommand)
@@ -89,6 +99,7 @@ func init() {
 	rootCommand.AddCommand(generateCommand)
 
 	clientCommand.AddCommand(clientWebCommand)
+	clientCommand.AddCommand(clientCliCommand)
 }
 
 func main() {

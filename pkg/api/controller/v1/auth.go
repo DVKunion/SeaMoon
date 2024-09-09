@@ -13,7 +13,7 @@ import (
 )
 
 func Login(c *gin.Context) {
-	var obj *models.AuthApi
+	var obj *models.Account
 	if err := c.ShouldBindJSON(&obj); err != nil {
 		servant.ErrorMsg(c, http.StatusBadRequest, errors.ApiError(xlog.ApiParamsError, err))
 		return
@@ -27,7 +27,7 @@ func Login(c *gin.Context) {
 }
 
 func Passwd(c *gin.Context) {
-	var obj *models.AuthApi
+	var obj *models.Account
 	if err := c.ShouldBindJSON(&obj); err != nil {
 		servant.ErrorMsg(c, http.StatusBadRequest, errors.ApiError(xlog.ApiParamsError, err))
 		return

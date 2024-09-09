@@ -2,7 +2,6 @@ package signal
 
 import (
 	"context"
-	"net"
 	"sync"
 
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
@@ -12,9 +11,6 @@ import (
 
 // Bus 用于控制所有需要异步处理的状态转换
 type Bus struct {
-	canceler map[uint]context.CancelFunc
-	listener map[uint]net.Listener
-
 	proxyChannel    chan *proxySignal
 	providerChannel chan *providerSignal
 	tunnelChannel   chan *tunnelSignal
@@ -39,8 +35,6 @@ type tunnelSignal struct {
 }
 
 var signalBus = &Bus{
-	canceler:        make(map[uint]context.CancelFunc, 0),
-	listener:        make(map[uint]net.Listener, 0),
 	proxyChannel:    make(chan *proxySignal, 1>>8),
 	providerChannel: make(chan *providerSignal, 1>>8),
 	tunnelChannel:   make(chan *tunnelSignal, 1>>8),

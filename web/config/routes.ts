@@ -13,29 +13,65 @@
       },
     ],
   },
-  // {
-  //   path: '/dashboard',
-  //   name: 'dashboard',
-  //   icon: 'dashboard',
-  //   component: './dashboard/',
-  // },
+  {
+    path: '/dashboard',
+    name: 'dashboard',
+    icon: 'dashboard',
+    component: './dashboard/',
+  },
   {
     path: '/service',
     name: 'service',
     icon: 'Thunderbolt',
-    component: './service/',
+    routes: [
+      {
+        path: "/service",
+        component: "./service",
+      },
+      {
+        name: 'network',
+        path: '/service/network',
+        component: './service/network',
+      },
+      {
+        name: 'application',
+        path: '/service/application',
+        component: './service/application',
+      },
+      {
+        component: './404',
+      },
+    ],
   },
   {
     path: '/function',
     name: 'function',
     icon: 'cluster',
-    component: './function/',
+    routes: [
+      {
+        path: "/function",
+        component: "./function",
+      },
+      {
+        name: 'network',
+        path: '/function/network',
+        component: './function/network',
+      },
+      {
+        name: 'application',
+        path: '/function/application',
+        component: './function/application',
+      },
+      {
+        component: './404',
+      },
+    ],
   },
   {
-    path: 'provider',
-    name: 'cloud', // 云账户相关配置
-    icon: 'cloud',
-    component: './provider/',
+    path: 'account',
+    name: 'account',
+    icon: 'user',
+    component: './account/',
   },
   {
     path: '/setting',
@@ -45,8 +81,7 @@
   },
   {
     path: '/',
-    redirect: '/service',
-    // redirect: '/dashboard',
+    redirect: '/dashboard',
   },
   {
     component: './404',

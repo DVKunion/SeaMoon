@@ -1,14 +1,20 @@
 package enum
 
-type TunnelStatus int8
+type FunctionStatus int8
 
 const (
-	TunnelInitializing TunnelStatus = iota + 1 // 初始化
-	TunnelActive                               // 可用
-	TunnelInactive                             // 停用
-	TunnelError                                // 不可用
-	TunnelWaiting                              // 异常
-	TunnelDelete                               // 删除
+	FunctionInitializing FunctionStatus = iota + 1 // 初始化
+	FunctionActive                                 // 可用
+	FunctionInactive                               // 停用
+	FunctionError                                  // 不可用
+	FunctionWaiting                                // 异常
+	FunctionDelete                                 // 删除
+)
+
+type FunctionType int8
+
+const (
+	FunctionTunnel FunctionType = iota + 1
 )
 
 type TunnelType string

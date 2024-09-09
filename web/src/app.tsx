@@ -33,8 +33,7 @@ export async function getInitialState(): Promise<{
     const token = localStorage.getItem("token");
     if (token !== "") {
       return token;
-    }
-    else {
+    } else {
       history.push(loginPath);
     }
     return "";

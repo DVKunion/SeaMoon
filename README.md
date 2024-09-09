@@ -48,6 +48,7 @@ Serverless 的动态实例不同的出口IP，从而获取到了干净(非威胁
 | Vmess       | []()                                                      |       ✅       |    ✅    |
 | Vless       | []()                                                      |       ✅       |    ✅    |
 | shadowsocks | []()                                                      |       ✅       |    ✅    | 
+ |
 
 **网络隧道**
 
@@ -56,6 +57,12 @@ Serverless 的动态实例不同的出口IP，从而获取到了干净(非威胁
 | websockst | []() |   ✅   |
 | grpc      | []() |   ✅   |
 | oss       | []() | 🐷调研中 |
+
+
+**代理模式**
++ 正向代理
++ 反向代理
++ 端口转发
 
 **其他**
 
@@ -105,9 +112,3 @@ Serverless 的动态实例不同的出口IP，从而获取到了干净(非威胁
 本工具仅用于学习serverless以及云原生相关技术，请勿用于其他用途。
 
 如您在使用本工具的过程中存在任何非法行为，您需自行承担相应后果，我们将不承担任何法律及连带责任。
-
-## ✨ CTStack
-
-<img src="https://ctstack-oss.oss-cn-beijing.aliyuncs.com/CT%20Stack-2.png" width="30%" />
-
-SeaMoon 现已加入 [CTStack](https://stack.chaitin.com/tool/detail?id=186) 社区

@@ -1,5 +1,7 @@
 package tools
 
+import "encoding/json"
+
 func IntPtr(v int) *int {
 	return &v
 }
@@ -13,6 +15,10 @@ func Int64Ptr(v int64) *int64 {
 }
 
 func UintPtr(v uint) *uint {
+	return &v
+}
+
+func Uint32Ptr(v uint32) *uint32 {
 	return &v
 }
 
@@ -96,6 +102,14 @@ func StringPtrs(vals []string) []*string {
 		ptrs[i] = &vals[i]
 	}
 	return ptrs
+}
+
+func BytesPtr(vals []byte) *[]byte {
+	return &vals
+}
+
+func JsonRawPtr(vals []byte) *json.RawMessage {
+	return (*json.RawMessage)(&vals)
 }
 
 func PtrInt32(v interface{}) int32 {

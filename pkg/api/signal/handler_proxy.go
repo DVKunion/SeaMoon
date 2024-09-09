@@ -7,7 +7,6 @@ import (
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
 	"github.com/DVKunion/SeaMoon/pkg/api/models"
 	"github.com/DVKunion/SeaMoon/pkg/api/service"
-	"github.com/DVKunion/SeaMoon/pkg/network/listener"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
@@ -52,16 +51,17 @@ func (sb *Bus) proxyHandler(ctx context.Context, pys *proxySignal) {
 	service.SVC.UpdateProxyStatus(ctx, pys.id, pys.next, "")
 	switch pys.next {
 	case enum.ProxyStatusActive, enum.ProxyStatusRecover:
-		sigCtx, cancel := context.WithCancel(ctx)
-		if server, err := listener.TCPListen(sigCtx, proxy); err != nil {
-			xlog.Error(xlog.SignalListenerError, "id", pys.id, "type", *proxy.Type, "addr", proxy.Addr(), "err", err)
-			service.SVC.UpdateProxyStatus(ctx, pys.id, enum.ProxyStatusError, err.Error())
-			cancel()
-			return
-		} else {
-			sb.canceler[pys.id] = cancel
-			sb.listener[pys.id] = server
-		}
+		// 直接调用 xray grpc 接口
+		//sigCtx, cancel := context.WithCancel(ctx)
+		//if server, err := listener.TCPListen(sigCtx, proxy); err != nil {
+		//	xlog.Error(xlog.SignalListenerError, "id", pys.id, "type", *proxy.Type, "addr", proxy.Addr(), "err", err)
+		//	service.SVC.UpdateProxyStatus(ctx, pys.id, enum.ProxyStatusError, err.Error())
+		//	cancel()
+		//	return
+		//} else {
+		//	sb.canceler[pys.id] = cancel
+		//	sb.listener[pys.id] = server
+		//}
 		xlog.Info(xlog.SignalStartProxy, "id", pys.id, "type", *proxy.Type, "addr", proxy.Addr())
 		service.SVC.UpdateProxyStatus(ctx, proxy.ID, enum.ProxyStatusActive, "")
 	case enum.ProxyStatusInactive:
@@ -80,18 +80,8 @@ func (sb *Bus) proxyHandler(ctx context.Context, pys *proxySignal) {
 }
 
 func (sb *Bus) stopProxy(proxy *models.Proxy) {
-	if cancel, ok := sb.canceler[proxy.ID]; ok {
-		// 先调一下 cancel
-		cancel()
-		if ln, exist := sb.listener[proxy.ID]; exist {
-			// 尝试着去停一下 ln, 防止泄漏
-			err := ln.Close()
-			if err != nil {
-				// 错了就错了吧，说明 ctx 挂了一般 goroutines 也跟着挂了
-				xlog.Error(xlog.SignalListenerError, "id", proxy.ID, "type", *proxy.Type, "addr", proxy.Addr(), "err", err)
-			}
-		}
-	}
+	// stop proxy
+	//
 	xlog.Info(xlog.SignalStopProxy, "id", proxy.ID, "type", *proxy.Type, "addr", proxy.Addr())
 }
 
@@ -104,5 +94,4 @@ func (sb *Bus) deleteProxy(ctx context.Context, proxy *models.Proxy) {
 		return
 	}
 	xlog.Info(xlog.SignalDeleteProxy, "id", proxy.ID, "type", *proxy.Type, "addr", proxy.Addr())
-
 }

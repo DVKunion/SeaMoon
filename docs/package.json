@@ -1,6 +1,6 @@
 {
-  "name": "SeaMoon",
-  "version": "1.2.0-beta",
+  "name": "seamoon",
+  "version": "2.0.1",
   "main": "index.js",
   "license": "MIT",
   "repository": "https://github.com/DVKunion/SeaMoon",

@@ -15,13 +15,20 @@ import (
 	"github.com/DVKunion/SeaMoon/cmd/client/static"
 	"github.com/DVKunion/SeaMoon/pkg/api/service"
 	"github.com/DVKunion/SeaMoon/pkg/api/signal"
+	"github.com/DVKunion/SeaMoon/pkg/system/errors"
 	"github.com/DVKunion/SeaMoon/pkg/system/version"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
+	"github.com/DVKunion/SeaMoon/plugins/xray"
+	"github.com/DVKunion/SeaMoon/plugins/xray/config"
+
+	_ "github.com/xtls/xray-core/main/distro/all"
 )
 
 func Serve(ctx context.Context, debug bool) {
 	// Signal 异步服务
 	runSignal(ctx)
+	// Xray API 服务
+	runXray()
 	// Restful API 服务
 	runApi(ctx, debug)
 }
@@ -38,6 +45,43 @@ func runSignal(ctx context.Context) {
 	signal.Signal().Recover(ctx, rec.Value)
 }
 
+func runXray() {
+	xServe, err := xray.StartServer(
+		// 日志
+		config.WithLogs("Debug"),
+		// 策略
+		config.WithDefaultPolicy(),
+		// 开启 API 控制
+		config.WithApiConfig(),
+		// 开启默认出站：freedom
+		config.WithFreedomOutbound(),
+		// 开启 流量统计
+		config.WithInboundCalculate(),
+		config.WithOutboundCalculate(),
+	)
+	if err != nil {
+		xlog.Error("xray failed to start", "err", err.Error())
+		// Configuration error. Exit with a special value to prevent systemd from restarting.
+		return
+	}
+	// copy
+	if err := xServe.Start(); err != nil {
+		xlog.Error("xray failed to start", "err", err.Error())
+		return
+	}
+	//defer xServe.Close()
+
+	/*
+		conf.FileCache = nil
+		conf.IPCache = nil
+		conf.SiteCache = nil
+	*/
+
+	//// Explicitly triggering GC to remove garbage from config loading.
+	//runtime.GC()
+	//debug.FreeOSMemory()
+}
+
 func runApi(ctx context.Context, debug bool) {
 	logPath, err := service.SVC.GetConfigByName(ctx, "control_log")
 	addr, err := service.SVC.GetConfigByName(ctx, "control_addr")
@@ -51,9 +95,9 @@ func runApi(ctx context.Context, debug bool) {
 
 	webLogger, err := os.OpenFile(logPath.Value, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
-		gin.DefaultWriter = io.MultiWriter(xlog.Logger())
+		gin.DefaultWriter = io.MultiWriter(xlog.GetLogger())
 	} else {
-		gin.DefaultWriter = io.MultiWriter(xlog.Logger(), webLogger)
+		gin.DefaultWriter = io.MultiWriter(xlog.GetLogger(), webLogger)
 	}
 
 	server := gin.Default()
@@ -70,7 +114,7 @@ func runApi(ctx context.Context, debug bool) {
 		c.FileFromFS(c.Request.URL.Path, http.FS(subFS))
 	})
 
-	if err := server.Run(strings.Join([]string{addr.Value, port.Value}, ":")); err != http.ErrServerClosed {
+	if err := server.Run(strings.Join([]string{addr.Value, port.Value}, ":")); !errors.Is(err, http.ErrServerClosed) {
 		xlog.Error(xlog.ApiServeError, "err", err)
 	}
 }

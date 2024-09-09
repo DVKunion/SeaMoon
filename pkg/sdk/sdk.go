@@ -23,14 +23,15 @@ type CloudSDK interface {
 	// UpdateVersion(auth models.CloudAuth) error
 }
 
-var cloudFactory = map[enum.ProviderType]CloudSDK{}
-
 func GetSDK(t enum.ProviderType) CloudSDK {
-	return cloudFactory[t]
-}
-
-func init() {
-	cloudFactory[enum.ProvTypeALiYun] = &aliyun.SDK{}
-	cloudFactory[enum.ProvTypeTencentYun] = &tencent.SDK{}
-	cloudFactory[enum.ProvTypeSealos] = &sealos.SDK{}
+	switch t {
+	case enum.ProvTypeALiYun:
+		return &aliyun.SDK{}
+	case enum.ProvTypeTencentYun:
+		return &tencent.SDK{}
+	case enum.ProvTypeSealos:
+		return &sealos.SDK{}
+	default:
+		return nil
+	}
 }

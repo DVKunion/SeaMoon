@@ -26,10 +26,11 @@ export const TunnelSelect: React.FC<TunnelProps> = (props: TunnelProps) => {
       const res: { key: number; label: JSX.Element; value: number; obj: Serverless.Tunnel; }[] = [];
       const {data} = await getServerlessTunnel(0, 999999);
       data.forEach((item) => {
-        if(!props.tor || (props.tor && item.tunnel_config.tor)) {
+        if (!props.tor || (props.tor && item.tunnel_config.tor)) {
           res.push({
             key: item.id,
-            label: <Space>{CloudProvideTypeValueEnum[item.provider_type || 0]} - {TunnelTypeValueEnum[item.type]} - {item.name}</Space>,
+            label:
+              <Space>{CloudProvideTypeValueEnum[item.provider_type || 0]} - {TunnelTypeValueEnum[item.type]} - {item.name}</Space>,
             value: item.id,
             obj: item
           });

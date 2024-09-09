@@ -38,7 +38,7 @@ func JWTAuthMiddleware(c *gin.Context) {
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		// 校验通过
-		if cast, ok := claims["type"].(float64); ok && enum.AuthType(cast) == enum.AuthAdmin {
+		if cast, ok := claims["type"].(float64); ok && enum.AuthType(cast) == enum.AdminAuth {
 			c.Next()
 			return
 		}

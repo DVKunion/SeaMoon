@@ -8,11 +8,11 @@ import (
 	"github.com/gookit/color"
 )
 
-type logger struct {
+type Logger struct {
 	*slog.Logger
 }
 
-func (l logger) Write(p []byte) (n int, err error) {
+func (l Logger) Write(p []byte) (n int, err error) {
 	s := strings.Replace(string(p), "\n", "", -1)
 	group := "[GIN] "
 	if strings.Contains(s, "[GIN") {
@@ -34,11 +34,11 @@ func (l logger) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-var defaultLog = &logger{slog.Default()}
+var defaultLog = &Logger{slog.Default()}
 
 var index = "UNEXPECT"
 
-func Logger() *logger {
+func GetLogger() *Logger {
 	return defaultLog
 }
 
