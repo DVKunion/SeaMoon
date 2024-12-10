@@ -30,10 +30,10 @@ jobs:
           registry.cn-hongkong.aliyuncs.com,
           registry.ap-northeast-1.aliyuncs.com,
           registry.ap-southeast-1.aliyuncs.com,
-          registry.ap-southeast-2.aliyuncs.com,
+#          registry.ap-southeast-2.aliyuncs.com, 关停
           registry.ap-southeast-3.aliyuncs.com,
           registry.ap-southeast-5.aliyuncs.com,
-          registry.ap-south-1.aliyuncs.com,
+#          registry.ap-south-1.aliyuncs.com, 关停
           registry.eu-central-1.aliyuncs.com,
           registry.eu-west-1.aliyuncs.com,
           registry.us-west-1.aliyuncs.com,
