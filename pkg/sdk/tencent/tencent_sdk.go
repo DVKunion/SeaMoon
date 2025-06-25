@@ -26,25 +26,34 @@ const (
 )
 
 type triggerDesc struct {
-	AuthType  string     `json:"AuthType"`
-	NetConfig *netConfig `json:"NetConfig"`
+	AuthType           string      `json:"AuthType,omitempty"`
+	NetConfig          *netConfig  `json:"NetConfig"`
+	CorsConfig         *corsConfig `json:"CorsConfig"`
+	ApiGwCompatible    bool        `json:"ApiGwCompatible,omitempty"`
+	SecurityRestricted bool        `json:"SecurityRestricted,omitempty"`
 }
 
 type netConfig struct {
-	EnableIntranet bool   `json:"EnableIntranet"`
-	EnableExtranet bool   `json:"EnableExtranet"`
-	IntranetUrl    string `json:"IntranetUrl"`
-	ExtranetUrl    string `json:"ExtranetUrl"`
+	EnableIntranet  bool   `json:"EnableIntranet,omitempty"`
+	IntranetUrl     string `json:"IntranetUrl,omitempty"`
+	IntranetHTTPUrl string `json:"IntranetHTTPUrl,omitempty"`
+	ExtranetUrl     string `json:"ExtranetUrl,omitempty"`
+	ExtranetHTTPUrl string `json:"ExtranetHTTPUrl,omitempty"`
+	WssIntranetUrl  string `json:"WssIntranetUrl,omitempty"`
+	WsIntranetUrl   string `json:"WsIntranetUrl,omitempty"`
+	WssExtranetUrl  string `json:"WssExtranetUrl,omitempty"`
+	WsExtranetUrl   string `json:"WsExtranetUrl,omitempty"`
+	EnableExtranet  bool   `json:"EnableExtranet,omitempty"`
 }
 
-type triggerDescService struct {
-	ServiceName string   `json:"serviceName"`
-	ServiceType string   `json:"serviceType"`
-	SubDomain   string   `json:"subDomain"`
-	Tags        []string `json:"tags"`
-}
-
-type triggerResp struct {
+type corsConfig struct {
+	Enable        bool     `json:"Enable,omitempty"`
+	Origins       []string `json:"Origins,omitempty"`
+	Headers       []string `json:"Headers,omitempty"`
+	Methods       []string `json:"Methods,omitempty"`
+	ExposeHeaders []string `json:"ExposeHeaders,omitempty"`
+	MaxAge        int      `json:"MaxAge,omitempty"`
+	Credentials   bool     `json:"Credentials,omitempty"`
 }
 
 type fcInfo struct {
@@ -292,10 +301,8 @@ func deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, string, error) {
 	config, err := json.Marshal(&triggerDesc{
 		AuthType: "NONE", // todo 增加 auth
 		NetConfig: &netConfig{
-			true,
-			true,
-			"",
-			"",
+			EnableIntranet: false,
+			EnableExtranet: true,
 		},
 	})
 	//
