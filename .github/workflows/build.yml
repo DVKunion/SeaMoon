@@ -32,7 +32,7 @@ jobs:
           path: seamoon
   build-docker:
     name: build-docker
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     if: startsWith(github.ref, 'refs/tags/')
     steps:
       - uses: actions/checkout@v4
