@@ -2,11 +2,8 @@ package sealos
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"net/url"
 	"strconv"
 	"time"
@@ -44,45 +41,46 @@ type amount struct {
 }
 
 func getAmountAndCost(ca *models.CloudAuth, region string) (float64, float64, error) {
-	amountUrl := fmt.Sprintf("https://costcenter.%s/api/account/getAmount", regionMap[region])
-
-	req, err := http.NewRequest("GET", amountUrl, nil)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	req.Header.Add("Authorization", url.PathEscape(ca.KubeConfig))
-	client := &http.Client{
-		Timeout: 30 * time.Second,
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return 0, 0, errors.New("error request : " + resp.Status)
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	var sa = amount{}
-	err = json.Unmarshal(body, &sa)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	if sa.Code != 200 {
-		return 0, 0, errors.New(sa.Message)
-	}
-
-	return float64(sa.Data.Balance-sa.Data.DeductionBalance) / 1000000, float64(sa.Data.DeductionBalance) / 1000000, nil
+	return 0, 0, nil
+	//amountUrl := fmt.Sprintf("https://costcenter.%s/api/account/getAmount", regionMap[region])
+	//
+	//req, err := http.NewRequest("GET", amountUrl, nil)
+	//if err != nil {
+	//	return 0, 0, err
+	//}
+	//
+	//req.Header.Add("Authorization", url.PathEscape(ca.KubeConfig))
+	//client := &http.Client{
+	//	Timeout: 30 * time.Second,
+	//}
+	//
+	//resp, err := client.Do(req)
+	//if err != nil {
+	//	return 0, 0, err
+	//}
+	//
+	//defer resp.Body.Close()
+	//
+	//if resp.StatusCode != 200 {
+	//	return 0, 0, errors.New("error request : " + resp.Status)
+	//}
+	//
+	//body, err := io.ReadAll(resp.Body)
+	//if err != nil {
+	//	return 0, 0, err
+	//}
+	//
+	//var sa = amount{}
+	//err = json.Unmarshal(body, &sa)
+	//if err != nil {
+	//	return 0, 0, err
+	//}
+	//
+	//if sa.Code != 200 {
+	//	return 0, 0, errors.New(sa.Message)
+	//}
+	//
+	//return float64(sa.Data.Balance-sa.Data.DeductionBalance) / 1000000, float64(sa.Data.DeductionBalance) / 1000000, nil
 }
 
 func deploy(config, svcName, imgName, hostName string, port int32, tc *models.TunnelConfig, tp *enum.TunnelType) (string, error) {
