@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"net"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -59,7 +60,22 @@ func (s *WSService) Conn(ctx context.Context, t enum.ProxyType, sOpts ...Option)
 		requestHeader.Add("SM-ONION", "enable")
 	}
 
-	wsConn, _, err := wsDialer.Dial(t.Path(srvOpts.addr), requestHeader)
+	if srvOpts.udpAddr != "" {
+		requestHeader.Add("SM-UDP-ADDR", srvOpts.udpAddr)
+	}
+
+	var u string
+	var err error
+	if srvOpts.path == "" {
+		u = t.Path(srvOpts.addr)
+	} else {
+		u, err = url.JoinPath(srvOpts.addr, srvOpts.path)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	wsConn, _, err := wsDialer.Dial(u, requestHeader)
 
 	if err != nil {
 		return nil, err
@@ -107,6 +123,7 @@ func (s *WSService) Serve(ln net.Listener, sOpts ...Option) error {
 
 	// websocket socks5 proxy handler
 	mux.HandleFunc("/socks5", s.socks5)
+	mux.HandleFunc("/socks5-udp", s.socks5UDP)
 
 	config := transfer.NewV2rayConfig(
 		transfer.WithServerMod(),
@@ -164,6 +181,7 @@ func (s *WSService) http(w http.ResponseWriter, r *http.Request) {
 
 func (s *WSService) socks5(w http.ResponseWriter, r *http.Request) {
 	onion := r.Header.Get("SM-ONION")
+	udpAddr := r.Header.Get("SM-UDP-ADDR")
 	// means use socks5 to connector
 	conn, err := s.upGrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -177,9 +195,22 @@ func (s *WSService) socks5(w http.ResponseWriter, r *http.Request) {
 				xlog.Error(xlog.ServiceTransportError, "type", "socks5+tor", "err", err)
 			}
 		} else {
-			if err := transfer.Socks5Transport(t, false); err != nil {
+			if err := transfer.Socks5Transport(t, false, udpAddr); err != nil {
 				xlog.Error(xlog.ServiceTransportError, "type", "socks5", "err", err)
 			}
+		}
+	}()
+}
+
+func (s *WSService) socks5UDP(w http.ResponseWriter, r *http.Request) {
+	conn, err := s.upGrader.Upgrade(w, r, nil)
+	if err != nil {
+		return
+	}
+	t := tunnel.WsWrapConn(conn)
+	go func() {
+		if err := transfer.Socks5UDPTransport(t); err != nil {
+			xlog.Error(xlog.ServiceTransportError, "type", "udp", "err", err)
 		}
 	}()
 }

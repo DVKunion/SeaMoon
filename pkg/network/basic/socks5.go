@@ -7,7 +7,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-	"io/ioutil"
 
 	"github.com/DVKunion/SeaMoon/pkg/system/errors"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
@@ -38,7 +37,6 @@ const (
 const (
 	SOCKS5CmdConnect uint8 = iota + 1
 	SOCKS5CmdBind
-	SOCKS5CmdUDP
 	SOCKS5CmdUDPOverTCP
 )
 
@@ -548,13 +546,13 @@ func ReadUDPDatagram(r io.Reader) (*UDPDatagram, error) {
 
 	dlen := int(header.Rsv)
 	if dlen == 0 { // standard SOCKS5 UDP datagram
-		extra, err := ioutil.ReadAll(r) // we assume no redundant data
-		if err != nil {
+		// Just read to the end of buffer
+		nn, err := r.Read(b[n:])
+		if err != nil && err != io.EOF {
 			return nil, err
 		}
-		copy(b[n:], extra)
-		n += len(extra) // total length
-		dlen = n - hlen // data length
+		n += nn
+		dlen = n - hlen
 	} else { // extended feature, for UDP over TCP, using reserved field as data length
 		if _, err := io.ReadFull(r, b[n:hlen+dlen]); err != nil {
 			return nil, err

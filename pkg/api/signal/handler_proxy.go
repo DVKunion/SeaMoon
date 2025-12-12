@@ -62,6 +62,14 @@ func (sb *Bus) proxyHandler(ctx context.Context, pys *proxySignal) {
 			sb.canceler[pys.id] = cancel
 			sb.listener[pys.id] = server
 		}
+		if proxy.AllowUDP != nil && *proxy.AllowUDP {
+			if _, err := listener.UDPListen(sigCtx, proxy); err != nil {
+				xlog.Error(xlog.SignalListenerError, "id", pys.id, "type", *proxy.Type, "addr", proxy.Addr(), "err", err)
+				service.SVC.UpdateProxyStatus(ctx, pys.id, enum.ProxyStatusError, err.Error())
+				cancel()
+				return
+			}
+		}
 		xlog.Info(xlog.SignalStartProxy, "id", pys.id, "type", *proxy.Type, "addr", proxy.Addr())
 		service.SVC.UpdateProxyStatus(ctx, proxy.ID, enum.ProxyStatusActive, "")
 	case enum.ProxyStatusInactive:

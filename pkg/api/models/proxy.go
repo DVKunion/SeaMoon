@@ -26,6 +26,7 @@ type Proxy struct {
 	OutBound      *int64
 	ListenAddr    *string
 	ListenPort    *string
+	AllowUDP      *bool
 }
 
 type ProxyList []*Proxy
@@ -46,6 +47,7 @@ type ProxyApi struct {
 	OutBound      *int64            `json:"out_bound"`
 	ListenAddr    *string           `json:"listen_address"`
 	ListenPort    *string           `json:"listen_port"`
+	AllowUDP	  *bool             `json:"allow_udp"`
 }
 
 type ProxyCreateApi struct {
@@ -54,6 +56,7 @@ type ProxyCreateApi struct {
 	Type            *enum.ProxyType   `json:"type"`
 	ListenAddr      *string           `json:"listen_address"`
 	ListenPort      *string           `json:"listen_port"`
+	AllowUDP        *bool             `json:"allow_udp"`
 	Status          *enum.ProxyStatus `json:"status"`
 	StatusMessage   *string           `json:"status_message"`
 	TunnelID        uint              `json:"tunnel_id"`
