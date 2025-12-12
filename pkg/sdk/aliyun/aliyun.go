@@ -5,12 +5,6 @@ import (
 	"github.com/DVKunion/SeaMoon/pkg/system/tools"
 )
 
-var (
-	// 阿里云 在 fc 上层还有一套 service 的概念，为了方便管理，这里硬编码了 service 的内容。
-	serviceName = "seamoon"
-	serviceDesc = "seamoon service"
-)
-
 // SDK FC
 type SDK struct {
 }

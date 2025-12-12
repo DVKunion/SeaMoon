@@ -15,14 +15,14 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
       - name: Build Front
         run: |
           cd web && npm install | true && npm run build && cp -r dist ../cmd/client/static
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.21
+          go-version: 1.25.5
       - name: Build
         run: |
           go mod tidy

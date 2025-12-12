@@ -31,8 +31,6 @@ type AuthApi struct {
 }
 
 type CloudAuth struct {
-	// 阿里需要 ID
-	AccessId string `json:"access_id" gorm:"not null"`
 	// 普通云厂商使用的认证
 	AccessKey    string `json:"access_key" gorm:"not null"`
 	AccessSecret string `json:"access_secret" gorm:"not null"`
