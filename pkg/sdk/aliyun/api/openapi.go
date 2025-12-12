@@ -2,13 +2,36 @@ package api
 
 import (
 	"encoding/json"
+
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
+	openapiutil "github.com/alibabacloud-go/darabonba-openapi/v2/utils"
+	fc "github.com/alibabacloud-go/fc-20230330/v4/client"
 	util "github.com/alibabacloud-go/tea-utils/v2/service"
 	"github.com/alibabacloud-go/tea/tea"
 )
 
-func Call(client *openapi.Client, params *openapi.Params, body map[string]interface{}, obj interface{}) error {
-	// runtime options
+// NewBillingClient 创建用于 Billing API 的客户端（仍使用旧的 openapi 客户端）
+func NewBillingClient(ak, sk, ep string) (*openapi.Client, error) {
+	config := &openapi.Config{
+		AccessKeyId:     tea.String(ak),
+		AccessKeySecret: tea.String(sk),
+	}
+	config.Endpoint = tea.String(ep)
+	return openapi.NewClient(config)
+}
+
+// NewFCClient 创建新的 FC SDK 客户端
+func NewFCClient(ak, sk, ep string) (*fc.Client, error) {
+	config := &openapiutil.Config{
+		AccessKeyId:     tea.String(ak),
+		AccessKeySecret: tea.String(sk),
+		Endpoint:        tea.String(ep),
+	}
+	return fc.NewClient(config)
+}
+
+// CallBilling 调用 Billing API（仍使用旧的 openapi 客户端）
+func CallBilling(client *openapi.Client, params *openapi.Params, body map[string]interface{}, obj interface{}) error {
 	runtime := &util.RuntimeOptions{}
 	request := &openapi.OpenApiRequest{}
 	if body != nil {
@@ -31,66 +54,21 @@ func Call(client *openapi.Client, params *openapi.Params, body map[string]interf
 	return json.Unmarshal(bs, obj)
 }
 
-func NewClient(ak, sk, ep string) (*openapi.Client, error) {
-	config := &openapi.Config{
-		// 必填，您的 AccessKey ID
-		AccessKeyId: tea.String(ak),
-		// 必填，您的 AccessKey Secret
-		AccessKeySecret: tea.String(sk),
-	}
-	config.Endpoint = tea.String(ep)
-	return openapi.NewClient(config)
-}
-
+// NewGetBillingsParams 创建 Billing API 参数
 func NewGetBillingsParams() *openapi.Params {
 	return newParams("QueryAccountBalance", "2017-12-14", "RPC", "POST", "/")
 }
 
-func NewCreateServiceParams() *openapi.Params {
-	return newParams("CreateService", "2021-04-06", "FC", "POST", "/2021-04-06/services")
-}
-
-func NewListFCParams() *openapi.Params {
-	return newParams("ListFunctions", "2021-04-06", "FC", "GET", "/2021-04-06/services/seamoon/functions")
-}
-
-func NewCreateFCParams() *openapi.Params {
-	return newParams("CreateFunction", "2021-04-06", "FC", "POST", "/2021-04-06/services/seamoon/functions")
-}
-
-func NewDeleteFCParams(fc string) *openapi.Params {
-	return newParams("DeleteFunction", "2021-04-06", "FC", "DELETE", "/2021-04-06/services/seamoon/functions/"+fc)
-}
-
-func NewListTriggerParams(fc string) *openapi.Params {
-	return newParams("ListTriggers", "2021-04-06", "FC", "GET", "/2021-04-06/services/seamoon/functions/"+fc+"/triggers")
-}
-
-func NewCreateTriggerParams(fc string) *openapi.Params {
-	return newParams("CreateTrigger", "2021-04-06", "FC", "POST", "/2021-04-06/services/seamoon/functions/"+fc+"/triggers")
-}
-
-func NewDeleteTriggerParams(fc, tr string) *openapi.Params {
-	return newParams("DeleteTrigger", "2021-04-06", "FC", "DELETE", "/2021-04-06/services/seamoon/functions/"+fc+"/triggers/"+tr)
-}
-
 func newParams(action, version, style, method, path string) *openapi.Params {
 	return &openapi.Params{
-		// 接口名称
-		Action: tea.String(action),
-		// 接口版本
-		Version: tea.String(version),
-		// 接口协议
-		Protocol: tea.String("HTTPS"),
-		// 接口 HTTP 方法
-		Method:   tea.String(method),
-		AuthType: tea.String("AK"),
-		Style:    tea.String(style),
-		// 接口 PATH
-		Pathname: tea.String(path),
-		// 接口请求体内容格式
+		Action:      tea.String(action),
+		Version:     tea.String(version),
+		Protocol:    tea.String("HTTPS"),
+		Method:      tea.String(method),
+		AuthType:    tea.String("AK"),
+		Style:       tea.String(style),
+		Pathname:    tea.String(path),
 		ReqBodyType: tea.String("json"),
-		// 接口响应体内容格式
-		BodyType: tea.String("json"),
+		BodyType:    tea.String("json"),
 	}
 }

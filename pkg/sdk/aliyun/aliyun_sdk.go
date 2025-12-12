@@ -13,17 +13,18 @@ import (
 	apimodels "github.com/DVKunion/SeaMoon/pkg/sdk/aliyun/models"
 	"github.com/DVKunion/SeaMoon/pkg/system/version"
 	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
-
+	fc "github.com/alibabacloud-go/fc-20230330/v4/client"
+	"github.com/alibabacloud-go/tea/dara"
 	"github.com/alibabacloud-go/tea/tea"
 )
 
 func getBilling(ca *models.CloudAuth) (float64, error) {
-	client, err := api.NewClient(ca.AccessKey, ca.AccessSecret, "business.aliyuncs.com")
+	client, err := api.NewBillingClient(ca.AccessKey, ca.AccessSecret, "business.aliyuncs.com")
 	if err != nil {
 		return 0, err
 	}
 	var r = &apimodels.BillingResponse{}
-	if err = api.Call(client, api.NewGetBillingsParams(), nil, r); err != nil {
+	if err = api.CallBilling(client, api.NewGetBillingsParams(), nil, r); err != nil {
 		return 0, err
 	}
 	if r.StatusCode != 200 || r.Body.Code != "200" {
@@ -34,97 +35,147 @@ func getBilling(ca *models.CloudAuth) (float64, error) {
 
 func deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, string, error) {
 	uid := ""
-	// 原生的库是真tm的难用，
-	client, err := api.NewClient(ca.AccessKey, ca.AccessSecret, fmt.Sprintf("%s.%s.fc.aliyuncs.com", ca.AccessId, tun.Config.Region))
+	// 使用新的 FC SDK
+	client, err := api.NewFCClient(ca.AccessKey, ca.AccessSecret, fmt.Sprintf("fcv3.%s.aliyuncs.com", tun.Config.Region))
 	if err != nil {
 		return "", "", err
 	}
-	body := map[string]interface{}{
-		"serviceName": serviceName,
-		"desc":        serviceDesc,
-	}
-	if err := api.Call(client, api.NewCreateServiceParams(), body, nil); err != nil {
-		var e *tea.SDKError
-		if errors.As(err, &e) && *e.Code != "ServiceAlreadyExists" {
-			return "", "", err
+
+	funcName := *tun.Name
+
+	// 创建函数
+	createFuncReq := &fc.CreateFunctionRequest{}
+
+	// 构建 Command 参数
+	// command 格式: ./seamoon server -p <port> -t <type>
+	var commandArgs []*string
+	switch *tun.Type {
+	case enum.TunnelTypeWST:
+		commandArgs = []*string{
+			tea.String("./seamoon"),
+			tea.String("server"),
+			tea.String("-p"),
+			tea.String("9000"),
+			tea.String("-t"),
+			tea.String("websocket"),
+		}
+	case enum.TunnelTypeGRT:
+		commandArgs = []*string{
+			tea.String("./seamoon"),
+			tea.String("server"),
+			tea.String("-p"),
+			tea.String("8089"),
+			tea.String("-t"),
+			tea.String("grpc"),
 		}
 	}
-	funcName := *tun.Name
-	// 有了服务了，现在来创建函数
-	body = map[string]interface{}{
-		"functionName":        funcName,
-		"description":         string(*tun.Type),
-		"runtime":             "custom-container",
-		"handler":             "main",
-		"timeout":             300,
-		"diskSize":            512,
-		"cpu":                 tun.Config.CPU,
-		"memorySize":          tun.Config.Memory,
-		"caPort":              *tun.Port,
-		"instanceConcurrency": tun.Config.Instance,
-		"instanceType":        "e1",
-		"environmentVariables": map[string]*string{
+
+	createFuncInput := &fc.CreateFunctionInput{
+		FunctionName:        tea.String(funcName),
+		Description:         tea.String(string(*tun.Type)),
+		Runtime:             tea.String("custom-container"),
+		Handler:             tea.String("main"),
+		Timeout:             tea.Int32(300),
+		DiskSize:            tea.Int32(512),
+		Cpu:                 tea.Float32(tun.Config.CPU),
+		MemorySize:          tea.Int32(tun.Config.Memory),
+		InstanceConcurrency: tea.Int32(tun.Config.Instance),
+		EnvironmentVariables: map[string]*string{
 			"SM_SS_PASS":  tea.String(tun.Config.SSRPass),
 			"SM_SS_CRYPT": tea.String(tun.Config.SSRCrypt),
 			"SM_UID":      tea.String(tun.Config.V2rayUid),
 		},
-		"customContainerConfig": map[string]*string{
-			"image": tea.String(fmt.Sprintf("%s:%s", registryEndPoint[tun.Config.Region], version.Version)),
-			"args": tea.String(func() string {
-				switch *tun.Type {
-				case enum.TunnelTypeWST:
-					return "[\"server\", \"-p\", \"9000\", \"-t\", \"websocket\"]"
-				case enum.TunnelTypeGRT:
-					return "[\"server\", \"-p\", \"8089\", \"-t\", \"grpc\"]"
-				}
-				return ""
-			}()),
+		CustomContainerConfig: &fc.CustomContainerConfig{
+			Image:   tea.String(fmt.Sprintf("%s:%s", registryEndPoint[tun.Config.Region], version.Version)),
+			Port:    tea.Int32(*tun.Port),
+			Command: commandArgs,
 		},
 	}
-	resp := &apimodels.FunctionCreateResponse{}
-	if err := api.Call(client, api.NewCreateFCParams(), body, resp); err != nil {
+	createFuncReq.Body = createFuncInput
+
+	createFuncResp, err := client.CreateFunction(createFuncReq)
+	if err != nil {
+		// 检查是否是镜像相关的错误
+		var sdkErr *dara.SDKError
+		if errors.As(err, &sdkErr) {
+			errMsg := dara.StringValue(sdkErr.Message)
+			// 如果是镜像不存在或 ACR 相关的错误，提供更清晰的错误信息
+			if strings.Contains(errMsg, "Image not stored in ACR") ||
+				strings.Contains(errMsg, "IMAGE_NOT_EXIST") ||
+				strings.Contains(errMsg, "repo image is not exist") {
+				imageName := fmt.Sprintf("%s:%s", registryEndPoint[tun.Config.Region], version.Version)
+				return "", "", fmt.Errorf("镜像不存在于 ACR 仓库中，请确保镜像已推送到 ACR: %s. 错误详情: %s", imageName, errMsg)
+			}
+		}
 		return "", "", err
-	} else {
-		uid = resp.Body.FunctionId
 	}
+
+	if createFuncResp.Body != nil && createFuncResp.Body.FunctionId != nil {
+		uid = dara.StringValue(createFuncResp.Body.FunctionId)
+	}
+
+	// 创建触发器
 	conf := apimodels.TriggerConfig{
 		Methods:            []string{"GET", "POST"},
 		AuthType:           "anonymous",
 		DisableURLInternet: false,
 	}
 	bytes, _ := json.Marshal(&conf)
-	body = map[string]interface{}{
-		"triggerName":   string(*tun.Type),
-		"triggerType":   "http",
-		"triggerConfig": string(bytes),
+
+	createTriggerReq := &fc.CreateTriggerRequest{}
+	createTriggerInput := &fc.CreateTriggerInput{
+		TriggerName:   tea.String(string(*tun.Type)),
+		TriggerType:   tea.String("http"),
+		TriggerConfig: tea.String(string(bytes)),
 	}
-	respT := &apimodels.TriggerCreateResponse{}
-	if err = api.Call(client, api.NewCreateTriggerParams(funcName), body, respT); err != nil {
+	createTriggerReq.Body = createTriggerInput
+
+	createTriggerResp, err := client.CreateTrigger(tea.String(funcName), createTriggerReq)
+	if err != nil {
 		return "", "", err
 	}
 
-	return strings.Replace(respT.Body.UrlInternet, "https://", "", -1), uid, nil
+	var urlInternet string
+	if createTriggerResp.Body != nil && createTriggerResp.Body.HttpTrigger != nil && createTriggerResp.Body.HttpTrigger.UrlInternet != nil {
+		urlInternet = dara.StringValue(createTriggerResp.Body.HttpTrigger.UrlInternet)
+	}
+
+	return strings.Replace(urlInternet, "https://", "", -1), uid, nil
 }
 
 func destroy(ca *models.CloudAuth, tun *models.Tunnel) error {
-	client, err := api.NewClient(ca.AccessKey, ca.AccessSecret, fmt.Sprintf("%s.%s.fc.aliyuncs.com", ca.AccessId, tun.Config.Region))
+	client, err := api.NewFCClient(ca.AccessKey, ca.AccessSecret, fmt.Sprintf("fcv3.%s.aliyuncs.com", tun.Config.Region))
 	if err != nil {
 		return err
 	}
-	// 先删除 trigger
-	var respT = &apimodels.TriggerListResponse{}
-	if err = api.Call(client, api.NewListTriggerParams(*tun.Name), nil, respT); err != nil {
+
+	funcName := *tun.Name
+
+	// 先列出所有触发器
+	listTriggersReq := &fc.ListTriggersRequest{}
+	listTriggersResp, err := client.ListTriggers(tea.String(funcName), listTriggersReq)
+	if err != nil {
 		return err
 	}
 
-	for _, t := range respT.Body.Triggers {
-		if err = api.Call(client, api.NewDeleteTriggerParams(*tun.Name, t.TriggerName), nil, nil); err != nil {
-			return err
+	// 删除所有触发器
+	if listTriggersResp.Body != nil && listTriggersResp.Body.Triggers != nil {
+		for _, t := range listTriggersResp.Body.Triggers {
+			if t.TriggerName != nil {
+				_, err = client.DeleteTrigger(tea.String(funcName), t.TriggerName)
+				if err != nil {
+					return err
+				}
+			}
 		}
 	}
-	if err = api.Call(client, api.NewDeleteFCParams(*tun.Name), nil, nil); err != nil {
+
+	// 删除函数
+	_, err = client.DeleteFunction(tea.String(funcName))
+	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -132,69 +183,109 @@ func sync(ca *models.CloudAuth, regions []string) (models.TunnelCreateApiList, e
 	res := make(models.TunnelCreateApiList, 0)
 
 	for _, rg := range regions {
-		client, err := api.NewClient(ca.AccessKey, ca.AccessSecret, fmt.Sprintf("%s.%s.fc.aliyuncs.com", ca.AccessId, rg))
+		client, err := api.NewFCClient(ca.AccessKey, ca.AccessSecret, fmt.Sprintf("fcv3.%s.aliyuncs.com", rg))
 		if err != nil {
 			return res, err
 		}
-		var r = &apimodels.FunctionListResponse{}
-		if err := api.Call(client, api.NewListFCParams(), nil, r); err != nil {
-			var e *tea.SDKError
-			if errors.As(err, &e) && *e.Code == "ServiceNotFound" {
-				// 说明没有 service，继续下一个地区好了
-				continue
-			} else {
-				// todo: 处理这个 非 200
-				return res, err
-			}
+
+		// 列出所有函数
+		listFuncReq := &fc.ListFunctionsRequest{}
+		listFuncResp, err := client.ListFunctions(listFuncReq)
+		if err != nil {
+			return res, err
 		}
 
-		for _, f := range r.Body.Functions {
-			if f.Description == "" {
-				xlog.Warn("sdk", "发现了不正确的隧道", "fc_name", f.FunctionName, "fc_type", f.Description)
+		if listFuncResp.Body == nil || listFuncResp.Body.Functions == nil {
+			continue
+		}
+
+		for _, f := range listFuncResp.Body.Functions {
+			if f.Description == nil || dara.StringValue(f.Description) == "" {
+				xlog.Warn("sdk", "发现了不正确的隧道", "fc_name", dara.StringValue(f.FunctionName), "fc_type", dara.StringValue(f.Description))
 				continue
 			}
+
 			var tun = models.NewTunnelCreateApi()
-			tun.UniqID = tea.String(f.FunctionId)
-			tun.Name = tea.String(f.FunctionName)
+			if f.FunctionId != nil {
+				tun.UniqID = tea.String(dara.StringValue(f.FunctionId))
+			}
+			if f.FunctionName != nil {
+				tun.Name = tea.String(dara.StringValue(f.FunctionName))
+			}
+
+			var cpu float32
+			if f.Cpu != nil {
+				cpu = dara.Float32Value(f.Cpu)
+			}
+			var memory int32
+			if f.MemorySize != nil {
+				memory = dara.Int32Value(f.MemorySize)
+			}
+			var instance int32
+			if f.InstanceConcurrency != nil {
+				instance = dara.Int32Value(f.InstanceConcurrency)
+			}
+
 			tun.Config = &models.TunnelConfig{
-				CPU:      f.Cpu,
+				CPU:      cpu,
 				Region:   rg,
-				Memory:   f.MemorySize,
-				Instance: f.InstanceConcurrency,
+				Memory:   memory,
+				Instance: instance,
 				TLS:      true, // 默认同步过来都打开
 				Tor:      false,
 			}
-			if len(f.EnvironmentVariables) > 0 {
+
+			if f.EnvironmentVariables != nil && len(f.EnvironmentVariables) > 0 {
 				for key, value := range f.EnvironmentVariables {
 					if key == "SEAMOON_TOR" {
 						tun.Config.Tor = true
 					}
-					if key == "SM_SS_CRYPT" {
-						tun.Config.SSRCrypt = value
+					if key == "SM_SS_CRYPT" && value != nil {
+						tun.Config.SSRCrypt = dara.StringValue(value)
 					}
-					if key == "SM_SS_PASS" {
-						tun.Config.SSRPass = value
+					if key == "SM_SS_PASS" && value != nil {
+						tun.Config.SSRPass = dara.StringValue(value)
 					}
-					if key == "SM_UID" {
-						tun.Config.V2rayUid = value
+					if key == "SM_UID" && value != nil {
+						tun.Config.V2rayUid = dara.StringValue(value)
 					}
 				}
 			}
-			*tun.Type = enum.TransTunnelType(f.Description)
-			tun.Port = tea.Int32(f.CaPort)
-			var respT = &apimodels.TriggerListResponse{}
-			if err := api.Call(client, api.NewListTriggerParams(f.FunctionName), nil, respT); err == nil {
-				for _, t := range respT.Body.Triggers {
-					if t.TriggerType == "http" {
-						*tun.Addr = strings.Replace(t.UrlInternet, "https://", "", -1)
-						tun.Config.FcAuthType = enum.TransAuthType(t.TriggerConfig.AuthType)
+
+			if f.Description != nil {
+				*tun.Type = enum.TransTunnelType(dara.StringValue(f.Description))
+			}
+			// 从 CustomContainerConfig 获取 Port
+			if f.CustomContainerConfig != nil && f.CustomContainerConfig.Port != nil {
+				tun.Port = tea.Int32(dara.Int32Value(f.CustomContainerConfig.Port))
+			}
+
+			// 列出触发器
+			listTriggersReq := &fc.ListTriggersRequest{}
+			listTriggersResp, err := client.ListTriggers(f.FunctionName, listTriggersReq)
+			if err == nil && listTriggersResp.Body != nil && listTriggersResp.Body.Triggers != nil {
+				for _, t := range listTriggersResp.Body.Triggers {
+					if t.TriggerType != nil && dara.StringValue(t.TriggerType) == "http" {
+						if t.HttpTrigger != nil && t.HttpTrigger.UrlInternet != nil {
+							*tun.Addr = strings.Replace(dara.StringValue(t.HttpTrigger.UrlInternet), "https://", "", -1)
+						}
+						// 解析 triggerConfig 获取 AuthType
+						if t.TriggerConfig != nil {
+							var triggerConfig apimodels.TriggerConfig
+							if err := json.Unmarshal([]byte(dara.StringValue(t.TriggerConfig)), &triggerConfig); err == nil {
+								tun.Config.FcAuthType = enum.TransAuthType(triggerConfig.AuthType)
+							}
+						}
 					}
 				}
 				*tun.Status = enum.TunnelActive
 			} else {
 				*tun.Status = enum.TunnelError
-				*tun.StatusMessage = err.Error()
+				if err != nil {
+					*tun.StatusMessage = err.Error()
+				}
 			}
+
 			res = append(res, tun)
 		}
 	}
