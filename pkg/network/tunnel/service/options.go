@@ -7,11 +7,13 @@ import (
 
 type Options struct {
 	addr string
+	path string
 
 	tor       bool
 	pass      string
 	uid       string
 	crypt     string
+	udpAddr   string
 	tlsConf   *tls.Config
 	keepalive *KeepAliveOpt
 	buffers   *BufferOpt
@@ -38,6 +40,12 @@ type BufferOpt struct {
 func WithAddr(addr string) Option {
 	return func(o *Options) {
 		o.addr = addr
+	}
+}
+
+func WithPath(path string) Option {
+	return func(o *Options) {
+		o.path = path
 	}
 }
 
@@ -68,6 +76,12 @@ func WithUid(uid string) Option {
 func WithCrypt(c string) Option {
 	return func(o *Options) {
 		o.crypt = c
+	}
+}
+
+func WithUDPAddr(p string) Option {
+	return func(o *Options) {
+		o.udpAddr = p
 	}
 }
 

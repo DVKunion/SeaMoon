@@ -16,7 +16,7 @@ func AutoTransport(conn net.Conn) error {
 		return HttpTransport(br)
 	}
 
-	return Socks5Transport(br, true)
+	return Socks5Transport(br, true, conn.LocalAddr().String())
 }
 
 func AutoTransportV2ray(conn net.Conn) error {

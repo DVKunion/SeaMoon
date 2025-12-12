@@ -20,7 +20,7 @@ func Socks5Check(conn net.Conn) (net.Conn, error) {
 	return br, nil
 }
 
-func Socks5Transport(conn net.Conn, check bool) error {
+func Socks5Transport(conn net.Conn, check bool, udpAddr string) error {
 
 	var err error
 	if !check {
@@ -52,9 +52,7 @@ func Socks5Transport(conn net.Conn, check bool) error {
 		xlog.Debug("unexpect not support cmd bind")
 		handleBind(conn, request)
 	case basic.SOCKS5CmdUDPOverTCP:
-		// todo: support upd proxy
-		xlog.Debug("unexpect not support upd")
-		handleUDPOverTCP(conn, request)
+		handleUDPOverTCP(conn, request, udpAddr)
 	}
 
 	return nil
@@ -92,6 +90,17 @@ func handleBind(conn net.Conn, req *basic.SOCKS5Request) {
 	// TODO
 }
 
-func handleUDPOverTCP(conn net.Conn, req *basic.SOCKS5Request) {
-	// TODO
+func handleUDPOverTCP(conn net.Conn, req *basic.SOCKS5Request, udpAddr string) {
+	xlog.Info(xlog.ServiceSocks5ConnectServer, "src", conn.RemoteAddr(), "dest", req.Addr)
+
+	localAddr, err := basic.NewAddr(udpAddr)
+	if err != nil {
+		xlog.Error(xlog.ServiceSocks5ReplyError, "err", err)
+		return
+	}
+
+	if err := basic.NewReply(basic.SOCKS5RespSucceeded, localAddr).Write(conn); err != nil {
+		xlog.Error(xlog.ServiceSocks5ReplyError, "err", err)
+		return
+	}
 }

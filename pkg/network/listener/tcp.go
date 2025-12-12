@@ -50,7 +50,8 @@ func listen(ctx context.Context, server net.Listener, id uint, t *enum.ProxyType
 
 		if srv, ok := service.Factory.Load(*tun.Type); ok {
 			destConn, err := srv.(service.Service).Conn(ctx, *t,
-				service.WithAddr(tun.GetAddr()), service.WithTorFlag(tun.Config.Tor))
+				service.WithAddr(tun.GetAddr()), service.WithTorFlag(tun.Config.Tor), service.WithUDPAddr(conn.LocalAddr().String()),
+			)
 			if err != nil {
 				xlog.Error(xlog.ListenerDailError, "err", err)
 				db_service.SVC.UpdateProxyConn(ctx, id, -1)

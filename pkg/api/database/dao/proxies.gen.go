@@ -43,6 +43,7 @@ func newProxy(db *gorm.DB, opts ...gen.DOOption) proxy {
 	_proxy.OutBound = field.NewInt64(tableName, "out_bound")
 	_proxy.ListenAddr = field.NewString(tableName, "listen_addr")
 	_proxy.ListenPort = field.NewString(tableName, "listen_port")
+	_proxy.AllowUDP = field.NewBool(tableName, "allow_udp")
 
 	_proxy.fillFieldMap()
 
@@ -70,6 +71,7 @@ type proxy struct {
 	OutBound      field.Int64
 	ListenAddr    field.String
 	ListenPort    field.String
+	AllowUDP      field.Bool
 
 	fieldMap map[string]field.Expr
 }
@@ -103,6 +105,7 @@ func (p *proxy) updateTableName(table string) *proxy {
 	p.OutBound = field.NewInt64(table, "out_bound")
 	p.ListenAddr = field.NewString(table, "listen_addr")
 	p.ListenPort = field.NewString(table, "listen_port")
+	p.AllowUDP = field.NewBool(table, "allow_udp")
 
 	p.fillFieldMap()
 
@@ -127,7 +130,7 @@ func (p *proxy) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (p *proxy) fillFieldMap() {
-	p.fieldMap = make(map[string]field.Expr, 17)
+	p.fieldMap = make(map[string]field.Expr, 18)
 	p.fieldMap["id"] = p.ID
 	p.fieldMap["created_at"] = p.CreatedAt
 	p.fieldMap["updated_at"] = p.UpdatedAt
@@ -145,6 +148,7 @@ func (p *proxy) fillFieldMap() {
 	p.fieldMap["out_bound"] = p.OutBound
 	p.fieldMap["listen_addr"] = p.ListenAddr
 	p.fieldMap["listen_port"] = p.ListenPort
+	p.fieldMap["allow_udp"] = p.AllowUDP
 }
 
 func (p proxy) clone(db *gorm.DB) proxy {

@@ -26,6 +26,7 @@ type GRPCService struct {
 	cc      *grpc.ClientConn
 	server  *grpc.Server
 	startAt time.Time
+	udpAddr string
 	proto.UnimplementedTunnelServer
 	gost.UnimplementedGostTunelServer
 }
@@ -43,12 +44,17 @@ func (g GRPCService) Conn(ctx context.Context, t enum.ProxyType, sOpts ...Option
 		o(srvOpts)
 	}
 
-	if strings.HasPrefix(srvOpts.addr, "grpc://") {
-		srvOpts.addr = strings.TrimPrefix(srvOpts.addr, "grpc://")
+	if after, ok := strings.CutPrefix(srvOpts.addr, "grpc://"); ok {
+		srvOpts.addr = after
 	}
 
-	if strings.HasPrefix(srvOpts.addr, "grpcs://") {
-		srvOpts.addr = strings.TrimPrefix(srvOpts.addr, "grpcs://")
+	if after, ok := strings.CutPrefix(srvOpts.addr, "grpcs://"); ok {
+		srvOpts.addr = after
+	}
+
+	if srvOpts.udpAddr != "" {
+		g.udpAddr = srvOpts.udpAddr
+		_ = g.udpAddr
 	}
 
 	nAddr, err := net.ResolveTCPAddr("tcp", srvOpts.addr)
@@ -184,7 +190,7 @@ func (g GRPCService) Http(server proto.Tunnel_HttpServer) error {
 func (g GRPCService) Socks5(server proto.Tunnel_Socks5Server) error {
 	gt := tunnel.GRPCWrapConn(g.addr, server)
 
-	if err := transfer.Socks5Transport(gt, false); err != nil {
+	if err := transfer.Socks5Transport(gt, false, g.udpAddr); err != nil {
 		xlog.Error(xlog.ServiceTransportError, "type", "socks5", "err", err)
 		return err
 	}
