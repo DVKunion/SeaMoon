@@ -5,18 +5,17 @@ import (
 	"net"
 
 	"github.com/DVKunion/SeaMoon/pkg/network/basic"
-	"github.com/DVKunion/SeaMoon/pkg/system/xlog"
 )
 
 // AutoTransport 自适应解析 http / socks
 func AutoTransport(conn net.Conn) error {
+	// 检查是否启用级联代理，如果启用，直接把流量转发给下一跳处理
+	if IsCascadeEnabled() {
+		return CascadeTransport(conn, "auto")
+	}
+
 	br := &basic.BufferedConn{Conn: conn, Br: bufio.NewReader(conn)}
 	b, err := br.Peek(1)
-
-	// 如果启用了级联代理，记录日志
-	if IsCascadeEnabled() {
-		xlog.Debug("Cascade proxy enabled for auto transport")
-	}
 
 	if err != nil || b[0] != basic.SOCKS5Version {
 		return HttpTransport(br)
