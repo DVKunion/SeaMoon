@@ -14,6 +14,8 @@ export type FormValueType = {
   tor: boolean,
   tunnel_name: string,
   tunnel_type: string,
+  cascade_proxy?: boolean,
+  cascade_tunnel_id?: number,
 } & Partial<Serverless.Tunnel>;
 
 export type CreateFormProps = {
@@ -84,6 +86,8 @@ const CreateForm: React.FC<CreateFormProps> = (props) => {
           tunnel_type: "websocket",
           tls: true,
           tor: false,
+          cascade_proxy: false,
+          cascade_tunnel_id: undefined,
         }}
       >
         <TunnelForm type={type} regions={regions}/>

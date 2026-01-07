@@ -10,7 +10,6 @@ import {CloudProviderAuthForm} from "@/pages/provider/components/AuthForm";
 import {toNumber} from "lodash";
 
 export type FormValueType = {
-  access_id?: string,
   access_key?: string,
   access_secret?: string,
   token?: string,

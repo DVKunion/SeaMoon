@@ -54,7 +54,7 @@ jobs:
       fail-fast: false
       matrix:
         registry: [ hkccr.ccs.tencentyun.com,
-          inccr.ccs.tencentyun.com,
+#          inccr.ccs.tencentyun.com,
           sgccr.ccs.tencentyun.com,
           thccr.ccs.tencentyun.com,
           krccr.ccs.tencentyun.com,

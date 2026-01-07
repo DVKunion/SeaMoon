@@ -66,6 +66,15 @@ func (s *Server) Serve(ctx context.Context) error {
 	srvOpt = append(srvOpt, service.WithPassword(os.Getenv("SM_SS_PASS")))
 	srvOpt = append(srvOpt, service.WithCrypt(os.Getenv("SM_SS_CRYPT")))
 
+	// 检测级联代理配置
+	cascadeAddr := os.Getenv("SM_CASCADE_ADDR")
+	cascadeUid := os.Getenv("SM_CASCADE_UID")
+	cascadePassword := os.Getenv("SM_CASCADE_PASS")
+	if cascadeAddr != "" && cascadeUid != "" {
+		srvOpt = append(srvOpt, service.WithCascadeProxy(cascadeAddr, cascadeUid, cascadePassword))
+		xlog.Info("Cascade proxy enabled", "addr", cascadeAddr, "uid", cascadeUid)
+	}
+
 	if err := s.srv.Serve(ln, srvOpt...); err != nil {
 		xlog.Error(xlog.ServiceError, err)
 		return err

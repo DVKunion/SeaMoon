@@ -34,7 +34,30 @@ func HttpTransport(conn net.Conn) error {
 		targetAddr = net.JoinHostPort(targetAddr, "80")
 	}
 
-	// 连接到目标服务器
+	// 检查是否启用级联代理
+	if IsCascadeEnabled() {
+		// 启用级联代理时，通过 v2ray 进行转发
+		resp := &http.Response{
+			ProtoMajor: 1,
+			ProtoMinor: 1,
+		}
+		if resp.Header == nil {
+			resp.Header = http.Header{}
+		}
+
+		if request.Method == http.MethodConnect {
+			resp.StatusCode = http.StatusOK
+			resp.Status = "200 Connection established"
+			if err = resp.Write(conn); err != nil {
+				return err
+			}
+		}
+
+		// 使用 v2ray 进行级联转发
+		return cascadeTransport(conn, targetAddr)
+	}
+
+	// 原有逻辑：直接连接目标服务器
 	destConn, err := net.Dial("tcp", targetAddr)
 	if err != nil {
 		return err

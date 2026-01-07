@@ -17,6 +17,11 @@ type Options struct {
 	tlsConf   *tls.Config
 	keepalive *KeepAliveOpt
 	buffers   *BufferOpt
+
+	// 级联代理配置
+	cascadeAddr     string
+	cascadeUid      string
+	cascadePassword string
 }
 
 type Option func(o *Options)
@@ -94,5 +99,13 @@ func WithKeepAlive(k *KeepAliveOpt) Option {
 func WithBuffers(b *BufferOpt) Option {
 	return func(o *Options) {
 		o.buffers = b
+	}
+}
+
+func WithCascadeProxy(addr, uid, password string) Option {
+	return func(o *Options) {
+		o.cascadeAddr = addr
+		o.cascadeUid = uid
+		o.cascadePassword = password
 	}
 }

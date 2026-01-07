@@ -58,7 +58,7 @@ export const ProviderSelect: React.FC<ProviderProps> = (props: ProviderProps) =>
         }
         </Space>
         <p style={{marginTop: "20px"}}>允许部署区域:</p>
-      <Space>
+      <Space wrap style={{maxWidth: '100%'}}>
         {cloud.regions?.map((region, index) => (
           <Tag key={index}>{RegionEnum[region]}</Tag>
         ))}

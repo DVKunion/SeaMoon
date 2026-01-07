@@ -241,6 +241,24 @@ func deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, string, error) {
 		})
 	}
 
+	// 如果启用了级联代理，添加级联代理环境变量
+	if tun.Config.CascadeProxy && tun.Config.CascadeAddr != "" && tun.Config.CascadeUid != "" {
+		request.Environment.Variables = append(request.Environment.Variables, &scf.Variable{
+			Key:   common.StringPtr("SM_CASCADE_ADDR"),
+			Value: common.StringPtr(tun.Config.CascadeAddr),
+		})
+		request.Environment.Variables = append(request.Environment.Variables, &scf.Variable{
+			Key:   common.StringPtr("SM_CASCADE_UID"),
+			Value: common.StringPtr(tun.Config.CascadeUid),
+		})
+		if tun.Config.CascadePassword != "" {
+			request.Environment.Variables = append(request.Environment.Variables, &scf.Variable{
+				Key:   common.StringPtr("SM_CASCADE_PASS"),
+				Value: common.StringPtr(tun.Config.CascadePassword),
+			})
+		}
+	}
+
 	request.PublicNetConfig = &scf.PublicNetConfigIn{
 		PublicNetStatus: common.StringPtr("ENABLE"),
 		EipConfig: &scf.EipConfigIn{

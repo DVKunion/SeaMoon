@@ -30,7 +30,6 @@ export async function createProvider(data: FormValueType) {
   params["cloud_auth"] = {
     "access_key": data.access_key,
     "access_secret": data.access_secret,
-    "access_id": data.access_id,
     "token": data.token,
     "kube_config": data.kube_config,
   }
@@ -59,10 +58,6 @@ export async function updateProvider(data: FormValueType) {
   const params = {};
 
   params["cloud_auth"] = {};
-
-  if (data.access_id !== undefined && data.access_id !== "") {
-    params["cloud_auth"]["access_id"] = data.access_id;
-  }
 
   if (data.access_key !== undefined && data.access_key !== "") {
     params["cloud_auth"]["access_key"] = data.access_key;

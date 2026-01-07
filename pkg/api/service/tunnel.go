@@ -66,6 +66,24 @@ func (t *tunnel) CreateTunnel(ctx context.Context, obj *models.Tunnel) (*models.
 		obj.Config.SSRCrypt = "aes-256-gcm"
 	}
 
+	// 如果启用了级联代理，从选中的隧道获取信息
+	if obj.Config.CascadeProxy && obj.Config.CascadeTunnelId > 0 {
+		cascadeTunnel, err := t.GetTunnelById(ctx, obj.Config.CascadeTunnelId)
+		if err != nil || cascadeTunnel == nil {
+			return nil, errors.New("cascade tunnel not found")
+		}
+		// 填充级联代理信息
+		if cascadeTunnel.Addr != nil {
+			obj.Config.CascadeAddr = cascadeTunnel.GetAddr()
+		}
+		if cascadeTunnel.Config.V2rayUid != "" {
+			obj.Config.CascadeUid = cascadeTunnel.Config.V2rayUid
+		}
+		if cascadeTunnel.Config.SSRPass != "" {
+			obj.Config.CascadePassword = cascadeTunnel.Config.SSRPass
+		}
+	}
+
 	if err = dao.Q.Tunnel.WithContext(ctx).Create(obj); err != nil {
 		return nil, err
 	}

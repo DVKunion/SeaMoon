@@ -1,8 +1,9 @@
-import React from "react";
-import {ProForm, ProFormSwitch, ProFormText, ProFormSelect} from "@ant-design/pro-components";
+import React, {useEffect, useState} from "react";
+import {ProForm, ProFormSwitch, ProFormText, ProFormSelect, ProFormDependency} from "@ant-design/pro-components";
 import {toNumber} from "lodash";
 import {TunnelAuthFCTypeEnum, TunnelTypeValueEnum} from "@/enum/tunnel";
 import {CloudRegionOneSelector} from "@/pages/provider/components/AuthForm";
+import {getServerlessTunnel} from "@/services/function/api";
 
 export type TunnelFormProps = {
   type: number
@@ -10,6 +11,17 @@ export type TunnelFormProps = {
 }
 
 export const TunnelForm: React.FC<TunnelFormProps> = (props) => {
+  const [tunnelList, setTunnelList] = useState<Serverless.Tunnel[]>([]);
+
+  useEffect(() => {
+    // 获取隧道列表用于级联代理选择
+    getServerlessTunnel(0, 9999).then((res) => {
+      if (res.success && res.data) {
+        setTunnelList(res.data);
+      }
+    });
+  }, []);
+
   return <> <ProForm.Group
     title={"基础信息"}
   >
@@ -181,6 +193,46 @@ export const TunnelForm: React.FC<TunnelFormProps> = (props) => {
           span: 12,
         }}
       />
+      <ProFormSwitch
+        name="cascade_proxy"
+        label={"启用级联代理"}
+        tooltip={"启用后将流量通过 vless 协议转发到下一跳隧道"}
+        checkedChildren={"开启"}
+        unCheckedChildren={"关闭"}
+        colProps={{
+          span: 12,
+        }}
+      />
+      <ProFormDependency name={['cascade_proxy']}>
+        {({cascade_proxy}) => {
+          if (cascade_proxy) {
+            return (
+              <ProFormSelect
+                name="cascade_tunnel_id"
+                label={"下一跳隧道"}
+                tooltip={"选择作为下一跳的已有隧道"}
+                colProps={{
+                  span: 12,
+                }}
+                placeholder={"请选择下一跳隧道"}
+                options={tunnelList
+                  .filter(t => t.id !== undefined)
+                  .map(t => ({
+                    label: `${t.name} (${t.tunnel_config?.region || ''})`,
+                    value: t.id,
+                  }))}
+                rules={[
+                  {
+                    required: true,
+                    message: "请选择下一跳隧道!",
+                  },
+                ]}
+              />
+            );
+          }
+          return null;
+        }}
+      </ProFormDependency>
     </ProForm.Group>
   </>
 }

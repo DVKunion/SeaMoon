@@ -29,6 +29,8 @@ export async function createFunctionTunnel(data: FormValueType) {
       "tunnel_auth_type": data.tunnel_auth_type,
       "tls": data.tls,
       "tor": data.tor,
+      "cascade_proxy": data.cascade_proxy || false,
+      "cascade_tunnel_id": data.cascade_tunnel_id || 0,
     }
   }
   return request<{

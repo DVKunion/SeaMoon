@@ -47,12 +47,10 @@ func deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, string, error) {
 	createFuncReq := &fc.CreateFunctionRequest{}
 
 	// 构建 Command 参数
-	// command 格式: ./seamoon server -p <port> -t <type>
 	var commandArgs []*string
 	switch *tun.Type {
 	case enum.TunnelTypeWST:
 		commandArgs = []*string{
-			tea.String("./seamoon"),
 			tea.String("server"),
 			tea.String("-p"),
 			tea.String("9000"),
@@ -61,12 +59,26 @@ func deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, string, error) {
 		}
 	case enum.TunnelTypeGRT:
 		commandArgs = []*string{
-			tea.String("./seamoon"),
 			tea.String("server"),
 			tea.String("-p"),
 			tea.String("8089"),
 			tea.String("-t"),
 			tea.String("grpc"),
+		}
+	}
+
+	envVars := map[string]*string{
+		"SM_SS_PASS":  tea.String(tun.Config.SSRPass),
+		"SM_SS_CRYPT": tea.String(tun.Config.SSRCrypt),
+		"SM_UID":      tea.String(tun.Config.V2rayUid),
+	}
+
+	// 如果启用了级联代理，添加级联代理环境变量
+	if tun.Config.CascadeProxy && tun.Config.CascadeAddr != "" && tun.Config.CascadeUid != "" {
+		envVars["SM_CASCADE_ADDR"] = tea.String(tun.Config.CascadeAddr)
+		envVars["SM_CASCADE_UID"] = tea.String(tun.Config.CascadeUid)
+		if tun.Config.CascadePassword != "" {
+			envVars["SM_CASCADE_PASS"] = tea.String(tun.Config.CascadePassword)
 		}
 	}
 
@@ -80,11 +92,7 @@ func deploy(ca *models.CloudAuth, tun *models.Tunnel) (string, string, error) {
 		Cpu:                 tea.Float32(tun.Config.CPU),
 		MemorySize:          tea.Int32(tun.Config.Memory),
 		InstanceConcurrency: tea.Int32(tun.Config.Instance),
-		EnvironmentVariables: map[string]*string{
-			"SM_SS_PASS":  tea.String(tun.Config.SSRPass),
-			"SM_SS_CRYPT": tea.String(tun.Config.SSRCrypt),
-			"SM_UID":      tea.String(tun.Config.V2rayUid),
-		},
+		EnvironmentVariables: envVars,
 		CustomContainerConfig: &fc.CustomContainerConfig{
 			Image:   tea.String(fmt.Sprintf("%s:%s", registryEndPoint[tun.Config.Region], version.Version)),
 			Port:    tea.Int32(*tun.Port),

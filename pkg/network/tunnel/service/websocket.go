@@ -125,13 +125,23 @@ func (s *WSService) Serve(ln net.Listener, sOpts ...Option) error {
 	mux.HandleFunc("/socks5", s.socks5)
 	mux.HandleFunc("/socks5-udp", s.socks5UDP)
 
-	config := transfer.NewV2rayConfig(
+	// 构建 v2ray 配置选项
+	configOpts := []transfer.ConfigOpt{
 		transfer.WithServerMod(),
 		transfer.WithNetAddr("0.0.0.0", uint32(port)),
 		transfer.WithTunnelType("", enum.TunnelTypeWST),
 		transfer.WithAuthInfo(srvOpts.uid, srvOpts.crypt, srvOpts.pass),
 		transfer.WithExtra(srvOpts.tor, srvOpts.tlsConf != nil),
-	)
+	}
+
+	// 如果配置了级联代理，添加到配置中，并设置全局配置供 socks5/http 原生转发使用
+	if srvOpts.cascadeAddr != "" && srvOpts.cascadeUid != "" {
+		configOpts = append(configOpts, transfer.WithCascadeProxy(srvOpts.cascadeAddr, srvOpts.cascadeUid, srvOpts.cascadePassword))
+		// 设置全局级联代理配置
+		transfer.SetCascadeConfig(srvOpts.cascadeAddr, srvOpts.cascadeUid, srvOpts.cascadePassword)
+	}
+
+	config := transfer.NewV2rayConfig(configOpts...)
 
 	if err := transfer.Init(config); err == nil {
 		mux.HandleFunc("/vmess", s.v2ray("vmess"))
