@@ -146,24 +146,19 @@ func (g GRPCService) Serve(ln net.Listener, srvOpt ...Option) error {
 		}
 	}
 
-	// init config
+	// 如果配置了级联代理，设置全局配置供所有转发使用
+	if srvOpts.cascadeAddr != "" && srvOpts.cascadeUid != "" {
+		transfer.SetCascadeConfig(srvOpts.cascadeAddr, srvOpts.cascadeUid, srvOpts.cascadePassword)
+	}
+
 	// 构建 v2ray 配置选项
-	configOpts := []transfer.ConfigOpt{
+	config := transfer.NewV2rayConfig(
 		transfer.WithServerMod(),
 		transfer.WithNetAddr("0.0.0.0", uint32(port)),
 		transfer.WithTunnelType("", enum.TunnelTypeWST),
 		transfer.WithAuthInfo(srvOpts.uid, srvOpts.crypt, srvOpts.pass),
 		transfer.WithExtra(srvOpts.tor, srvOpts.tlsConf != nil),
-	}
-
-	// 如果配置了级联代理，添加到配置中，并设置全局配置供 socks5/http 原生转发使用
-	if srvOpts.cascadeAddr != "" && srvOpts.cascadeUid != "" {
-		configOpts = append(configOpts, transfer.WithCascadeProxy(srvOpts.cascadeAddr, srvOpts.cascadeUid, srvOpts.cascadePassword))
-		// 设置全局级联代理配置
-		transfer.SetCascadeConfig(srvOpts.cascadeAddr, srvOpts.cascadeUid, srvOpts.cascadePassword)
-	}
-
-	config := transfer.NewV2rayConfig(configOpts...)
+	)
 
 	if err := transfer.Init(config); err != nil {
 		xlog.Error(xlog.ServiceV2rayInitError, "err", err)

@@ -3,8 +3,6 @@ package transfer
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
-	"strings"
 
 	core "github.com/v2fly/v2ray-core/v5"
 	"github.com/v2fly/v2ray-core/v5/infra/conf/cfgcommon"
@@ -68,11 +66,6 @@ type v2rayConfig struct {
 
 	tor bool
 	tls bool
-
-	// 级联代理配置
-	cascadeAddr     string
-	cascadeUid      string
-	cascadePassword string
 }
 
 type ConfigOpt func(config *v2rayConfig)
@@ -108,14 +101,6 @@ func WithExtra(tor, tls bool) ConfigOpt {
 	return func(config *v2rayConfig) {
 		config.tor = tor
 		config.tls = tls
-	}
-}
-
-func WithCascadeProxy(addr, uid, password string) ConfigOpt {
-	return func(config *v2rayConfig) {
-		config.cascadeAddr = addr
-		config.cascadeUid = uid
-		config.cascadePassword = password
 	}
 }
 
@@ -170,13 +155,7 @@ func (v v2rayConfig) OutboundConfig() []v4.OutboundDetourConfig {
 	cs := make([]v4.OutboundDetourConfig, 0)
 	switch v.mode {
 	case "server":
-		// 如果配置了级联代理，使用 vless 协议转发到下一跳
-		if v.cascadeAddr != "" && v.cascadeUid != "" {
-			// 解析级联代理地址
-			addr, port, cascadeTLS := v.parseCascadeAddr()
-			// 创建级联代理的 vless outbound 配置
-			cs = append(cs, v.cascadeVlessOutboundConfig(addr, port, cascadeTLS))
-		} else if v.tor {
+		if v.tor {
 			cs = append(cs, v.torOutboundConfig())
 		} else {
 			cs = append(cs, v.freedomOutboundConfig())
@@ -405,95 +384,5 @@ func (v v2rayConfig) freedomOutboundConfig() v4.OutboundDetourConfig {
 	return v4.OutboundDetourConfig{
 		Protocol: "freedom",
 		Settings: (*json.RawMessage)(&empty),
-	}
-}
-
-// parseCascadeAddr 解析级联代理地址，返回地址、端口和是否使用 TLS
-func (v v2rayConfig) parseCascadeAddr() (string, uint32, bool) {
-	// cascadeAddr 格式可能是: "example.com" 或 "example.com:443" 或 "wss://example.com" 或 "ws://example.com"
-	addr := v.cascadeAddr
-	port := uint32(443) // 默认端口
-	useTLS := false
-
-	// 移除协议前缀并判断 TLS
-	if strings.HasPrefix(addr, "wss://") {
-		addr = strings.TrimPrefix(addr, "wss://")
-		port = 443
-		useTLS = true
-	} else if strings.HasPrefix(addr, "ws://") {
-		addr = strings.TrimPrefix(addr, "ws://")
-		port = 80
-		useTLS = false
-	} else if strings.HasPrefix(addr, "https://") {
-		addr = strings.TrimPrefix(addr, "https://")
-		port = 443
-		useTLS = true
-	} else if strings.HasPrefix(addr, "http://") {
-		addr = strings.TrimPrefix(addr, "http://")
-		port = 80
-		useTLS = false
-	} else if strings.HasPrefix(addr, "grpcs://") {
-		addr = strings.TrimPrefix(addr, "grpcs://")
-		port = 443
-		useTLS = true
-	} else if strings.HasPrefix(addr, "grpc://") {
-		addr = strings.TrimPrefix(addr, "grpc://")
-		port = 80
-		useTLS = false
-	}
-
-	// 检查是否包含端口
-	if strings.Contains(addr, ":") {
-		parts := strings.Split(addr, ":")
-		if len(parts) == 2 {
-			addr = parts[0]
-			if p, err := strconv.ParseUint(parts[1], 10, 32); err == nil {
-				port = uint32(p)
-			}
-		}
-	}
-
-	return addr, port, useTLS
-}
-
-// cascadeVlessOutboundConfig 创建级联代理的 vless outbound 配置
-func (v v2rayConfig) cascadeVlessOutboundConfig(addr string, port uint32, cascadeTLS bool) v4.OutboundDetourConfig {
-	outSetting := []byte(fmt.Sprintf(`{
-    "vnext": [
-        {
-            "address": "%s",
-            "port": %d,
-            "users": [
-                {
-                    "alterId": 0,
-                    "id": "%s",
-                    "security": "auto",
-					"encryption": "none"
-                }
-            ]
-        }
-    ]
-}`, addr, port, v.cascadeUid))
-	
-	// 为级联代理创建 StreamSetting，使用 websocket 传输（级联代理通常使用 websocket）
-	tunnelType := enum.TunnelType(enum.TunnelTypeWST)
-	streamSetting := &v4.StreamConfig{
-		Network: (*v4.TransportProtocol)(tunnelType.ToPtr()),
-		Security: func() string {
-			if cascadeTLS {
-				return "tls"
-			}
-			return ""
-		}(),
-		WSSettings: &v4.WebSocketConfig{
-			Path: "/vless",
-		},
-	}
-	
-	return v4.OutboundDetourConfig{
-		Protocol:      "vless",
-		Settings:      (*json.RawMessage)(&outSetting),
-		Tag:           handleTag + "cascade-vless",
-		StreamSetting: streamSetting,
 	}
 }

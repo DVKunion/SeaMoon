@@ -41,6 +41,11 @@ func Init(cfg *v2rayConfig) error {
 
 // V2rayTransport v2ray 相关协议支持: vmess / vless / shadowsock
 func V2rayTransport(conn net.Conn, proto string) error {
+	// 如果启用了级联代理，直接转发到下一跳
+	if IsCascadeEnabled() {
+		return CascadeTransport(conn, proto)
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	manager := v2ray.GetFeature(inbound.ManagerType()).(inbound.Manager)
