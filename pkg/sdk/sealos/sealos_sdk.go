@@ -262,6 +262,23 @@ func renderDeployment(svcName, imgName string, port int32, config *models.Tunnel
 									Name:  "SM_SS_PASS",
 									Value: config.SSRPass,
 								})
+								// 如果启用了级联代理，添加级联代理环境变量
+								if config.CascadeProxy && config.CascadeAddr != "" && config.CascadeUid != "" {
+									env = append(env, corev1.EnvVar{
+										Name:  "SM_CASCADE_ADDR",
+										Value: config.CascadeAddr,
+									})
+									env = append(env, corev1.EnvVar{
+										Name:  "SM_CASCADE_UID",
+										Value: config.CascadeUid,
+									})
+									if config.CascadePassword != "" {
+										env = append(env, corev1.EnvVar{
+											Name:  "SM_CASCADE_PASS",
+											Value: config.CascadePassword,
+										})
+									}
+								}
 								return env
 							}(),
 							Resources: corev1.ResourceRequirements{

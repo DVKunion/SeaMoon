@@ -45,6 +45,13 @@ type TunnelConfig struct {
 
 	TLS bool `json:"tls"` // 是否开启 TLS 传输, 开启后自动使用 wss  协议
 	Tor bool `json:"tor"` // 是否开启 Tor 转发
+
+	// 级联代理配置
+	CascadeProxy     bool   `json:"cascade_proxy"`      // 是否启用级联代理
+	CascadeTunnelId  uint   `json:"cascade_tunnel_id"`  // 下一跳隧道ID
+	CascadeAddr      string `json:"cascade_addr"`       // 下一跳隧道地址
+	CascadeUid       string `json:"cascade_uid"`        // 下一跳隧道UID
+	CascadePassword  string `json:"cascade_password"`   // 下一跳隧道密码（SSR密码）
 }
 
 type TunnelApi struct {

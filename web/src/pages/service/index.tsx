@@ -119,6 +119,9 @@ const Proxy: React.FC = () => {
       metas={{
         title: {
           dataIndex: 'name',
+          render: (_, record) => {
+            return <span style={{whiteSpace: 'nowrap'}}>{record.name}</span>;
+          }
         },
         subTitle: {
           render: (_, record) => {

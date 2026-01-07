@@ -7,7 +7,7 @@ var registryEndPoint = map[string]string{
 	"ap-shanghai":  "ccr.ccs.tencentyun.com/dvkunion/seamoon",
 	"ap-nanjing":   "ccr.ccs.tencentyun.com/dvkunion/seamoon",
 	"ap-hongkong":  "hkccr.ccs.tencentyun.com/seamoon/seamoon",
-	"ap-mumbai":    "inccr.ccs.tencentyun.com/seamoon/seamoon",
+	//"ap-mumbai":    "inccr.ccs.tencentyun.com/seamoon/seamoon",
 	"ap-singapore": "sgccr.ccs.tencentyun.com/seamoon/seamoon",
 	"ap-bangkok":   "thccr.ccs.tencentyun.com/seamoon/seamoon",
 	"ap-seoul":     "krccr.ccs.tencentyun.com/seamoon/seamoon",

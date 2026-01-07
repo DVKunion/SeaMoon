@@ -35,18 +35,6 @@ export const CloudProviderAuthForm: React.FC<CloudProviderType> = (props) => {
           ]}
         />
         <ProFormText
-          name={"access_id"}
-          label={"AccessId"}
-          width="xl"
-          placeholder={""}
-          rules={[
-            {
-              required: true,
-              message: "请填写主账户ID信息!",
-            },
-          ]}
-        />
-        <ProFormText
           name={"access_key"}
           label={"AccessKey"}
           width="xl"
@@ -325,14 +313,6 @@ export const AuthColumns = [
   [],
   // 1
   [
-    {
-      title: 'AccessId',
-      key: 'access_id',
-      dataIndex: 'access_id',
-      render: () => {
-        return "******************"
-      }
-    },
     {
       title: 'AccessKey',
       key: 'access_key',
