@@ -2,6 +2,12 @@ package service
 
 import (
 	"context"
+	"crypto/tls"
+	"fmt"
+	"io"
+	"net/http"
+	"strings"
+	"time"
 
 	"github.com/DVKunion/SeaMoon/pkg/api/database/dao"
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
@@ -155,6 +161,15 @@ func (t *tunnel) ExistTunnel(ctx context.Context, name, uid *string) bool {
 	return false
 }
 
+// GetCascadeDependents 获取依赖指定隧道的所有级联代理隧道
+func (t *tunnel) GetCascadeDependents(ctx context.Context, tunnelId uint) (models.TunnelList, error) {
+	var tunnels models.TunnelList
+	err := dao.Q.Tunnel.WithContext(ctx).UnderlyingDB().
+		Where("cascade_tunnel_id = ?", tunnelId).
+		Find(&tunnels).Error
+	return tunnels, err
+}
+
 func (t *tunnel) DeployTunnel(ctx context.Context, tun *models.Tunnel) (string, string, error) {
 
 	prv, err := SVC.GetProviderById(ctx, tun.ProviderId)
@@ -175,4 +190,136 @@ func (t *tunnel) StopTunnel(ctx context.Context, tun *models.Tunnel) error {
 		return err
 	}
 	return nil
+}
+
+// HealthCheckInfo 健康检查结果
+type HealthCheckInfo struct {
+	OK            bool
+	StartTime     string
+	Version       string
+	V2rayVersion  string
+	ErrorMessage  string
+}
+
+// HealthCheck 对隧道进行健康检查
+func (t *tunnel) HealthCheck(ctx context.Context, tun *models.Tunnel) (*HealthCheckInfo, error) {
+	if tun.Addr == nil || *tun.Addr == "" {
+		return nil, errors.New("tunnel address is empty")
+	}
+
+	// 构建健康检查 URL
+	var healthURL string
+	switch *tun.Type {
+	case enum.TunnelTypeWST:
+		if tun.Config.TLS {
+			healthURL = fmt.Sprintf("https://%s/_health", *tun.Addr)
+		} else {
+			healthURL = fmt.Sprintf("http://%s/_health", *tun.Addr)
+		}
+	case enum.TunnelTypeGRT:
+		// gRPC 也使用 HTTP 健康检查端点
+		if tun.Config.TLS {
+			healthURL = fmt.Sprintf("https://%s/_health", *tun.Addr)
+		} else {
+			healthURL = fmt.Sprintf("http://%s/_health", *tun.Addr)
+		}
+	default:
+		return nil, errors.New("unsupported tunnel type")
+	}
+
+	xlog.Info(xlog.ServiceHealthCheck, "tunnel", *tun.Name, "url", healthURL)
+
+	// 创建 HTTP 客户端，设置超时和跳过证书验证（用于自签名证书）
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		},
+	}
+
+	resp, err := client.Get(healthURL)
+	if err != nil {
+		return &HealthCheckInfo{
+			OK:           false,
+			ErrorMessage: err.Error(),
+		}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return &HealthCheckInfo{
+			OK:           false,
+			ErrorMessage: fmt.Sprintf("health check failed with status: %d", resp.StatusCode),
+		}, errors.New(fmt.Sprintf("health check failed with status: %d", resp.StatusCode))
+	}
+
+	// 读取响应内容
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return &HealthCheckInfo{
+			OK:           false,
+			ErrorMessage: err.Error(),
+		}, err
+	}
+
+	// 解析响应内容
+	// 格式: OK\n2026-01-07 08:59:39\n2.0.3-c4efd4c670e7e278aa7d3a6b3fc2d78601263e27\nv2ray-core:-5.16.1
+	lines := strings.Split(strings.TrimSpace(string(body)), "\n")
+	info := &HealthCheckInfo{OK: true}
+
+	if len(lines) >= 1 && strings.TrimSpace(lines[0]) == "OK" {
+		info.OK = true
+	} else {
+		info.OK = false
+		info.ErrorMessage = "unexpected response format"
+	}
+
+	if len(lines) >= 2 {
+		info.StartTime = strings.TrimSpace(lines[1])
+	}
+	if len(lines) >= 3 {
+		info.Version = strings.TrimSpace(lines[2])
+	}
+	if len(lines) >= 4 {
+		info.V2rayVersion = strings.TrimSpace(lines[3])
+	}
+
+	return info, nil
+}
+
+// UpdateTunnelHealthInfo 更新隧道的健康检查信息
+func (t *tunnel) UpdateTunnelHealthInfo(ctx context.Context, id uint, version, v2rayVersion, lastCheckTime string) {
+	query := dao.Q.Tunnel
+
+	if _, err := query.WithContext(ctx).Where(query.ID.Eq(id)).Updates(models.Tunnel{
+		Version:       &version,
+		V2rayVersion:  &v2rayVersion,
+		LastCheckTime: &lastCheckTime,
+	}); err != nil {
+		xlog.Error(xlog.ServiceDBUpdateFiledError, "type", "tunnel_health", "err", err)
+	}
+}
+
+// CheckAndUpdateTunnelHealth 检查并更新隧道健康状态
+func (t *tunnel) CheckAndUpdateTunnelHealth(ctx context.Context, tun *models.Tunnel) {
+	info, err := t.HealthCheck(ctx, tun)
+	checkTime := time.Now().Format("2006-01-02 15:04:05")
+
+	if err != nil || !info.OK {
+		// 健康检查失败，更新状态为异常
+		errMsg := "health check failed"
+		if err != nil {
+			errMsg = err.Error()
+		} else if info.ErrorMessage != "" {
+			errMsg = info.ErrorMessage
+		}
+		xlog.Warn(xlog.ServiceHealthCheckFailed, "tunnel", tun.ID, "err", errMsg)
+		t.UpdateTunnelStatus(ctx, tun.ID, enum.TunnelError, errMsg)
+		t.UpdateTunnelHealthInfo(ctx, tun.ID, "", "", checkTime)
+		return
+	}
+
+	// 健康检查成功，更新版本信息
+	xlog.Info(xlog.ServiceHealthCheckSuccess, "tunnel", tun.ID, "version", info.Version)
+	t.UpdateTunnelHealthInfo(ctx, tun.ID, info.Version, info.V2rayVersion, checkTime)
 }

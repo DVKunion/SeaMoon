@@ -3,7 +3,7 @@ package tools
 import (
 	"time"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 
 	"github.com/DVKunion/SeaMoon/pkg/api/enum"
 )

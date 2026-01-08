@@ -98,16 +98,25 @@ func (p *provider) SyncProvider(ctx context.Context, prov *models.Provider) erro
 		return err
 	}
 
+	// 收集需要进行健康检查的隧道
+	tunnelsToCheck := make([]*models.Tunnel, 0)
+
 	for _, tun := range tuns {
 		// 检测是否存在
 		if SVC.ExistTunnel(ctx, nil, tun.UniqID) {
 			// 存在的话，仅更新状态好了
 			SVC.UpdateTunnelStatusByUid(ctx, *tun.UniqID, *tun.Status, *tun.StatusMessage)
+			// 获取已存在的隧道进行健康检查
+			if existTun, err := SVC.GetTunnelByUId(ctx, *tun.UniqID); err == nil && existTun != nil {
+				tunnelsToCheck = append(tunnelsToCheck, existTun)
+			}
 			continue
 		}
 		tun.ProviderId = prov.ID
-		if _, err = SVC.CreateTunnel(ctx, tun.ToModel(true)); err != nil {
+		if newTun, err := SVC.CreateTunnel(ctx, tun.ToModel(true)); err != nil {
 			return err
+		} else if newTun != nil {
+			tunnelsToCheck = append(tunnelsToCheck, newTun)
 		}
 	}
 
@@ -115,6 +124,15 @@ func (p *provider) SyncProvider(ctx context.Context, prov *models.Provider) erro
 	if _, err = p.UpdateProvider(ctx, prov); err != nil {
 		return err
 	}
+
+	// 异步进行健康检查
+	go func() {
+		for _, tun := range tunnelsToCheck {
+			if tun.Status != nil && *tun.Status == enum.TunnelActive {
+				SVC.CheckAndUpdateTunnelHealth(ctx, tun)
+			}
+		}
+	}()
 
 	return nil
 }

@@ -21,16 +21,17 @@ func Socks5Check(conn net.Conn) (net.Conn, error) {
 }
 
 func Socks5Transport(conn net.Conn, check bool, udpAddr string) error {
+	// 检查是否启用级联代理，如果启用，直接把流量转发给下一跳处理
+	// 必须在 Socks5Check 之前检查，因为级联代理模式下应该让下一跳处理协议
+	if IsCascadeEnabled() {
+		return CascadeTransport(conn, "socks5")
+	}
+
 	var err error
 	if !check {
 		if conn, err = Socks5Check(conn); err != nil {
 			return err
 		}
-	}
-
-	// 检查是否启用级联代理，如果启用，直接把流量转发给下一跳处理
-	if IsCascadeEnabled() {
-		return CascadeTransport(conn, "socks5")
 	}
 
 	// 原有逻辑：本节点处理 socks5 协议

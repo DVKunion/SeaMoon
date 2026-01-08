@@ -20,6 +20,25 @@ type sqlite3 struct {
 	db *gorm.DB
 }
 
+// migrationColumns 定义需要检查和迁移的新字段
+// 格式: tableName -> []columnDefinition{name, type, default}
+var migrationColumns = map[string][]struct {
+	Name    string
+	Type    string
+	Default string
+}{
+	"tunnels": {
+		{"version", "TEXT", ""},
+		{"v2ray_version", "TEXT", ""},
+		{"last_check_time", "TEXT", ""},
+		{"cascade_proxy", "INTEGER", "0"},
+		{"cascade_tunnel_id", "INTEGER", "0"},
+		{"cascade_addr", "TEXT", ""},
+		{"cascade_uid", "TEXT", ""},
+		{"cascade_password", "TEXT", ""},
+	},
+}
+
 func (s *sqlite3) Init(migrateFunc []func()) {
 	gormConfig := gorm.Config{
 		Logger:                                   logger.Default.LogMode(logger.Silent),
@@ -27,19 +46,10 @@ func (s *sqlite3) Init(migrateFunc []func()) {
 	}
 
 	var err error
+	isNewDB := false
 
 	if _, exist := os.Stat(dbPath); os.IsNotExist(exist) {
-		defer func() {
-			xlog.Info(xlog.DatabaseInit)
-			for _, m := range models.ModelList {
-				// 初始化表
-				s.db.AutoMigrate(m)
-			}
-			// 写表
-			for _, fn := range migrateFunc {
-				fn()
-			}
-		}()
+		isNewDB = true
 	}
 
 	s.db, err = gorm.Open(sqlite.Open(dbPath), &gormConfig)
@@ -47,6 +57,48 @@ func (s *sqlite3) Init(migrateFunc []func()) {
 	if err != nil {
 		panic(err)
 	}
+
+	// 每次启动都执行 AutoMigrate 以确保表结构是最新的
+	for _, m := range models.ModelList {
+		s.db.AutoMigrate(m)
+	}
+
+	// 执行手动迁移，确保新增字段存在（兼容旧版本数据库）
+	s.manualMigrate()
+
+	// 只有新数据库才执行初始化数据写入
+	if isNewDB {
+		xlog.Info(xlog.DatabaseInit)
+		for _, fn := range migrateFunc {
+			fn()
+		}
+	}
+}
+
+// manualMigrate 手动检查并添加可能缺失的列
+// 这是为了兼容旧版本数据库，因为 SQLite 的 AutoMigrate 有时候无法正确添加新列
+func (s *sqlite3) manualMigrate() {
+	for tableName, columns := range migrationColumns {
+		for _, col := range columns {
+			if !s.columnExists(tableName, col.Name) {
+				xlog.Info(xlog.DatabaseMigrate, "table", tableName, "column", col.Name)
+				sql := "ALTER TABLE " + tableName + " ADD COLUMN " + col.Name + " " + col.Type
+				if col.Default != "" {
+					sql += " DEFAULT " + col.Default
+				}
+				if err := s.db.Exec(sql).Error; err != nil {
+					xlog.Error(xlog.DatabaseMigrateError, "table", tableName, "column", col.Name, "err", err)
+				}
+			}
+		}
+	}
+}
+
+// columnExists 检查表中是否存在指定列
+func (s *sqlite3) columnExists(tableName, columnName string) bool {
+	var count int64
+	s.db.Raw("SELECT COUNT(*) FROM pragma_table_info(?) WHERE name = ?", tableName, columnName).Scan(&count)
+	return count > 0
 }
 
 func (s *sqlite3) GetConn() *gorm.DB {

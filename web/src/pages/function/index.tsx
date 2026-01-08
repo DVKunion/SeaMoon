@@ -99,7 +99,27 @@ const Tunnel: React.FC = () => {
                                title={record.address}>{record.address.substring(0, 39) + "..."}</Tooltip> : record.address
                            }}
                 />
-
+                <Statistic title="远程版本:"
+                           valueRender={() => {
+                             if (record.version) {
+                               // 版本格式: 2.1.0-dev2-commitHash(40字符)，从后截取commit，剩下的是版本号
+                               // 兼容低版本格式如 2.0.0- 没有完整commit的情况
+                               const fullVersion = record.version;
+                               let versionNum = fullVersion;
+                               if (fullVersion.length > 41) {
+                                 versionNum = fullVersion.slice(0, -41);
+                               } else if (fullVersion.endsWith('-')) {
+                                 versionNum = fullVersion.slice(0, -1);
+                               }
+                               // v2ray 版本格式: v2ray-core:-5.16.1，取 :- 后面的部分，兼容没有v2ray版本的情况
+                               const v2rayVer = (record.v2ray_version?.trim() && record.v2ray_version.split(':-')[1]) || record.v2ray_version?.trim() || '-';
+                               return <Tooltip title={`v2ray: ${v2rayVer}`}>
+                                 <span style={{color: '#52c41a'}}>{versionNum}</span>
+                               </Tooltip>
+                             }
+                             return <span style={{color: '#999'}}>-</span>
+                           }}
+                />
                 <Statistic title="函数规格:"
                            valueRender={() => <Space><IconFont
                              type={"icon-cpu1"}/>{record.tunnel_config.cpu} M <IconFont

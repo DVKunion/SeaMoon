@@ -25,6 +25,11 @@ type Tunnel struct {
 	Status        *enum.TunnelStatus // 隧道状态
 	StatusMessage *string            // 隧道状态原因，用于展示具体的异常详情
 
+	// 健康检查信息
+	Version       *string // 远程服务版本号
+	V2rayVersion  *string // v2ray-core 版本号
+	LastCheckTime *string // 最后检查时间
+
 	Config *TunnelConfig `gorm:"embedded"`
 	// 连表查询
 	Proxies []Proxy `gorm:"foreignKey:TunnelID;references:ID"`
@@ -69,6 +74,11 @@ type TunnelApi struct {
 	Type          *enum.TunnelType   `json:"type"`
 	Status        *enum.TunnelStatus `json:"status"`
 	StatusMessage *string            `json:"status_message"`
+
+	// 健康检查信息
+	Version       *string `json:"version"`
+	V2rayVersion  *string `json:"v2ray_version"`
+	LastCheckTime *string `json:"last_check_time"`
 
 	Config *TunnelConfig `json:"tunnel_config"`
 }

@@ -57,9 +57,14 @@ func (sb *Bus) tunnelHandler(ctx context.Context, ts *tunnelSignal) {
 			return
 		} else {
 			service.SVC.UpdateTunnelDetail(ctx, tun.ID, addr, uid)
+			// 更新 tun 的地址信息，用于健康检查
+			tun.Addr = &addr
 		}
 		xlog.Info(xlog.SignalDeployTunnel, "id", tun.ID, "type", tun.Type)
 		service.SVC.UpdateTunnelStatus(ctx, tun.ID, enum.TunnelActive, "")
+
+		// 部署成功后进行健康检查
+		go service.SVC.CheckAndUpdateTunnelHealth(ctx, tun)
 	case enum.TunnelInactive:
 		sb.stopTunnel(ctx, tun)
 	case enum.TunnelDelete:
@@ -78,6 +83,16 @@ func (sb *Bus) stopTunnel(ctx context.Context, tun *models.Tunnel) {
 }
 
 func (sb *Bus) deleteTunnel(ctx context.Context, tun *models.Tunnel) {
+	// 先检查是否有依赖该隧道的级联代理，如果有则先删除它们
+	dependents, err := service.SVC.GetCascadeDependents(ctx, tun.ID)
+	if err != nil {
+		xlog.Error(xlog.SignalDeleteTunError, "obj", "tunnel", "err", err, "reason", "failed to get cascade dependents")
+	}
+	for _, dep := range dependents {
+		xlog.Info(xlog.SignalDeleteTunnel, "id", dep.ID, "reason", "cascade dependent of tunnel", "parent", tun.ID)
+		sb.deleteTunnel(ctx, dep)
+	}
+
 	// 先停掉本地的服务
 	for _, py := range tun.Proxies {
 		sb.deleteProxy(ctx, &py)

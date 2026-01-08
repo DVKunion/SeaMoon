@@ -102,6 +102,23 @@ func DeleteTunnel(c *gin.Context) {
 	servant.SuccessMsg(c, 1, nil)
 }
 
+// GetTunnelDependents 获取依赖某个隧道的级联代理列表
+func GetTunnelDependents(c *gin.Context) {
+	id, err := servant.GetPathId(c)
+	if err != nil {
+		servant.ErrorMsg(c, http.StatusBadRequest, errors.ApiError(xlog.ApiParamsError, err))
+		return
+	}
+
+	dependents, err := service.SVC.GetCascadeDependents(c, uint(id))
+	if err != nil {
+		servant.ErrorMsg(c, http.StatusInternalServerError, errors.ApiError(xlog.ApiServiceError, err))
+		return
+	}
+
+	servant.SuccessMsg(c, int64(len(dependents)), dependents.ToApi(extra()))
+}
+
 func SubscribeTunnel(c *gin.Context) {
 	subType := c.Param("type")
 	tuns, err := service.SVC.ListTunnels(c, 0, 9999)

@@ -142,9 +142,13 @@ func (p *proxy) SpeedProxy(ctx context.Context, obj *models.Proxy) error {
 		return err
 	}
 
+	// 将 speedtest.ByteRate 转换为 float64
+	ulSpeed := float64(s.ULSpeed)
+	dlSpeed := float64(s.DLSpeed)
+
 	_, err = p.UpdateProxy(ctx, obj.ID, &models.Proxy{
-		SpeedUp:   &s.ULSpeed,
-		SpeedDown: &s.DLSpeed,
+		SpeedUp:   &ulSpeed,
+		SpeedDown: &dlSpeed,
 	})
 
 	return err
