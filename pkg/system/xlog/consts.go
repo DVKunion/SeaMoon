@@ -15,6 +15,9 @@ const (
 	ServiceTorDisConnect        = "service tor disconnect"
 	ServiceCasCadeConnectServer = "service cascade server handle connect"
 	ServiceCasCadeDisConnect    = "service cascade disconnect"
+	ServiceHealthCheck          = "service health check request"
+	ServiceHealthCheckSuccess   = "service health check success"
+	ServiceHealthCheckFailed    = "service health check failed"
 )
 
 // SIGNAL 相关日志
@@ -30,6 +33,9 @@ const (
 	SignalDeployTunnel = "signal deploy tunnel success"
 	SignalStopTunnel   = "signal stop tunnel success"
 	SignalDeleteTunnel = "signal delete tunnel success"
+
+	SignalStartupSync     = "signal startup sync begin"
+	SignalStartupSyncDone = "signal startup sync completed"
 )
 
 // DB 相关日志
@@ -37,6 +43,12 @@ const (
 	DatabaseInit       = "database not found, start init ......"
 	DatabaseConfigInit = "database not found config table, start init ......"
 	DatabaseUserInit   = "database not found user table, start init ......"
+	DatabaseMigrate    = "database migrate adding column"
+)
+
+// DB 相关错误
+const (
+	DatabaseMigrateError = "database migrate error"
 )
 
 // SDK 相关日志

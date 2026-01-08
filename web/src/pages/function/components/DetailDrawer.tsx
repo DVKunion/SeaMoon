@@ -1,13 +1,14 @@
 import React, {useRef, useState} from 'react';
 import type {ProDescriptionsActionType} from '@ant-design/pro-components';
 import {ProDescriptions} from '@ant-design/pro-components';
-import {Button, Divider, Drawer, Popconfirm, Space, Tooltip} from "antd";
+import {Button, Divider, Drawer, Modal, Popconfirm, Space, Tooltip} from "antd";
 import {TunnelAuthFCTypeEnum, TunnelStatusTag, TunnelTypeValueEnum} from "@/enum/tunnel";
 import {CloudProvideTypeValueEnum, RegionEnum} from "@/enum/cloud";
-import {CheckCircleTwoTone, CloseCircleTwoTone, PoweroffOutlined, SyncOutlined} from "@ant-design/icons";
+import {CheckCircleTwoTone, CloseCircleTwoTone, ExclamationCircleOutlined, PoweroffOutlined, SyncOutlined} from "@ant-design/icons";
 // @ts-ignore
 import {CopyToClipboard} from 'react-copy-to-clipboard';
 import {FormValueType} from "./CreateForm";
+import {getTunnelDependents} from "@/services/function/api";
 
 export type DetailProps = {
   onCancel: () => void;
@@ -20,6 +21,48 @@ export type DetailProps = {
 const DetailDrawer: React.FC<DetailProps> = (props) => {
   const actionRef = useRef<ProDescriptionsActionType>();
   const [spin, setSpin] = useState<boolean>(false);
+
+  // 执行删除操作，带依赖检查提示
+  const handleDelete = async () => {
+    if (!props.values.id) {
+      props.onDelete(props.values as FormValueType);
+      return;
+    }
+
+    try {
+      const result = await getTunnelDependents(props.values.id);
+      if (result.success && result.data && result.data.length > 0) {
+        // 有依赖的隧道，显示确认对话框
+        Modal.confirm({
+          title: '删除确认',
+          icon: <ExclamationCircleOutlined />,
+          content: (
+            <div>
+              <p>以下函数依赖该隧道作为级联代理，删除后这些函数也将被一并删除：</p>
+              <ul>
+                {result.data.map((dep: Serverless.Tunnel) => (
+                  <li key={dep.id}>{dep.name}</li>
+                ))}
+              </ul>
+              <p>确定要继续删除吗？</p>
+            </div>
+          ),
+          okText: '确认删除',
+          okType: 'danger',
+          cancelText: '取消',
+          onOk: () => {
+            props.onDelete(props.values as FormValueType);
+          },
+        });
+      } else {
+        // 没有依赖，直接删除
+        props.onDelete(props.values as FormValueType);
+      }
+    } catch (error) {
+      // 查询失败，直接删除
+      props.onDelete(props.values as FormValueType);
+    }
+  };
 
   return <Drawer
     title="函数详情"
@@ -64,9 +107,7 @@ const DetailDrawer: React.FC<DetailProps> = (props) => {
       {/*}}>更新</Button>*/}
         <Popconfirm
           title="删除函数?"
-          onConfirm={() => {
-            props.onDelete(props.values as FormValueType).then();
-          }}
+          onConfirm={handleDelete}
           okText="确认"
           cancelText="取消"
         >
@@ -101,6 +142,71 @@ const DetailDrawer: React.FC<DetailProps> = (props) => {
           span: 2,
           render: (dom, entry) => {
             return <Tooltip title={entry.status_message}> {TunnelStatusTag[entry.status ? entry.status : 0]}</Tooltip>
+          }
+        },
+        {
+          title: '远程版本',
+          key: 'version',
+          editable: false,
+          dataIndex: 'version',
+          render: (dom, entry) => {
+            if (entry.version) {
+              // 版本格式: 2.1.0-dev2-commitHash(40字符)，从后截取commit，剩下的是版本号
+              // 兼容低版本格式如 2.0.0- 没有完整commit的情况
+              const fullVersion = entry.version;
+              let versionNum = fullVersion;
+              if (fullVersion.length > 41) {
+                versionNum = fullVersion.slice(0, -41);
+              } else if (fullVersion.endsWith('-')) {
+                versionNum = fullVersion.slice(0, -1);
+              }
+              return <span style={{color: '#52c41a'}}>{versionNum}</span>
+            }
+            return <span style={{color: '#999'}}>-</span>
+          }
+        },
+        {
+          title: 'Commit',
+          key: 'commit',
+          editable: false,
+          dataIndex: 'version',
+          render: (dom, entry) => {
+            // commit hash 是最后40个字符，需要确保有完整的 commit
+            if (entry.version && entry.version.length > 41) {
+              const commit = entry.version.slice(-40);
+              // 验证是否是有效的 commit hash (只包含十六进制字符)
+              if (/^[0-9a-f]{40}$/i.test(commit)) {
+                return <span style={{fontSize: '12px', color: '#666'}}>{commit}</span>
+              }
+            }
+            return <span style={{color: '#999'}}>-</span>
+          }
+        },
+        {
+          title: 'V2Ray版本',
+          key: 'v2ray_version',
+          editable: false,
+          dataIndex: 'v2ray_version',
+          render: (dom, entry) => {
+            if (entry.v2ray_version && entry.v2ray_version.trim()) {
+              // v2ray 版本格式: v2ray-core:-5.16.1，取 :- 后面的部分
+              const v2rayVer = entry.v2ray_version.split(':-')[1] || entry.v2ray_version;
+              return <span>{v2rayVer}</span>
+            }
+            return <span style={{color: '#999'}}>-</span>
+          }
+        },
+        {
+          title: '最后检查时间',
+          key: 'last_check_time',
+          editable: false,
+          dataIndex: 'last_check_time',
+          span: 2,
+          render: (dom, entry) => {
+            if (entry.last_check_time) {
+              return <span>{entry.last_check_time}</span>
+            }
+            return <span style={{color: '#999'}}>-</span>
           }
         },
         {
@@ -225,12 +331,35 @@ const DetailDrawer: React.FC<DetailProps> = (props) => {
         },
         {
           title: '是否开启 tor 网桥',
-          key: 'tls',
+          key: 'tor',
           editable: false,
           dataIndex: "tunnel_config.tor",
           render: (dom, record) => {
             return record.tunnel_config?.tor ? <CheckCircleTwoTone style={{marginTop: "4px"}}  twoToneColor="#52c41a" /> :
               <CloseCircleTwoTone style={{marginTop: "4px"}} twoToneColor="#eb2f96"/>
+          }
+        },
+        {
+          title: '是否开启级联代理',
+          key: 'cascade_proxy',
+          editable: false,
+          dataIndex: "tunnel_config.cascade_proxy",
+          render: (dom, record) => {
+            return record.tunnel_config?.cascade_proxy ? <CheckCircleTwoTone style={{marginTop: "4px"}}  twoToneColor="#52c41a" /> :
+              <CloseCircleTwoTone style={{marginTop: "4px"}} twoToneColor="#eb2f96"/>
+          }
+        },
+        {
+          title: '级联代理地址',
+          key: 'cascade_addr',
+          editable: false,
+          span: 2,
+          dataIndex: "tunnel_config.cascade_addr",
+          render: (dom, record) => {
+            if (record.tunnel_config?.cascade_proxy && record.tunnel_config?.cascade_addr) {
+              return <span>{record.tunnel_config.cascade_addr}</span>
+            }
+            return <span style={{color: '#999'}}>-</span>
           }
         }
       ]}

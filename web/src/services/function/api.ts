@@ -69,3 +69,17 @@ export async function deleteFunctionTunnel(id: number | undefined) {
     },
   });
 }
+
+// 获取依赖某个隧道的级联代理列表
+export async function getTunnelDependents(id: number | undefined) {
+  return request<{
+    success: boolean;
+    total: number;
+    data: Serverless.Tunnel[];
+  }>('/api/v1/tunnel/' + id + '/dependents', {
+    method: 'GET',
+    headers: {
+      'Authorization': localStorage.getItem("token") || "",
+    },
+  });
+}

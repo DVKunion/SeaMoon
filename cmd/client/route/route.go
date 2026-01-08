@@ -38,6 +38,7 @@ func registerV1(router *gin.Engine, middles []gin.HandlerFunc) {
 	// tunnel
 	v1.GET("/tunnel", append(middles, api_v1.ListTunnels)...)
 	v1.GET("/tunnel/:id", append(middles, api_v1.GetTunnelById)...)
+	v1.GET("/tunnel/:id/dependents", append(middles, api_v1.GetTunnelDependents)...)
 	v1.GET("/tunnel/subscribe/:type/", append(middles, api_v1.SubscribeTunnel)...)
 	v1.POST("/tunnel", append(middles, api_v1.CreateTunnel)...)
 	v1.PUT("/tunnel/:id", append(middles, api_v1.UpdateTunnel)...)

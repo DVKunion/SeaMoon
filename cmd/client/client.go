@@ -36,6 +36,9 @@ func runSignal(ctx context.Context) {
 		return
 	}
 	signal.Signal().Recover(ctx, rec.Value)
+
+	// 启动时同步云账户和执行健康检查（异步执行，不阻塞启动）
+	go signal.Signal().StartupSync(ctx)
 }
 
 func runApi(ctx context.Context, debug bool) {

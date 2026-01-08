@@ -76,3 +76,36 @@ func (sb *Bus) Recover(ctx context.Context, recover string) {
 		}
 	}
 }
+
+// StartupSync 启动时同步云账户和执行健康检查
+func (sb *Bus) StartupSync(ctx context.Context) {
+	xlog.Info(xlog.SignalStartupSync)
+
+	// 1. 先同步所有云账户
+	providers, err := service.SVC.ListActiveProviders(ctx)
+	if err != nil {
+		xlog.Error(xlog.SignalSyncProviderError, "err", err, "stage", "startup")
+	} else {
+		for _, p := range providers {
+			xlog.Info(xlog.SignalSyncProvider, "id", p.ID, "type", *p.Type, "stage", "startup")
+			if err := service.SVC.SyncProvider(ctx, p); err != nil {
+				xlog.Error(xlog.SignalSyncProviderError, "id", p.ID, "err", err, "stage", "startup")
+			}
+		}
+	}
+
+	// 2. 同步完成后，对所有活跃的隧道执行健康检查
+	tunnels, err := service.SVC.ListTunnels(ctx, 0, 9999)
+	if err != nil {
+		xlog.Error(xlog.SignalGetObjError, "obj", "tunnel", "err", err, "stage", "startup")
+	} else {
+		for _, t := range tunnels {
+			if t.Status != nil && *t.Status == enum.TunnelActive {
+				xlog.Info(xlog.ServiceHealthCheck, "tunnel", t.ID, "stage", "startup")
+				service.SVC.CheckAndUpdateTunnelHealth(ctx, t)
+			}
+		}
+	}
+
+	xlog.Info(xlog.SignalStartupSyncDone)
+}
